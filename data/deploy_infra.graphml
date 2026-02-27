@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="d_label" for="node" attr.name="label" attr.type="string" />
+  <key id="d_desc" for="node" attr.name="description" attr.type="string" />
+  <key id="d_rel" for="edge" attr.name="relation" attr.type="string" />
+
+  <graph edgedefault="directed">
+    <node id="docker_compose">
+      <data key="d_label">TechStack</data>
+      <data key="d_desc">Оркестрация контейнеров для локальной разработки.</data>
+    </node>
+    <node id="postgres_container">
+      <data key="d_label">Component</data>
+      <data key="d_desc">БД PostgreSQL 16 в докере.</data>
+    </node>
+    <node id="req_ci_cd">
+      <data key="d_label">Requirement</data>
+      <data key="d_desc">Автоматический деплой при пуше в master.</data>
+    </node>
+    <node id="github_actions">
+      <data key="d_label">TechStack</data>
+      <data key="d_desc">Платформа для CI/CD пайплайнов.</data>
+    </node>
+
+    <edge source="postgres_container" target="docker_compose">
+      <data key="d_rel">RUNS_IN</data>
+    </edge>
+    <edge source="github_actions" target="req_ci_cd">
+      <data key="d_rel">IMPLEMENTS</data>
+    </edge>
+  </graph>
+</graphml>
