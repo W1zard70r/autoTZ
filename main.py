@@ -1,70 +1,76 @@
 import os
-from typing import List
+import asyncio
+import logging
+from dotenv import load_dotenv
 
-from models.inputs import DataSource, DataEnum
-from models.graph import UnifiedGraph
-from models.document import FullTZDocument
-from services.extractor import DataExtractorService
-from services.merger import GraphMergerService
-from services.generator import TZGeneratorService
+from schemas.document import DataSource
+from schemas.enums import DataEnum
+from layer1_miner.extractor import MinerProcessor
+from layer2_merger.merger import SmartGraphMerger
+from layer3_compiler.generator import TZGenerator
+from utils.test_data_gen import get_huge_chat_dataset
 
-def load_graphml(filepath: str) -> DataSource:
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return DataSource(
-            source_type=DataEnum.GRAPHML,
-            content=f.read(),
-            file_name=os.path.basename(filepath)
-        )
+load_dotenv()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
+logger = logging.getLogger(__name__)
 
-def main():
-    print("==========================================")
-    print("🚀 ГЕНЕРАТОР ТЗ (GRAPHML EDITION)")
-    print("==========================================\n")
+async def main():
+    print("==================================================")
+    print("🚀 ГЕНЕРАТОР ТЗ (3-LAYER GRAPH PIPELINE)")
+    print("==================================================\n")
 
-    extractor = DataExtractorService()
-    merger = GraphMergerService()
-    generator = TZGeneratorService()
+    # Инициализация всех 3 слоев
+    miner = MinerProcessor()
+    merger = SmartGraphMerger()
+    compiler = TZGenerator()
 
-    # Берем 3 графа: твой backend и 2 новых от друга
-    files = [
-        "data/telegram_backend_team.graphml",
-        "data/frontend_app.graphml",
-        "data/deploy_infra.graphml"
-    ]
+    # Входные данные (имитация чата команды из utils)
+    chat_data = get_huge_chat_dataset()
+    source = DataSource(
+        source_type=DataEnum.CHAT,
+        content=chat_data,
+        file_name="telegram_backend_team"
+    )
+
+    # ---------------------------------------------------------
+    # ЭТАП 1: MINER (Извлечение подграфов)
+    # ---------------------------------------------------------
+    logger.info(">>> СТАРТ ЭТАПА 1")
+    extracted_subgraphs = await miner.process_source(source)
+    logger.info(f"✅ Извлечено подграфов: {len(extracted_subgraphs)}")
+    print("-" * 50)
+
+    # ---------------------------------------------------------
+    # ЭТАП 2: MERGER (Дедупликация и Слияние)
+    # ---------------------------------------------------------
+    logger.info(">>> СТАРТ ЭТАПА 2")
+    unified_graph = await merger.smart_merge(extracted_subgraphs)
+    logger.info(f"✅ Граф объединен. Итоговых узлов: {len(unified_graph.nodes)}")
+    print("-" * 50)
+
+    # ---------------------------------------------------------
+    # ЭТАП 3: COMPILER (Генерация Markdown)
+    # ---------------------------------------------------------
+    logger.info(">>> СТАРТ ЭТАПА 3")
+    doc = await compiler.generate_tz(unified_graph)
     
-    inputs = []
-    print("📂 Загрузка графов:")
-    for f in files:
-        if os.path.exists(f):
-            inputs.append(load_graphml(f))
-            print(f"  - {f} (ok)")
-        else:
-            print(f"  - {f} (НЕ НАЙДЕН)")
-
-    # 1. PARSING (Без LLM)
-    print("\n--- ЭТАП 1: ПАРСИНГ ГРАФОВ ---")
-    chunks = []
-    for src in inputs:
-        chunk = extractor.extract(src)
-        chunks.append(chunk)
-        print(f"  ✅ {src.file_name}: узлов={len(chunk.nodes)}, связей={len(chunk.edges)}")
-
-    # 2. MERGING (С LLM)
-    print("\n--- ЭТАП 2: СЛИЯНИЕ (LLM) ---")
-    unified_graph = merger.merge(chunks)
-    print(f"  ✅ Граф объединен. Узлов: {len(unified_graph.nodes)}")
+    # Сохранение результата
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, "FINAL_TZ.md")
     
-    # 3. GENERATION (С LLM)
-    print("\n--- ЭТАП 3: ГЕНЕРАЦИЯ ТЗ ---")
-    try:
-        doc = generator.generate(unified_graph, template={})
-        with open("FINAL_TZ.md", "w", encoding="utf-8") as f:
-            f.write(f"# {doc.project_name}\n\n")
-            for sec in doc.sections:
-                f.write(f"## {sec.title}\n{sec.content_markdown}\n\n")
-        print(f"\n🎉 ГОТОВО! Файл: FINAL_TZ.md")
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(f"# {doc.project_name}\n")
+        f.write(f"**Версия:** {doc.version}\n\n")
+        f.write("---\n\n")
+        for sec in doc.sections:
+            f.write(f"## {sec.title}\n\n")
+            f.write(f"{sec.content_markdown}\n\n")
+            f.write("---\n\n")
+            
+    logger.info(f"🎉 ГОТОВО! Техническое задание сохранено: {output_path}")
+    print("==================================================")
 
 if __name__ == "__main__":
-    main()
+    # Запускаем асинхронный цикл
+    asyncio.run(main())
