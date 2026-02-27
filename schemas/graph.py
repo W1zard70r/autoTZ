@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List
 from pydantic import BaseModel, Field
 from .enums import NodeLabel, EdgeRelation, TZSectionEnum
 
@@ -7,7 +7,7 @@ class KeyValue(BaseModel):
     value: str = Field(description="Значение свойства")
 
 class GraphNode(BaseModel):
-    id: str = Field(description="Snake_case ID сущности (например: user_grisha, db_postgres)")
+    id: str = Field(description="Snake_case ID сущности")
     label: NodeLabel = Field(description="Тип сущности")
     name: str = Field(description="Человекочитаемое название")
     description: str = Field(default="", description="Описание сущности в контексте проекта")

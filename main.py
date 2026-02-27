@@ -14,17 +14,18 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
 
+
 async def main():
     print("==================================================")
     print("🚀 ГЕНЕРАТОР ТЗ (3-LAYER GRAPH PIPELINE)")
     print("==================================================\n")
 
-    # Инициализация всех 3 слоев
+    # Инициализация слоев
     miner = MinerProcessor()
     merger = SmartGraphMerger()
     compiler = TZGenerator()
 
-    # Входные данные (имитация чата команды из utils)
+    # Входные данные (имитация чата)
     chat_data = get_huge_chat_dataset()
     source = DataSource(
         source_type=DataEnum.CHAT,
@@ -53,12 +54,12 @@ async def main():
     # ---------------------------------------------------------
     logger.info(">>> СТАРТ ЭТАПА 3")
     doc = await compiler.generate_tz(unified_graph)
-    
+
     # Сохранение результата
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "FINAL_TZ.md")
-    
+
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(f"# {doc.project_name}\n")
         f.write(f"**Версия:** {doc.version}\n\n")
@@ -67,10 +68,10 @@ async def main():
             f.write(f"## {sec.title}\n\n")
             f.write(f"{sec.content_markdown}\n\n")
             f.write("---\n\n")
-            
+
     logger.info(f"🎉 ГОТОВО! Техническое задание сохранено: {output_path}")
     print("==================================================")
 
+
 if __name__ == "__main__":
-    # Запускаем асинхронный цикл
     asyncio.run(main())

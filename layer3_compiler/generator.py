@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import List
 from schemas.graph import UnifiedGraph, GraphNode
 from schemas.enums import TZSectionEnum
@@ -7,49 +8,63 @@ from utils.llm_client import acall_llm_text
 
 logger = logging.getLogger(__name__)
 
+
 class TZGenerator:
+    def __init__(self, model_name: str = "gemini-2.5-flash"):
+        self.model_name = model_name
+
     async def generate_tz(self, graph: UnifiedGraph) -> FullTZDocument:
-        logger.info("📄 СЛОЙ 3: Компиляция Технического Задания")
-        
-        sections_data = []
-        sections_to_generate = [
-            (TZSectionEnum.GENERAL, "1. Общие сведения"),
-            (TZSectionEnum.FUNCTIONAL, "2. Функциональные требования"),
-            (TZSectionEnum.STACK, "3. Стек технологий"),
-            (TZSectionEnum.INTERFACE, "4. Интерфейс (UI/UX)")
+        logger.info("📝 СЛОЙ 3: Генерация документа ТЗ...")
+
+        if graph.conflicts:
+            logger.warning(f"⚠️ В графе найдено {len(graph.conflicts)} неразрешенных конфликтов!")
+
+        sections_to_write = [
+            TZSectionEnum.GENERAL,
+            TZSectionEnum.FUNCTIONAL,
+            TZSectionEnum.STACK,
+            TZSectionEnum.INTERFACE
         ]
 
-        # Превращаем связи в быстрый поиск
-        edges_text = [f"{e.source} --[{e.relation}]--> {e.target} (Обоснование: {e.evidence})" for e in graph.edges]
+        tasks = []
+        for sec_enum in sections_to_write:
+            tasks.append(self._generate_section(sec_enum, graph))
 
-        for sec_enum, sec_title in sections_to_generate:
-            relevant_nodes = [n for n in graph.nodes if n.target_section == sec_enum]
-            if not relevant_nodes:
-                continue
+        generated_sections = await asyncio.gather(*tasks)
 
-            logger.info(f"  -> Генерация раздела: {sec_title} ({len(relevant_nodes)} узлов)")
-            
-            node_context = "\n".join([f"- [{n.label}] {n.name}: {n.description}" for n in relevant_nodes])
-            edge_context = "\n".join(edges_text) # Отдаем связи для понимания контекста
-            
-            prompt = f"""Ты Технический Писатель. Напиши раздел ТЗ: '{sec_title}'.
-            Используй ТОЛЬКО факты из предоставленных узлов и связей.
-            Стиль: формально-деловой, структурированный (ГОСТ).
-            Пиши только текст самого раздела, используй Markdown. Не пиши введения от себя."""
-            
-            data_str = f"УЗЛЫ РАЗДЕЛА:\n{node_context}\n\nСВЯЗИ ПРОЕКТА:\n{edge_context}"
-            
-            content = await acall_llm_text(prompt=prompt, data=data_str)
-            
-            sections_data.append(GeneratedSection(
-                section_id=sec_enum,
-                title=sec_title,
-                content_markdown=content,
-                used_node_ids=[n.id for n in relevant_nodes]
-            ))
+        valid_sections = [sec for sec in generated_sections if sec is not None]
 
         return FullTZDocument(
-            project_name="Генерируемый Проект",
+            project_name="Техническое Задание (AI Generated)",
             version="1.0.0",
-            sections=sections_data
+            sections=valid_sections
         )
+
+    async def _generate_section(self, sec_enum: TZSectionEnum, graph: UnifiedGraph) -> GeneratedSection:
+        relevant_nodes = [n for n in graph.nodes if n.target_section == sec_enum]
+
+        if not relevant_nodes:
+            return None
+
+        logger.info(f"  -> Пишем раздел: {sec_enum.value} ({len(relevant_nodes)} узлов)")
+
+        node_context = "\n".join([f"- {n.name} (ID: {n.id}): {n.description}" for n in relevant_nodes])
+
+        prompt = f"""
+Напиши раздел Технического Задания: '{sec_enum.value}'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+{node_context}
+"""
+        try:
+            content_markdown = await acall_llm_text(prompt=prompt, model_name=self.model_name)
+            return GeneratedSection(
+                section_id=sec_enum,
+                title=sec_enum.name,
+                content_markdown=content_markdown
+            )
+        except Exception as e:
+            logger.error(f"Ошибка генерации раздела {sec_enum.value}: {e}")
+            return None

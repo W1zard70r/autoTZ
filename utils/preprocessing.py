@@ -4,8 +4,8 @@ REJECTION_WORDS = {"не", "нет", "не надо", "минус", "-", "отм
 def normalize_short_answers(text: str) -> str:
     if not isinstance(text, str): return ""
     clean = text.lower().strip().strip(",.!?:")
-    if clean in CONFIRMATION_WORDS: return "[FLAG: CONFIRMATION]"
-    if clean in REJECTION_WORDS: return "[FLAG: REJECTION]"
+    if clean in CONFIRMATION_WORDS: return f"[FLAG: CONFIRMATION]"
+    if clean in REJECTION_WORDS: return f"[FLAG: REJECTION]"
     return text
 
 def get_clean_text(text_obj) -> str:

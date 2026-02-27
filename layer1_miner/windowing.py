@@ -11,7 +11,8 @@ OVERLAP_MESSAGES = 4
 SEMANTIC_THRESHOLD = 0.65
 LOOKBACK_WINDOW = 20
 EMBEDDING_BATCH_SIZE = 20
-EMBEDDING_DELAY = 2
+EMBEDDING_DELAY = 1.0
+
 
 def parse_date(date_str: str) -> datetime:
     try:
@@ -19,10 +20,12 @@ def parse_date(date_str: str) -> datetime:
     except:
         return datetime.now()
 
+
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     v1, v2 = np.array(v1), np.array(v2)
     norm = np.linalg.norm(v1) * np.linalg.norm(v2)
     return float(np.dot(v1, v2) / norm) if norm > 0 else 0.0
+
 
 async def asplit_chat_into_semantic_threads(messages: List[dict]) -> List[Tuple[str, List[dict]]]:
     valid_msgs = [m for m in messages if m.get("type") == "message" and m.get("text")]
@@ -30,7 +33,7 @@ async def asplit_chat_into_semantic_threads(messages: List[dict]) -> List[Tuple[
 
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
     texts_to_embed = [str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
-    
+
     embeddings = []
     for i in range(0, len(texts_to_embed), EMBEDDING_BATCH_SIZE):
         batch = texts_to_embed[i: i + EMBEDDING_BATCH_SIZE]
@@ -41,7 +44,7 @@ async def asplit_chat_into_semantic_threads(messages: List[dict]) -> List[Tuple[
             embeddings.extend([[0.0] * 768] * len(batch))
         await asyncio.sleep(EMBEDDING_DELAY)
 
-    G = nx.Graph() # Undirected for Louvain
+    G = nx.Graph()
     for i, msg in enumerate(valid_msgs):
         G.add_node(msg["id"], msg=msg, vec=embeddings[i], time=parse_date(msg.get("date", "")))
 
@@ -91,7 +94,7 @@ async def asplit_chat_into_semantic_threads(messages: List[dict]) -> List[Tuple[
                 current_chars = sum(len(str(m.get("text", ""))) for m in current_window)
             current_window.append(msg)
             current_chars += msg_len
-        
+
         if current_window:
             ref = f"thread_{thread_idx}_msg_{current_window[0]['id']}_to_{current_window[-1]['id']}"
             processed_windows.append((ref, current_window))
