@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from typing import List
-# from schemas.inputs import DataSource
+from schemas.inputs import DataSource
 from schemas.graph import ExtractedKnowledge
 from utils.preprocessing import format_chat_message
 from utils.llm_client import acall_llm_json

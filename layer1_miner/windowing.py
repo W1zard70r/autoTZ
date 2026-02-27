@@ -28,7 +28,7 @@ async def asplit_chat_into_semantic_threads(messages: List[dict]) -> List[Tuple[
     valid_msgs = [m for m in messages if m.get("type") == "message" and m.get("text")]
     if not valid_msgs: return []
 
-    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
     texts_to_embed = [str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
     
     embeddings = []
