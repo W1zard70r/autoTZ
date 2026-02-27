@@ -11,3 +11,7 @@ wheels/
 venv
 .env
 .idea/
+.vscode/
+# Logs and databases
+*.log
+logs/
