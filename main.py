@@ -8,7 +8,7 @@ from schemas.enums import DataEnum
 from layer1_miner.extractor import MinerProcessor
 from layer2_merger.merger import SmartGraphMerger
 from layer3_compiler.generator import TZGenerator
-from utils.test_data_gen import get_huge_chat_dataset
+from utils.test_data_gen import get_backend_chat_dataset, get_frontend_chat_dataset
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
@@ -26,26 +26,38 @@ async def main():
     compiler = TZGenerator()
 
     # Входные данные (имитация чата)
-    chat_data = get_huge_chat_dataset()
-    source = DataSource(
-        source_type=DataEnum.CHAT,
-        content=chat_data,
-        file_name="telegram_backend_team"
-    )
+    sources = [
+        DataSource(
+            source_type=DataEnum.CHAT,
+            content=get_backend_chat_dataset(),
+            file_name="chat_backend_team"
+        ),
+        DataSource(
+            source_type=DataEnum.CHAT,
+            content=get_frontend_chat_dataset(),
+            file_name="chat_frontend_team"
+        )
+    ]
 
     # ---------------------------------------------------------
-    # ЭТАП 1: MINER (Извлечение подграфов)
+    # ЭТАП 1: MINER (Извлечение подграфов из всех источников)
     # ---------------------------------------------------------
-    logger.info(">>> СТАРТ ЭТАПА 1")
-    extracted_subgraphs = await miner.process_source(source)
-    logger.info(f"✅ Извлечено подграфов: {len(extracted_subgraphs)}")
-    print("-" * 50)
+    logger.info(">>> СТАРТ ЭТАПА 1: Майнинг знаний")
+
+    all_extracted_subgraphs = []
+
+    for source in sources:
+        logger.info(f"📂 Обработка источника: {source.file_name}")
+        # Майнер использует накопленный глоссарий для улучшения связности
+        subgraphs = await miner.process_source(source)
+        all_extracted_subgraphs.extend(subgraphs)
+        logger.info(f"   -> Извлечено {len(subgraphs)} чанков из {source.file_name}")
 
     # ---------------------------------------------------------
     # ЭТАП 2: MERGER (Дедупликация и Слияние)
     # ---------------------------------------------------------
     logger.info(">>> СТАРТ ЭТАПА 2")
-    unified_graph = await merger.smart_merge(extracted_subgraphs)
+    unified_graph = await merger.smart_merge(all_extracted_subgraphs)
     logger.info(f"✅ Граф объединен. Итоговых узлов: {len(unified_graph.nodes)}")
     print("-" * 50)
 
