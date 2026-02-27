@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from schemas.graph import ExtractedKnowledge, UnifiedGraph, GraphNode, GraphEdge, Conflict
 from schemas.enums import TZSectionEnum, NodeLabel
 from utils.llm_client import acall_llm_json
+from utils.state_logger import log_graphml, log_pydantic
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class SmartGraphMerger:
     def __init__(self):
         self.G = nx.DiGraph()
         self.conflicts: List[Conflict] = []
+        self.logged_merge_actions: List[MergeAction] = [] 
 
     async def smart_merge(self, subgraphs: List[ExtractedKnowledge]) -> UnifiedGraph:
         logger.info("🔗 СЛОЙ 2: Загрузка подграфов в единый граф NetworkX")
@@ -41,16 +43,16 @@ class SmartGraphMerger:
         for sg in subgraphs:
             for node in sg.nodes:
                 if not self.G.has_node(node.id):
-                    self.G.add_node(node.id, **node.model_dump())
+                    # Используем mode='json' для безопасной конвертации Enum в строки
+                    self.G.add_node(node.id, **node.model_dump(mode='json'))
             for edge in sg.edges:
-                # !!! ИСПРАВЛЕНИЕ 1: Исключаем source и target при добавлении в граф,
-                # так как они уже определены топологией графа (u -> v)
-                edge_data = edge.model_dump(exclude={'source', 'target'})
+                edge_data = edge.model_dump(mode='json', exclude={'source', 'target'})
                 self.G.add_edge(edge.source, edge.target, **edge_data)
 
         logger.info(f"  -> Исходный размер: {self.G.number_of_nodes()} узлов, {self.G.number_of_edges()} связей.")
-
-        # ... (код дедупликации и распределения по секциям остается без изменений) ...
+        
+        # --- LOGGING ---
+        log_graphml("layer2_step1_initial_combined.graphml", self.G)
 
         nodes_by_label = {}
         for nid, data in self.G.nodes(data=True):
@@ -62,7 +64,6 @@ class SmartGraphMerger:
         for label, nodes in nodes_by_label.items():
             if len(nodes) < 2: continue
 
-            # (Логика дедупликации пропущена для краткости, она не меняется)
             logger.info(f"  -> Дедупликация группы '{label}' ({len(nodes)} узлов)...")
             batch_size = 15
             for i in range(0, len(nodes), batch_size):
@@ -75,9 +76,13 @@ class SmartGraphMerger:
                     result = await acall_llm_json(schema=MergeBatchResult, prompt=prompt, data=data_str)
                     for action in result.actions:
                         if action.is_duplicate and len(action.ids_to_merge) > 1:
+                            self.logged_merge_actions.append(action)
                             self._merge_nodes_in_graph(action)
                 except Exception as e:
                     logger.error(f"Ошибка при дедупликации: {e}")
+
+        # --- LOGGING ---
+        log_pydantic("layer2_step2_merge_actions.json", MergeBatchResult(actions=self.logged_merge_actions))
 
         await self._assign_sections()
 
@@ -95,18 +100,20 @@ class SmartGraphMerger:
 
             final_nodes.append(GraphNode(**node_data))
 
-        # !!! ИСПРАВЛЕНИЕ 2: Безопасное создание ребер
         final_edges = []
         for u, v, data in self.G.edges(data=True):
-            # Удаляем source/target из data, если они там случайно оказались,
-            # чтобы избежать конфликта аргументов
             clean_data = {k: val for k, val in data.items() if k not in {'source', 'target'}}
             final_edges.append(GraphEdge(source=u, target=v, **clean_data))
 
-        return UnifiedGraph(nodes=final_nodes, edges=final_edges, conflicts=self.conflicts)
+        unified_graph = UnifiedGraph(nodes=final_nodes, edges=final_edges, conflicts=self.conflicts)
+
+        # --- LOGGING ---
+        log_graphml("layer2_step3_final_unified.graphml", self.G)
+        log_pydantic("layer2_step3_final_unified.json", unified_graph)
+
+        return unified_graph
 
     def _merge_nodes_in_graph(self, action: MergeAction):
-        # ... (остальной код метода без изменений) ...
         valid_ids = [nid for nid in action.ids_to_merge if self.G.has_node(nid)]
         if not valid_ids: return
 
@@ -132,7 +139,6 @@ class SmartGraphMerger:
             self.G.remove_node(old_id)
 
     async def _assign_sections(self):
-        # ... (без изменений) ...
         logger.info("  -> Распределение узлов по секциям ТЗ...")
         nodes_to_assign = [{"id": n, "name": d.get("name"), "label": d.get("label")}
                            for n, d in self.G.nodes(data=True) if d.get("label") != NodeLabel.PERSON]

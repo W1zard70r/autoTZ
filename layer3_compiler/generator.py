@@ -5,6 +5,7 @@ from schemas.graph import UnifiedGraph, GraphNode
 from schemas.enums import TZSectionEnum
 from schemas.document import FullTZDocument, GeneratedSection
 from utils.llm_client import acall_llm_text
+from utils.state_logger import log_text
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,9 @@ class TZGenerator:
 ФАКТЫ ДЛЯ РАЗДЕЛА:
 {node_context}
 """
+        # --- LOGGING: Сохраняем переданный контекст для дебага ---
+        log_text(f"layer3_prompt_{sec_enum.value}.txt", prompt)
+
         try:
             content_markdown = await acall_llm_text(prompt=prompt, model_name=self.model_name)
             return GeneratedSection(

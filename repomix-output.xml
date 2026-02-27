@@ -44,34 +44,32 @@ data/
   deploy_infra.graphml
   frontend_app.graphml
   telegram_backend_team.graphml
-models/
+layer1_miner/
+  __init__.py
+  extractor.py
+  windowing.py
+layer2_merger/
+  __init__.py
+  merger.py
+layer3_compiler/
+  __init__.py
+  generator.py
+output/
+  FINAL_TZ.md
+schemas/
+  __init__.py
   document.py
   enums.py
   graph.py
-  inputs.py
-Parser/
-  output/
-    telegram_backend_team.graphml
-  extractor.py
-  global_glossary.py
-  graph_manager.py
-  main.py
-  models.py
-  preprocessing.py
-  processor.py
-  test_data_gen.py
-  vision.py
-  windowing.py
-services/
-  extractor.py
-  generator.py
-  merger.py
 utils/
+  __init__.py
   llm_client.py
+  preprocessing.py
+  test_data_gen.py
 .gitignore
 FINAL_TZ_1.md
+FINAL_TZ_2.md
 FINAL_TZ_Sanya.md
-FINAL_TZ.md
 main.py
 README.md
 requirements.txt
@@ -902,1093 +900,26 @@ This section contains the contents of the repository's files.
 </graphml>
 </file>
 
-<file path="models/document.py">
-from typing import List
-from pydantic import BaseModel, Field
-from .enums import TZSectionEnum
+<file path="schemas/__init__.py">
 
-class GeneratedSection(BaseModel):
-    section_id: TZSectionEnum
-    title: str
-    content_markdown: str = Field(description="Текст раздела в формате Markdown")
-    used_node_ids: List[str] = Field(description="Какие узлы графа использовались (для traceability)", default_factory=list)
-
-class FullTZDocument(BaseModel):
-    project_name: str
-    version: str
-    sections: List[GeneratedSection]
 </file>
 
-<file path="models/enums.py">
+<file path="schemas/enums.py">
 from enum import Enum
 
 class DataEnum(str, Enum):
-    CHAT = "messages"
-    DOCUMENT = "documents"
+    CHAT = "chat"
+    DOCUMENT = "document"
     PLAIN_TEXT = "plain_text"
-    ACTION = "user_action"
-
-class TZSectionEnum(str, Enum):
-    GENERAL = "general_info"       # Общие сведения
-    STACK = "tech_stack"           # Стек технологий
-    FUNCTIONAL = "functional_req"  # Функциональные требования
-    INTERFACE = "ui_ux"            # Интерфейс
-    UNKNOWN = "uncategorized"
-</file>
-
-<file path="models/graph.py">
-from typing import List
-from pydantic import BaseModel, Field
-from .enums import TZSectionEnum
-
-class GraphNode(BaseModel):
-    id: str
-    label: str
-    target_section: TZSectionEnum = Field(default=TZSectionEnum.GENERAL)
-    content: str
-    sources: List[str] = Field(default_factory=list)
-
-class Conflict(BaseModel):
-    id: str = Field(default="unknown_conflict")
-    node_id: str = Field(default="")
-    conflicting_values: List[str] = Field(default_factory=list)
-    description: str
-
-class UnifiedGraph(BaseModel):
-    nodes: List[GraphNode] = Field(default_factory=list)
-    conflicts: List[Conflict] = Field(default_factory=list)
-    missing_info: List[str] = Field(default_factory=list)
-</file>
-
-<file path="models/inputs.py">
-from dataclasses import dataclass, field
-from typing import Any, List, Dict, Optional
-from enum import Enum
-from pydantic import BaseModel, Field
-
-class DataEnum(str, Enum):
-    CHAT = "messages"
-    DOCUMENT = "documents"
-    PLAIN_TEXT = "plain_text"
-    ACTION = "user_action"
     GRAPHML = "graphml"
 
-@dataclass
-class DataSource:
-    source_type: DataEnum
-    content: Any 
-    file_name: str
-    metadata: Optional[Dict[str, Any]] = field(default_factory=dict)
+class TZSectionEnum(str, Enum):
+    GENERAL = "general_info"
+    STACK = "tech_stack"
+    FUNCTIONAL = "functional_req"
+    INTERFACE = "ui_ux"
+    UNKNOWN = "uncategorized"
 
-# --- НОВАЯ СТРУКТУРА ДЛЯ СВОЙСТВ ---
-class KeyValue(BaseModel):
-    key: str = Field(description="Название свойства (например, 'status')")
-    value: str = Field(description="Значение свойства (например, 'active')")
-
-class GraphNode(BaseModel):
-    id: str = Field(description="ID сущности")
-    label: str = Field(description="Тип сущности")
-    content: str = Field(default="", description="Текстовое описание") # <-- ДОБАВЛЕНО
-    properties: List[KeyValue] = Field(default_factory=list)
-
-class GraphEdge(BaseModel):
-    source: str
-    target: str
-    relation: str
-
-class ExtractedKnowledge(BaseModel):
-    summary: str = Field(description="Краткая выжимка", default="") 
-    nodes: List[GraphNode] = Field(default_factory=list)
-    edges: List[GraphEdge] = Field(default_factory=list)
-    source_window_ref: str = Field(default="")
-</file>
-
-<file path="Parser/output/telegram_backend_team.graphml">
-<?xml version='1.0' encoding='utf-8'?>
-<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
-  <key id="d13" for="edge" attr.name="added_at" attr.type="string" />
-  <key id="d12" for="edge" attr.name="source_ref" attr.type="string" />
-  <key id="d11" for="edge" attr.name="evidence" attr.type="string" />
-  <key id="d10" for="edge" attr.name="relation" attr.type="string" />
-  <key id="d9" for="node" attr.name="data_volume" attr.type="string" />
-  <key id="d8" for="node" attr.name="size" attr.type="string" />
-  <key id="d7" for="node" attr.name="estimated_effort" attr.type="string" />
-  <key id="d6" for="node" attr.name="status" attr.type="string" />
-  <key id="d5" for="node" attr.name="role" attr.type="string" />
-  <key id="d4" for="node" attr.name="description" attr.type="string" />
-  <key id="d3" for="node" attr.name="history" attr.type="string" />
-  <key id="d2" for="node" attr.name="label" attr.type="string" />
-  <key id="d1" for="node" attr.name="name" attr.type="string" />
-  <key id="d0" for="graph" attr.name="name" attr.type="string" />
-  <graph edgedefault="directed">
-    <node id="person_alexandr">
-      <data key="d1">Александр</data>
-      <data key="d2">Person</data>
-      <data key="d3">{"description": {"value": "Александр — Сотрудник, интересующийся причиной простоя сервиса.", "timestamp": "2026-02-27T02:48:55.186046", "source": "telegram_backend_team::thread_2_msg_25_to_32"}, "role": {"value": "Участник обсуждения, вероятно, руководитель", "timestamp": "2026-02-27T02:49:07.322782", "source": "telegram_backend_team::thread_4_msg_58_to_60"}}</data>
-      <data key="d4">Александр — Сотрудник, интересующийся причиной простоя сервиса.</data>
-      <data key="d5">Участник обсуждения, вероятно, руководитель</data>
-    </node>
-    <node id="task_oauth_authorization">
-      <data key="d1">OAuth авторизация</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="person_grisha">
-      <data key="d1">Гриша</data>
-      <data key="d2">Person</data>
-      <data key="d3">{"description": {"value": "Гриша — Сотрудник, который допустил ошибку в коде, вызвавшую проблему с базой данных.", "timestamp": "2026-02-27T02:48:55.186046", "source": "telegram_backend_team::thread_2_msg_25_to_32"}}</data>
-      <data key="d4">Гриша — Сотрудник, который допустил ошибку в коде, вызвавшую проблему с базой данных.</data>
-    </node>
-    <node id="requirement_use_google_oauth">
-      <data key="d1">Использовать Google OAuth</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="requirement_use_github_oauth_in_second_iteration">
-      <data key="d1">GitHub во второй итерации</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="person_maria">
-      <data key="d1">Мария</data>
-      <data key="d2">Person</data>
-      <data key="d3">{"role": {"value": "Участник обсуждения", "timestamp": "2026-02-27T02:49:07.322782", "source": "telegram_backend_team::thread_4_msg_58_to_60"}}</data>
-      <data key="d5">Участник обсуждения</data>
-    </node>
-    <node id="task_implement_google_oauth">
-      <data key="d1">Реализовать Google OAuth</data>
-      <data key="d2">Component</data>
-      <data key="d3">{"name": {"value": "authlib", "timestamp": "2026-02-27T02:48:41.571534", "source": "telegram_backend_team::thread_0_msg_1_to_16"}}</data>
-    </node>
-    <node id="task_implement_github_oauth">
-      <data key="d1">Реализовать GitHub OAuth</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="task_use_env_for_secrets">
-      <data key="d1">Использовать ENV для секретов</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="person_sergey">
-      <data key="d1">Сергей</data>
-      <data key="d2">Person</data>
-      <data key="d3">{"description": {"value": "Сергей — Сотрудник, который обнаружил проблему с базой данных и выполнил откат.", "timestamp": "2026-02-27T02:48:55.186046", "source": "telegram_backend_team::thread_2_msg_25_to_32"}, "role": {"value": "Участник обсуждения", "timestamp": "2026-02-27T02:49:07.322782", "source": "telegram_backend_team::thread_4_msg_58_to_60"}}</data>
-      <data key="d4">Сергей — Сотрудник, который обнаружил проблему с базой данных и выполнил откат.</data>
-      <data key="d5">Участник обсуждения</data>
-    </node>
-    <node id="component_env">
-      <data key="d1">ENV</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="task_store_users_in_postgres">
-      <data key="d1">Хранить пользователей в PostgreSQL</data>
-      <data key="d2">Requirement</data>
-      <data key="d3">{"name": {"value": "Использовать PostgreSQL 16", "timestamp": "2026-02-27T02:48:41.571534", "source": "telegram_backend_team::thread_0_msg_1_to_16"}}</data>
-    </node>
-    <node id="component_mongodb">
-      <data key="d1">MongoDB</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="component_postgresql">
-      <data key="d1">PostgreSQL</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="concept_acid">
-      <data key="d1">ACID</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="task_ensure_api_returns_json">
-      <data key="d1">API должен отдавать JSON</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="component_postgresql_16">
-      <data key="d1">PostgreSQL 16</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="concept_sprint">
-      <data key="d1">Спринт</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="concept_api">
-      <data key="d1">API</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="concept_json">
-      <data key="d1">JSON</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="concept_design">
-      <data key="d1">Дизайн</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="api_v1_login">
-      <data key="d2">Component</data>
-    </node>
-    <node id="cors_error">
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="localhost_3000">
-      <data key="d2">Concept</data>
-    </node>
-    <node id="port_8080">
-      <data key="d2">Concept</data>
-    </node>
-    <node id="requirement_use_postgres_for_users_and_transactions">
-      <data key="d4">Поправь конфиг</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="nginx_configuration">
-      <data key="d4">Это вообще на уровне Nginx надо решать</data>
-      <data key="d2">Task</data>
-      <data key="d3">{"description": {"value": "Это вообще на уровне Nginx надо решать", "timestamp": "2026-02-27T02:48:47.879233", "source": "telegram_backend_team::thread_1_msg_17_to_24"}}</data>
-    </node>
-    <node id="refresh_token_storage">
-      <data key="d4">refresh token мы храним в httpOnly куке?</data>
-      <data key="d2">Task</data>
-      <data key="d3">{"description": {"value": "refresh token мы храним в httpOnly куке?", "timestamp": "2026-02-27T02:48:47.879233", "source": "telegram_backend_team::thread_1_msg_17_to_24"}}</data>
-    </node>
-    <node id="http_only_cookie">
-      <data key="d2">Concept</data>
-    </node>
-    <node id="xss_prevention">
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="zabbix_bot">
-      <data key="d4">Zabbix Bot — Бот, отправляющий оповещения о нагрузке на серверы.</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="production_db">
-      <data key="d4">production-db — Сервер баз данных в продакшене.</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="production_db_high_cpu_load">
-      <data key="d4">High CPU load on production-db (99%) — Оповещение о высокой нагрузке на CPU на сервере production-db, достигающей 99%.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="deployment_on_friday_evening">
-      <data key="d4">деплоил в пятницу вечером — Действие по развертыванию кода в продакшене в пятницу вечером.</data>
-      <data key="d2">Task</data>
-      <data key="d3">{"description": {"value": "Мониторинг после развертывания", "timestamp": "2026-02-27T02:49:07.322782", "source": "telegram_backend_team::thread_4_msg_58_to_60"}}</data>
-    </node>
-    <node id="query_without_index">
-      <data key="d4">запрос без индекса — Запрос к базе данных, который выполняется без использования индекса, что приводит к проблемам с производительностью.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="task_rollback">
-      <data key="d4">откат — Действие по возвращению базы данных к предыдущему стабильному состоянию.</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="task_check_logs">
-      <data key="d4">смотрю логи — Проверка логов для выявления причины проблемы.</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="email_search">
-      <data key="d4">поиск по email — Функциональность поиска пользователей по адресу электронной почты.</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="service_downtime">
-      <data key="d4">сервис лежит — Состояние, когда сервис недоступен или не функционирует должным образом.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="grisha_deployed_buggy_code">
-      <data key="d4">Гриша залил кривой код — Развертывание некорректного или содержащего ошибки кода.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="database_recovery">
-      <data key="d4">База оживает — Процесс восстановления работоспособности базы данных после сбоя.</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="missing_index_on_email_normalized">
-      <data key="d4">Забыл индекс на поле email_normalized — Отсутствие необходимого индекса на поле 'email_normalized' в базе данных.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="person_elena">
-      <data key="d5">HR</data>
-      <data key="d2">Person</data>
-    </node>
-    <node id="pizza_order">
-      <data key="d6">ordered</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="dark_theme_requirement">
-      <data key="d6">requested</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="css_variables_refactoring">
-      <data key="d7">3 days</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="theme_setting_storage">
-      <data key="d4">Theme setting should be stored in user profile for cross-device synchronization.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="add_theme_field_to_users_table">
-      <data key="d4">Add 'theme' field to users table.</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="migration_writing">
-      <data key="d6">to be reviewed</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="users_table">
-      <data key="d1">users</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="redis_for_authorization">
-      <data key="d4">Redis is needed for authorization to store sessions.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="redis_component">
-      <data key="d1">Redis</data>
-      <data key="d8">small</data>
-      <data key="d9">couple of megabytes</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="authorization_session_storage">
-      <data key="d4">Storing authorization session information.</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="session_keys">
-      <data key="d4">Identifiers for active user sessions.</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="release_in_tuesday">
-      <data key="d6">Запланировано</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="good_weekend">
-      <data key="d2">Concept</data>
-    </node>
-    <edge source="person_alexandr" target="concept_sprint">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Александр: Коллеги, стартуем спринт.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="task_oauth_authorization">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Александр: Коллеги, стартуем спринт. Главная задача - OAuth авторизация.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="requirement_use_google_oauth">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Александр: Давайте начнем с Google.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="requirement_use_github_oauth_in_second_iteration">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Александр: GitHub во второй итерации.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="task_store_users_in_postgres">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Фиксируем: ставим PostgreSQL 16.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="component_postgresql_16">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Александр: Фиксируем: ставим PostgreSQL 16.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="refresh_token_storage">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Александр: Гриша, а refresh token мы храним в httpOnly куке?</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_alexandr" target="service_downtime">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">[2026-02-27T22:56:00] Александр: Что случилось? Почему сервис лежит?</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_alexandr" target="pizza_order">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Мне с грибами.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_alexandr" target="dark_theme_requirement">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Вернемся к делам. Клиент хочет темную тему к релизу.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_alexandr" target="theme_setting_storage">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Да, надо хранить. Чтобы на телефоне и компе синхронилось.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_alexandr" target="redis_component">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Утверждаем Redis.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_alexandr" target="release_in_tuesday">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Александр: Всем спасибо за неделю. Релиз во вторник.</data>
-      <data key="d12">telegram_backend_team::thread_4_msg_58_to_60</data>
-      <data key="d13">2026-02-27T02:49:07.322782</data>
-    </edge>
-    <edge source="person_grisha" target="task_oauth_authorization">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Гриша[в ответ Александр: "Коллеги, стартуем спринт. Главная задача..."]: Принял.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="task_implement_google_oauth">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Гриша: Ок, тогда я беру либу authlib.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="component_env">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: Все будет в .env.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="task_store_users_in_postgres">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Гриша: Не, для юзеров и транзакций нужна реляционка. Я за Postgres.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="component_mongodb">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: В текущую Монгу?</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="concept_acid">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Гриша: Монга не дает ACID. Если платеж отвалится, мы потеряем данные.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="component_postgresql">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша: Нужен PG.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="component_postgresql_16">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша[в ответ Александр: "Фиксируем: ставим PostgreSQL 16...."]: [FLAG: CONFIRMATION]</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="task_ensure_api_returns_json">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Мне без разницы, главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="localhost_3000">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: Странно, я разрешил localhost:3000.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_grisha" target="person_sergey">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша: Сергей, мы пока на локалке. На стейдже ты настроишь.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_grisha" target="http_only_cookie">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: Да, чтобы XSS не прошел.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879777</data>
-    </edge>
-    <edge source="person_grisha" target="xss_prevention">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Да, чтобы XSS не прошел.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879777</data>
-    </edge>
-    <edge source="person_grisha" target="deployment_on_friday_evening">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T22:39:00] Гриша[в ответ Сергей: "Какого черта? Кто деплоил в пятницу вече..."]: Я...</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186046</data>
-    </edge>
-    <edge source="person_grisha" target="task_check_logs">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T22:46:00] Гриша: Понял, смотрю логи.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_grisha" target="email_search">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:46:00] Гриша: Понял, смотрю логи. Кажется, это поиск по email.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_grisha" target="grisha_deployed_buggy_code">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T22:58:00] Сергей: Гриша залил кривой код.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_grisha" target="missing_index_on_email_normalized">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T23:00:00] Гриша: Сорри. Забыл индекс на поле email_normalized.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_grisha" target="pizza_order">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша: Мне 4 сыра.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_grisha" target="add_theme_field_to_users_table">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Гриша: Тогда мне нужно добавить поле `theme` в таблицу users.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_grisha" target="migration_writing">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Гриша: Ладно-ладно, напишу и скину тебе на ревью.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_grisha" target="redis_for_authorization">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша: Саша, я тут подумал. Для авторизации нам нужен Redis. Хранить сессий в PG медленно.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_grisha" target="redis_component">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: Пару мегабайт. Чисто ключи сессий.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="requirement_use_google_oauth" target="task_implement_google_oauth">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Александр: Давайте начнем с Google.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="requirement_use_github_oauth_in_second_iteration" target="task_implement_github_oauth">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Александр: GitHub во второй итерации.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="concept_design">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: На дизайне нарисованы обе кнопки.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="task_ensure_api_returns_json">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Мне без разницы, главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="concept_api">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="concept_json">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="api_v1_login">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Гриша, я стучусь на /api/v1/login и получаю CORS error.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_maria" target="cors_error">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Гриша, я стучусь на /api/v1/login и получаю CORS error.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_maria" target="port_8080">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: У меня порт 8080.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_maria" target="requirement_use_postgres_for_users_and_transactions">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Мария: У меня порт 8080. Поправь конфиг.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_maria" target="pizza_order">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Мария[в ответ Елена (HR): "Ребята, выдыхаем! Давайте закажем пиццу ..."]: О, я за! Пепперони.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_maria" target="css_variables_refactoring">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Мария[в ответ Александр: "Вернемся к делам. Клиент хочет темную те..."]: Это переделывать все CSS переменные... Дня 3 работы.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_maria" target="theme_setting_storage">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Мария: Нет, только если хранить настройку в профиле юзера.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_maria" target="dark_theme_requirement">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Александр: Мария, после обеда оцени точно сроки по Темной теме.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_maria" target="good_weekend">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Хороших выходных!</data>
-      <data key="d12">telegram_backend_team::thread_4_msg_58_to_60</data>
-      <data key="d13">2026-02-27T02:49:07.322782</data>
-    </edge>
-    <edge source="task_implement_google_oauth" target="task_implement_google_oauth">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Ок, тогда я беру либу authlib.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="task_use_env_for_secrets">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Сергей: Только не хардкодьте секреты в код, используйте ENV!</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="component_mongodb">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Сергей: У нас уже есть MongoDB на проде.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="component_postgresql">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Сергей: Поднимать еще и Постгрес — это мне лишний геморрой.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="component_postgresql_16">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Сергей[в ответ Александр: "Фиксируем: ставим PostgreSQL 16...."]: [FLAG: CONFIRMATION]</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="nginx_configuration">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Сергей: Это вообще на уровне Nginx надо решать, а не в коде.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_sergey" target="deployment_on_friday_evening">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Сергей: Я мониторю, если что.</data>
-      <data key="d12">telegram_backend_team::thread_4_msg_58_to_60</data>
-      <data key="d13">2026-02-27T02:49:07.322782</data>
-    </edge>
-    <edge source="person_sergey" target="query_without_index">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">[2026-02-27T22:41:00] Сергей: У тебя там запрос без индекса положил базу.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186046</data>
-    </edge>
-    <edge source="person_sergey" target="task_rollback">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T22:41:00] Сергей: У тебя там запрос без индекса положил базу. Я делаю откат (rollback).</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_sergey" target="database_recovery">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:58:00] Сергей: Гриша залил кривой код. Я откатил. База оживает.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_sergey" target="migration_writing">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Сергей[в ответ Гриша: "Тогда мне нужно добавить поле `theme` в ..."]: Только миграцию нормально напиши в этот раз!</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_sergey" target="redis_component">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Сергей: Тогда добро. Дам доступы.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="task_store_users_in_postgres" target="component_postgresql_16">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Александр: Фиксируем: ставим PostgreSQL 16.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="task_ensure_api_returns_json" target="concept_json">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Мария: главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="task_ensure_api_returns_json" target="concept_api">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Мария: главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="zabbix_bot" target="production_db_high_cpu_load">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">[2026-02-27T22:32:00] Zabbix Bot: [ALERT] High CPU load on production-db (99%)</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186046</data>
-    </edge>
-    <edge source="production_db_high_cpu_load" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:32:00] Zabbix Bot: [ALERT] High CPU load on production-db (99%)</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186046</data>
-    </edge>
-    <edge source="query_without_index" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:41:00] Сергей: У тебя там запрос без индекса положил базу.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="task_rollback" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:41:00] Сергей: У тебя там запрос без индекса положил базу. Я делаю откат (rollback).</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="grisha_deployed_buggy_code" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:58:00] Сергей: Гриша залил кривой код.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="database_recovery" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:58:00] Сергей: Гриша залил кривой код. Я откатил. База оживает.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="missing_index_on_email_normalized" target="email_search">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T23:00:00] Гриша: Сорри. Забыл индекс на поле email_normalized.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="missing_index_on_email_normalized" target="query_without_index">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T23:00:00] Гриша: Сорри. Забыл индекс на поле email_normalized.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_elena" target="pizza_order">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Елена (HR): Ок, заказала. Через 40 мин будет.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="css_variables_refactoring" target="dark_theme_requirement">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Мария[в ответ Александр: "Вернемся к делам. Клиент хочет темную те..."]: Это переделывать все CSS переменные... Дня 3 работы.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="add_theme_field_to_users_table" target="users_table">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Тогда мне нужно добавить поле `theme` в таблицу users.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="add_theme_field_to_users_table" target="theme_setting_storage">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Гриша: Тогда мне нужно добавить поле `theme` в таблицу users.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="migration_writing" target="add_theme_field_to_users_table">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Сергей[в ответ Гриша: "Тогда мне нужно добавить поле `theme` в ..."]: Только миграцию нормально напиши в этот раз!</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="redis_for_authorization" target="authorization_session_storage">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Саша, я тут подумал. Для авторизации нам нужен Redis. Хранить сессий в PG медленно.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="redis_component" target="authorization_session_storage">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Саша, я тут подумал. Для авторизации нам нужен Redis. Хранить сессий в PG медленно.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="redis_component" target="session_keys">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Пару мегабайт. Чисто ключи сессий.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <data key="d0">telegram_backend_team</data>
-  </graph>
-</graphml>
-</file>
-
-<file path="Parser/extractor.py">
-import os
-import logging
-from tenacity import retry, stop_after_attempt, wait_exponential
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate
-from models import ProjectGlossary, WindowExtractionResult
-from global_glossary import GlobalGlossary
-
-logger = logging.getLogger(__name__)
-
-class AsyncGraphExtractor:
-    def __init__(self, global_glossary: GlobalGlossary):
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError("GOOGLE_API_KEY is missing")
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0.0)
-        self.glossary_llm = self.llm.with_structured_output(ProjectGlossary)
-        self.graph_llm = self.llm.with_structured_output(WindowExtractionResult)
-        self.global_glossary = global_glossary
-
-    @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=4, max=60))
-    async def agenerate_glossary(self, text_content: str) -> ProjectGlossary:
-        """ПРОХОД 1: Глоссарий"""
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """Ты аналитик. Найди ВСЕ ключевые сущности (Люди, Компоненты, Задачи, Требования).
-Верни их в snake_case ID. Используй только предоставленные типы."""),
-            ("user", "{text}")
-        ])
-        chain = prompt | self.glossary_llm
-        return await chain.ainvoke({"text": text_content})
-
-    @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=1, min=4, max=60))
-    async def aextract_graph(self, text_content: str, glossary: ProjectGlossary, prev_summary: str) -> WindowExtractionResult:
-        """ПРОХОД 2: Извлечение графа"""
-        glossary_str = "\n".join([f"- {e.id} ({e.label.value}): {e.name} — {e.description}" for e in glossary.entities])
-
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """Ты Senior Data Architect. Извлеки граф знаний.
-СТРОГИЕ ПРАВИЛА:
-1. Если сущность из текста АБСОЛЮТНО СОВПАДАЕТ по смыслу с сущностью из глоссария — используй старый ID.
-2. Если сущность похожа, но является другой (например, Redis vs Postgres, Индекс vs База) — СОЗДАЙ НОВЫЙ ID.
-3. Учитывай ПРЕДЫДУЩИЙ КОНТЕКСТ для местоимений.
-4. [FLAG: CONFIRMATION] = AGREES_WITH или ASSIGNED_TO.
-5. Для каждой связи добавляй evidence — точную цитату из текста.
-
-
-ГЛОССАРИЙ:
-{glossary}
-
-ПРЕДЫДУЩИЙ КОНТЕКСТ:
-{prev_summary}"""),
-            ("user", "Текст:\n{text}")
-        ])
-        chain = prompt | self.graph_llm
-        return await chain.ainvoke({
-            "glossary": glossary_str or "Пусто",
-            "prev_summary": prev_summary or "Начало диалога.",
-            "text": text_content
-        })
-</file>
-
-<file path="Parser/global_glossary.py">
-from typing import Dict, Optional
-from models import ProjectGlossary, GlossaryItem
-
-class GlobalGlossary:
-    """Глобальный глоссарий проекта — защищает от дубликатов сущностей"""
-    def __init__(self):
-        self.entities: Dict[str, GlossaryItem] = {}
-        self.name_to_id: Dict[str, str] = {}  # для fuzzy matching
-
-    def _find_similar(self, name: str) -> Optional[str]:
-        """Простой fuzzy match по имени"""
-        name_lower = name.lower().strip()
-        for stored_name, eid in self.name_to_id.items():
-            if (name_lower in stored_name or stored_name in name_lower or
-                len(set(name_lower) & set(stored_name)) / len(name_lower) > 0.7):
-                return eid
-        return None
-
-    def merge(self, new_glossary: ProjectGlossary) -> ProjectGlossary:
-        """Мёрджит новые сущности в глобальный глоссарий"""
-        for entity in new_glossary.entities:
-            existing_id = self._find_similar(entity.name) or self.entities.get(entity.id)
-            if existing_id:
-                entity.id = existing_id  # используем уже существующий ID
-            else:
-                # Добавляем новую
-                self.entities[entity.id] = entity
-                self.name_to_id[entity.name.lower()] = entity.id
-        return new_glossary
-</file>
-
-<file path="Parser/graph_manager.py">
-import networkx as nx
-import json
-import logging
-from datetime import datetime
-from models import WindowExtractionResult
-
-logger = logging.getLogger(__name__)
-
-class KnowledgeGraphManager:
-    def __init__(self, project_name: str):
-        self.graph = nx.DiGraph(name=project_name)
-        logger.info(f"Создан граф проекта: {project_name}")
-
-    def smart_merge_node(self, node_id: str, new_properties: dict, source_ref: str):
-        """Умное слияние свойств + история"""
-        if not self.graph.has_node(node_id):
-            self.graph.add_node(node_id, **new_properties)
-            return
-
-        current = self.graph.nodes[node_id]
-        if "history" not in current:
-            current["history"] = {}
-
-        for k, new_val in new_properties.items():
-            old_val = current.get(k)
-            if old_val is None or (isinstance(new_val, str) and len(str(new_val)) > len(str(old_val)) + 3):
-                current[k] = new_val
-
-            # История
-            current["history"][k] = {
-                "value": new_val,
-                "timestamp": datetime.now().isoformat(),
-                "source": source_ref
-            }
-
-    def apply_extraction(self, result: WindowExtractionResult, source_ref: str):
-        logger.info(f"Применяем извлечение из {source_ref} ({len(result.nodes)} узлов, {len(result.edges)} связей)")
-
-        # Узлы
-        for node in result.nodes:
-            self.smart_merge_node(node.id, node.properties, source_ref)
-            self.graph.nodes[node.id]["label"] = node.label.value
-
-        # Рёбра
-        for edge in result.edges:
-            if not self.graph.has_node(edge.source):
-                self.graph.add_node(edge.source, label="Unknown")
-            if not self.graph.has_node(edge.target):
-                self.graph.add_node(edge.target, label="Unknown")
-
-            self.graph.add_edge(
-                edge.source, edge.target,
-                relation=edge.relation.value,
-                evidence=edge.evidence,
-                source_ref=source_ref,
-                added_at=datetime.now().isoformat()
-            )
-
-    def export_to_graphml(self, filepath: str):
-        export_g = self.graph.copy()
-        for _, data in export_g.nodes(data=True):
-            for k, v in list(data.items()):
-                if isinstance(v, (dict, list)):
-                    data[k] = json.dumps(v, ensure_ascii=False)
-        for _, _, data in export_g.edges(data=True):
-            for k, v in list(data.items()):
-                if isinstance(v, (dict, list)):
-                    data[k] = json.dumps(v, ensure_ascii=False)
-        nx.write_graphml(export_g, filepath)
-        logger.info(f"Граф экспортирован в {filepath}")
-</file>
-
-<file path="Parser/main.py">
-import os
-import json
-import asyncio
-from dotenv import load_dotenv
-from models import DataSource, DataEnum
-from processor import Layer1Processor
-from test_data_gen import get_huge_chat_dataset
-
-load_dotenv()
-import logging
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-async def main():
-    # 1. Создаем тестовые данные (Имитация сложного диалога)
-    chat_data = {
-        "messages": get_huge_chat_dataset()
-    }
-
-    source = DataSource(
-        source_type=DataEnum.CHAT,
-        content=chat_data["messages"],
-        file_name="telegram_backend_team"
-    )
-
-    # 2. Инициализация и запуск Асинхронного пайплайна
-    processor = Layer1Processor()
-
-    # Запускаем обработку
-    graph_manager = await processor.process_source(source)
-
-    # 3. Сохранение результатов
-    os.makedirs("output", exist_ok=True)
-
-    # Экспорт в GraphML (Для визуализации в Gephi / Neo4j)
-    graphml_path = os.path.join("output", f"{source.file_name}.graphml")
-    graph_manager.export_to_graphml(graphml_path)
-    print(f"✅ Граф сохранен в формате GraphML: {graphml_path}")
-
-    # Вывод статистики
-    print("\n📊 Итоговая статистика графа:")
-    print(f"Узлов: {graph_manager.graph.number_of_nodes()}")
-    print(f"Связей: {graph_manager.graph.number_of_edges()}")
-
-
-if __name__ == "__main__":
-    # Запуск асинхронного event loop
-    asyncio.run(main())
-</file>
-
-<file path="Parser/models.py">
-from dataclasses import dataclass
-from typing import Any, List, Dict, Optional
-from enum import Enum
-from pydantic import BaseModel, Field
-
-class DataEnum(Enum):
-    CHAT = "messages"
-    DOCUMENT = "documents"
-    PLAIN_TEXT = "plain_text"
-
-@dataclass
-class DataSource:
-    source_type: DataEnum
-    content: Any
-    file_name: str
-    metadata: Optional[Dict[str, Any]] = None
-
-# --- СТРОГАЯ ОНТОЛОГИЯ ---
 class NodeLabel(str, Enum):
     PERSON = "Person"
     COMPONENT = "Component"
@@ -2002,762 +933,10 @@ class EdgeRelation(str, Enum):
     RELATES_TO = "RELATES_TO"
     AGREES_WITH = "AGREES_WITH"
     MENTIONS = "MENTIONS"
-
-# --- СХЕМЫ ДЛЯ LLM ---
-class GlossaryItem(BaseModel):
-    id: str = Field(description="Snake_case ID сущности (например: user_grisha, db_postgres)")
-    name: str = Field(description="Человекочитаемое название")
-    label: NodeLabel = Field(description="Тип сущности")
-    description: str = Field(description="Краткое описание из контекста")
-
-class ProjectGlossary(BaseModel):
-    entities: List[GlossaryItem] = Field(default_factory=list, description="Список найденных сущностей")
-
-class GraphNode(BaseModel):
-    id: str = Field(description="ID из глоссария")
-    label: NodeLabel
-    properties: Dict[str, str] = Field(default_factory=dict, description="Свойства (статус, детали). Ключи и значения - строки.")
-
-class GraphEdge(BaseModel):
-    source: str = Field(description="ID исходного узла")
-    target: str = Field(description="ID целевого узла")
-    relation: EdgeRelation
-    evidence: str = Field(description="Цитата, подтверждающая связь")
-
-class WindowExtractionResult(BaseModel):
-    summary: str = Field(description="Суммаризация текущего окна")
-    nodes: List[GraphNode] = Field(default_factory=list)
-    edges: List[GraphEdge] = Field(default_factory=list)
 </file>
 
-<file path="Parser/preprocessing.py">
-CONFIRMATION_WORDS = {"ок", "да", "давайте", "плюс", "+", "ага", "согласен", "добро", "ок, да"}
-REJECTION_WORDS = {"не", "нет", "не надо", "минус", "-", "отмена"}
+<file path="utils/__init__.py">
 
-
-def normalize_short_answers(text: str) -> str:
-    if not isinstance(text, str): return ""
-    clean = text.lower().strip().strip(",.!?:")
-    if clean in CONFIRMATION_WORDS: return "[FLAG: CONFIRMATION]"
-    if clean in REJECTION_WORDS: return "[FLAG: REJECTION]"
-    return text
-
-
-def get_clean_text(text_obj) -> str:
-    if isinstance(text_obj, str): return text_obj
-    if isinstance(text_obj, list):
-        return "".join([i if isinstance(i, str) else i.get("text", "") for i in text_obj])
-    return ""
-
-
-def format_chat_message_for_llm(msg: dict, msg_lookup: dict = None) -> str:
-    date = msg.get("date", "Unknown Date")
-    author = msg.get("from", msg.get("author", "Unknown"))
-    text = normalize_short_answers(get_clean_text(msg.get("text", "")))
-
-    reply_str = ""
-    reply_id = msg.get("reply_to_message_id")
-    if reply_id and msg_lookup and reply_id in msg_lookup:
-        r_msg = msg_lookup[reply_id]
-        r_author = r_msg.get("from", "Unknown")
-        r_text = get_clean_text(r_msg.get("text", ""))[:40].replace('\n', ' ')
-        reply_str = f"[в ответ {r_author}: \"{r_text}...\"]"
-
-    return f"[{date}] {author}{reply_str}: {text}".strip()
-</file>
-
-<file path="Parser/processor.py">
-import asyncio
-import logging
-
-import networkx as nx
-
-from models import DataSource, DataEnum
-from windowing import asplit_chat_into_semantic_threads, split_text_into_chunks
-from preprocessing import format_chat_message_for_llm
-from extractor import AsyncGraphExtractor
-from graph_manager import KnowledgeGraphManager
-from global_glossary import GlobalGlossary
-
-logger = logging.getLogger(__name__)
-
-class Layer1Processor:
-    def __init__(self):
-        self.global_glossary = GlobalGlossary()
-        self.extractor = AsyncGraphExtractor(self.global_glossary)
-
-    async def process_source(self, source: DataSource) -> KnowledgeGraphManager:
-        logger.info(f"🚀 Запуск обработки: {source.file_name}")
-        graph_manager = KnowledgeGraphManager(source.file_name)
-
-        if source.source_type == DataEnum.CHAT:
-            await self._process_chat_stateful(source, graph_manager)
-        else:
-            await self._process_text_stateful(source, graph_manager)
-
-        # NEW: Вывод сообществ
-        communities = nx.get_node_attributes(graph_manager.graph, "community")
-        logger.info(f"Найдено сообществ: {len(set(communities.values()))}")
-
-        return graph_manager
-
-    async def _process_chat_stateful(self, source: DataSource, graph_manager: KnowledgeGraphManager):
-        windows = await asplit_chat_into_semantic_threads(source.content)
-        msg_lookup = {m["id"]: m for m in source.content if m.get("type") == "message"}
-        previous_summary = ""
-
-        for window_ref, window_msgs, _ in windows:
-            logger.info(f" -> Окно: {window_ref} ({len(window_msgs)} сообщений)")
-            lines = [format_chat_message_for_llm(m, msg_lookup) for m in window_msgs]
-            text_content = "\n".join(lines)
-
-            # Глоссарий → глобальный мёрдж
-            glossary = await self.extractor.agenerate_glossary(text_content)
-            glossary = self.global_glossary.merge(glossary)
-
-            # Граф
-            result = await self.extractor.aextract_graph(text_content, glossary, previous_summary)
-            previous_summary = result.summary
-
-            graph_manager.apply_extraction(result, f"{source.file_name}::{window_ref}")
-</file>
-
-<file path="Parser/test_data_gen.py">
-import json
-from datetime import datetime, timedelta
-
-
-def get_huge_chat_dataset():
-    """
-    Генерация 100+ сообщений с 5-6 ветками обсуждения,
-    разрывами по времени и перекрестными ссылками.
-    """
-    base_date = datetime(2026, 2, 24, 10, 0, 0)
-
-    messages = []
-    msg_id = 1
-
-    def add_msg(author, text, time_offset_minutes=0, reply_to=None):
-        nonlocal msg_id, base_date
-        base_date += timedelta(minutes=time_offset_minutes)
-        msg = {
-            "id": msg_id,
-            "type": "message",
-            "date": base_date.isoformat(),
-            "from": author,
-            "text": text
-        }
-        if reply_to:
-            msg["reply_to_message_id"] = reply_to
-        messages.append(msg)
-        current_id = msg_id
-        msg_id += 1
-        return current_id
-
-    # --- ТЕМА 1: АВТОРИЗАЦИЯ (OAuth) ---
-    # Начало рабочего дня
-    m1 = add_msg("Александр", "Коллеги, стартуем спринт. Главная задача - OAuth авторизация.")
-    m2 = add_msg("Гриша", "Принял. Будем делать через Google или GitHub?", 2, m1)
-    m3 = add_msg("Мария", "На дизайне нарисованы обе кнопки.", 5, m1)
-    m4 = add_msg("Александр", "Давайте начнем с Google. GitHub во второй итерации.", 2, m2)
-    m5 = add_msg("Гриша", "Ок, тогда я беру либу authlib.", 1, m4)
-    add_msg("Сергей", "Только не хардкодьте секреты в код, используйте ENV!", 10)
-    add_msg("Гриша", "Обижаешь, Серега. Все будет в .env.", 2)
-
-    # --- ТЕМА 2: ВЫБОР БАЗЫ ДАННЫХ (Спор) ---
-    # Пауза 3 часа (Обед + работа)
-    base_date += timedelta(hours=3)
-
-    m8 = add_msg("Александр", "Кстати, а куда юзеров складываем? В текущую Монгу?")
-    m9 = add_msg("Гриша", "Не, для юзеров и транзакций нужна реляционка. Я за Postgres.", 5, m8)
-    m10 = add_msg("Сергей",
-                  "Зачем нам зоопарк технологий? У нас уже есть MongoDB на проде. Поднимать еще и Постгрес — это мне лишний геморрой.",
-                  2, m9)
-    add_msg("Гриша", "Монга не дает ACID. Если платеж отвалится, мы потеряем данные. Нужен PG.", 3)
-    add_msg("Мария", "Мне без разницы, главное чтобы API отдавал JSON.", 10)
-    add_msg("Сергей", "Ладно. Но если PG упадет, поднимать будешь сам.", 5)
-    m14 = add_msg("Александр", "Фиксируем: ставим PostgreSQL 16.", 2)
-    add_msg("Гриша", "+", 1, m14)
-    add_msg("Сергей", "Ок", 1, m14)
-
-    # --- ТЕМА 3: ПРОБЛЕМЫ С FRONTEND (CORS) ---
-    # Следующий день, утро
-    base_date += timedelta(hours=18)
-
-    m17 = add_msg("Мария", "Гриша, я стучусь на /api/v1/login и получаю CORS error.", 0)
-    m18 = add_msg("Гриша", "Странно, я разрешил localhost:3000.", 10, m17)
-    add_msg("Мария", "У меня порт 8080. Поправь конфиг.", 2)
-    m20 = add_msg("Сергей", "Это вообще на уровне Nginx надо решать, а не в коде.", 5)
-    add_msg("Гриша", "Сергей, мы пока на локалке. На стейдже ты настроишь.", 2, m20)
-    add_msg("Мария", "Всё заработало, спасибо.", 15)
-
-    # --- ВНЕЗАПНЫЙ ВОПРОС ПО ТЕМЕ 1 ---
-    add_msg("Александр", "Гриша, а refresh token мы храним в httpOnly куке?", 5)
-    add_msg("Гриша", "Да, чтобы XSS не прошел.", 2)
-
-    # --- ТЕМА 4: ИНЦИДЕНТ (CRASH) ---
-    # Прошло 2 дня. Ночь.
-    base_date += timedelta(days=2, hours=14)  # 02:00 ночи
-
-    m25 = add_msg("Zabbix Bot", "[ALERT] High CPU load on production-db (99%)", 0)
-    m26 = add_msg("Сергей", "Какого черта? Кто деплоил в пятницу вечером?", 5, m25)
-    m27 = add_msg("Гриша", "Я...", 2, m26)
-    add_msg("Сергей", "У тебя там запрос без индекса положил базу. Я делаю откат (rollback).", 2)
-    add_msg("Гриша", "Понял, смотрю логи. Кажется, это поиск по email.", 5)
-    add_msg("Александр", "Что случилось? Почему сервис лежит?", 10)
-    add_msg("Сергей", "Гриша залил кривой код. Я откатил. База оживает.", 2)
-    add_msg("Гриша", "Сорри. Забыл индекс на поле email_normalized.", 2)
-
-    # --- ТЕМА 5: ОФФТОП (ПИЦЦА) ---
-    # Следующий день, обед
-    base_date += timedelta(hours=10)
-
-    m33 = add_msg("Елена (HR)", "Ребята, выдыхаем! Давайте закажем пиццу в офис.", 0)
-    add_msg("Мария", "О, я за! Пепперони.", 2, m33)
-    add_msg("Гриша", "Мне 4 сыра.", 1)
-    add_msg("Сергей", "Я пас, у меня созвон с дата-центром.", 2)
-    add_msg("Александр", "Мне с грибами.", 1)
-    add_msg("Елена (HR)", "Ок, заказала. Через 40 мин будет.", 5)
-    add_msg("Мария", "+", 1)
-    add_msg("Гриша", "спс", 1)
-
-    # --- ТЕМА 6: НОВАЯ ФИЧА (DARK MODE) ---
-    # Через 2 часа
-    base_date += timedelta(hours=2)
-
-    m41 = add_msg("Александр", "Вернемся к делам. Клиент хочет темную тему к релизу.", 0)
-    m42 = add_msg("Мария", "Это переделывать все CSS переменные... Дня 3 работы.", 5, m41)
-    add_msg("Гриша", "Бэкенд это не затрагивает?", 2)
-    add_msg("Мария", "Нет, только если хранить настройку в профиле юзера.", 1)
-    add_msg("Александр", "Да, надо хранить. Чтобы на телефоне и компе синхронилось.", 2)
-    m46 = add_msg("Гриша", "Тогда мне нужно добавить поле `theme` в таблицу users.", 2)
-    add_msg("Сергей", "Только миграцию нормально напиши в этот раз!", 2, m46)
-    add_msg("Гриша", "Ладно-ладно, напишу и скину тебе на ревью.", 1)
-
-    # --- СМЕШАННЫЙ КОНТЕКСТ ---
-    add_msg("Елена (HR)", "Пицца приехала! На кухне.", 15)
-    add_msg("Мария", "Бегу!", 1)
-    add_msg("Александр", "Мария, после обеда оцени точно сроки по Темной теме.", 2)
-    add_msg("Мария", "Хорошо.", 1)
-
-    # --- ДОПОЛНИТЕЛЬНЫЕ ТЕХНИЧЕСКИЕ ДЕТАЛИ (Для проверки глоссария) ---
-    base_date += timedelta(hours=4)
-
-    add_msg("Гриша", "Саша, я тут подумал. Для авторизации нам нужен Redis. Хранить сессии в PG медленно.", 0)
-    add_msg("Сергей", "Опять новый компонент... Redis есть, но маленький. Какой объем данных?", 5)
-    add_msg("Гриша", "Пару мегабайт. Чисто ключи сессий.", 2)
-    add_msg("Сергей", "Тогда добро. Дам доступы.", 2)
-    add_msg("Александр", "Утверждаем Redis.", 1)
-
-    # --- ЗАВЕРШЕНИЕ ---
-    # Пятница вечер
-    base_date += timedelta(days=1)
-
-    add_msg("Александр", "Всем спасибо за неделю. Релиз во вторник.", 0)
-    add_msg("Мария", "Хороших выходных!", 5)
-    add_msg("Сергей", "Я мониторю, если что.", 1)
-
-    # Искусственно раздуваем до 100 сообщений, если не хватило,
-    # добавляя мелкий флуд и уточнения в середину (в реальном коде выше было около 60)
-    # Здесь просто симулируем активную переписку по багам
-    return messages
-
-
-if __name__ == "__main__":
-    data = get_huge_chat_dataset()
-    print(json.dumps(data, indent=2, ensure_ascii=False))
-    print(f"Всего сообщений: {len(data)}")
-</file>
-
-<file path="Parser/vision.py">
-import networkx as nx
-from pyvis.network import Network
-
-
-def visualize_interactive_html(graphml_path: str, output_html: str):
-    # 1. Читаем готовый граф
-    G = nx.read_graphml(graphml_path)
-
-    # 2. Настраиваем интерактивную сеть
-    # select_menu добавляет выпадающий список для поиска узлов
-    net = Network(notebook=False, directed=True, height="800px", width="100%", select_menu=True)
-
-    # Добавляем цвета в зависимости от типа сущности (label)
-    color_map = {
-        "Person": "#ff9999",
-        "Component": "#99ccff",
-        "Task": "#99ff99",
-        "Requirement": "#ffcc99",
-        "Concept": "#e5ccff"
-    }
-
-    # Настраиваем визуальное отображение узлов
-    for node_id, node_data in G.nodes(data=True):
-        label_type = node_data.get("label", "Unknown")
-        node_data["color"] = color_map.get(label_type, "#cccccc")
-        node_data["title"] = f"Type: {label_type}\nID: {node_id}"  # Текст при наведении (tooltip)
-
-        # Заменяем технический ID на красивое имя, если оно есть в свойствах
-        if "name" in node_data:
-            node_data["label"] = node_data["name"]
-
-    # 3. Загружаем данные из NetworkX
-    net.from_nx(G)
-
-    # 4. Включаем физику, чтобы граф красиво "расправился"
-    net.repulsion(node_distance=150, central_gravity=0.2, spring_length=200)
-
-    # 5. Сохраняем в HTML
-    net.show(output_html, notebook=False)
-    print(f"✅ Интерактивный граф сохранен в: {output_html}")
-
-# Пример использования:
-visualize_interactive_html("output/telegram_backend_team.graphml", "output/graph_view.html")
-</file>
-
-<file path="Parser/windowing.py">
-import os
-import asyncio
-import numpy as np
-import networkx as nx
-import community as community_louvain
-from datetime import datetime, timedelta
-from typing import List, Tuple
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-MAX_CHARS_PER_WINDOW = 12000
-OVERLAP_MESSAGES = 6
-SEMANTIC_THRESHOLD = 0.65
-LOOKBACK_WINDOW = 30
-
-# Настройки Rate Limiter
-EMBEDDING_BATCH_SIZE = 20  # Количество текстов за 1 запрос
-EMBEDDING_DELAY = 10  # Задержка в секундах (1.0 сек = макс 60 RPM, безопасно для лимита 100)
-
-
-def parse_date(date_str: str) -> datetime:
-    try:
-        # Обработка разных форматов дат, включая те, что с 'Z'
-        return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-    except:
-        return datetime.now()
-
-
-def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
-    v1 = np.array(vec1)
-    v2 = np.array(vec2)
-    if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:
-        return 0.0
-    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-
-
-async def asplit_chat_into_semantic_threads(messages: List[dict]) -> List[Tuple[str, List[dict], List[dict]]]:
-    """
-    Разбивает чат на семантические треды с использованием графов и эмбеддингов.
-    Включает защиту от Rate Limit API Google.
-    """
-    valid_msgs = [m for m in messages if m.get("type") == "message" and m.get("text")]
-    if not valid_msgs: return []
-
-    # 1. Инициализация модели
-    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
-
-    # Подготовка текстов (защита от пустых строк, которые могут вызвать ошибку API)
-    texts_to_embed = [str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
-    print(f"🧠 Векторизация {len(texts_to_embed)} сообщений (с учетом Rate Limit)...")
-
-    # --- RATE LIMITING LOGIC START ---
-    embeddings = []
-    total_batches = (len(texts_to_embed) + EMBEDDING_BATCH_SIZE - 1) // EMBEDDING_BATCH_SIZE
-
-    for i in range(0, len(texts_to_embed), EMBEDDING_BATCH_SIZE):
-        batch = texts_to_embed[i: i + EMBEDDING_BATCH_SIZE]
-        current_batch_num = (i // EMBEDDING_BATCH_SIZE) + 1
-
-        try:
-            # print(f"   Batch {current_batch_num}/{total_batches}...") # Раскомментировать для дебага
-            batch_result = await embeddings_model.aembed_documents(batch)
-            embeddings.extend(batch_result)
-        except Exception as e:
-            print(f"⚠️ Ошибка эмбеддинга на батче {current_batch_num}: {e}")
-            # Заполняем нулями, чтобы сохранить индексы и не сломать граф
-            embeddings.extend([[0.0] * 768] * len(batch))
-
-        # Ждем перед следующим запросом, чтобы не превысить 100 RPM
-        # 60 RPM = 1 запрос в секунду. Это безопасно.
-        await asyncio.sleep(EMBEDDING_DELAY)
-    # --- RATE LIMITING LOGIC END ---
-
-    # 2. Строим узлы графа
-    G = nx.Graph()
-    for i, msg in enumerate(valid_msgs):
-        G.add_node(msg["id"], msg=msg, vec=embeddings[i], time=parse_date(msg.get("date", "")))
-
-    # 3. Устанавливаем связи (Явные + Семантические)
-    print("🔗 Построение связей...")
-    for i, msg in enumerate(valid_msgs):
-        reply_id = msg.get("reply_to_message_id")
-
-        # А. Явная связь (Reply)
-        if reply_id and G.has_node(reply_id):
-            G.add_edge(msg["id"], reply_id, type="reply")
-            continue
-
-        # Б. Неявная связь (Семантика)
-        best_sim = 0.0
-        best_target_id = None
-        start_idx = max(0, i - LOOKBACK_WINDOW)
-
-        for j in range(start_idx, i):
-            # Проверка времени (не связываем сообщения с разницей > 4 часов)
-            time_diff = G.nodes[msg["id"]]["time"] - G.nodes[valid_msgs[j]["id"]]["time"]
-            if time_diff > timedelta(hours=4):
-                continue
-
-            sim = cosine_similarity(embeddings[i], embeddings[j])
-            if sim > best_sim:
-                best_sim = sim
-                best_target_id = valid_msgs[j]["id"]
-
-        if best_sim >= SEMANTIC_THRESHOLD and best_target_id:
-            G.add_edge(msg["id"], best_target_id, type="semantic", weight=best_sim)
-
-    # 4. Community Detection (Louvain)
-    # ВАЖНО: Запускаем ПОСЛЕ добавления ребер, иначе граф пустой
-    if G.number_of_edges() > 0:
-        try:
-            print("🔍 Выполняем Community Detection (Louvain)...")
-            partition = community_louvain.best_partition(G)  # Louvain работает с ненаправленными графами
-            for node_id, comm_id in partition.items():
-                G.nodes[node_id]["community"] = comm_id
-        except Exception as e:
-            print(f"⚠️ Ошибка Louvain: {e}. Пропускаем этап сообществ.")
-
-    # 5. Извлекаем треды (Связные компоненты)
-    threads = []
-    for component in nx.connected_components(G):
-        thread_msgs = [G.nodes[node_id]["msg"] for node_id in component]
-        thread_msgs.sort(key=lambda x: parse_date(x.get("date", "")))
-        threads.append(thread_msgs)
-
-    threads.sort(key=lambda t: parse_date(t[0].get("date", "")))
-
-    # 6. Нарезка на окна
-    processed_windows = []
-    for thread_idx, thread in enumerate(threads):
-        current_window = []
-        current_chars = 0
-
-        for msg in thread:
-            msg_len = len(str(msg.get("text", "")))
-
-            if current_chars + msg_len > MAX_CHARS_PER_WINDOW and len(current_window) > OVERLAP_MESSAGES:
-                start_id = current_window[0]["id"]
-                end_id = current_window[-1]["id"]
-                window_ref = f"thread_{thread_idx}_msg_{start_id}_to_{end_id}"
-
-                processed_windows.append((window_ref, current_window, []))
-
-                current_window = current_window[-OVERLAP_MESSAGES:]
-                current_chars = sum(len(str(m.get("text", ""))) for m in current_window)
-
-            current_window.append(msg)
-            current_chars += msg_len
-
-        if current_window:
-            start_id = current_window[0]["id"]
-            end_id = current_window[-1]["id"]
-            window_ref = f"thread_{thread_idx}_msg_{start_id}_to_{end_id}"
-            processed_windows.append((window_ref, current_window, []))
-
-    print(f"✅ Чат разбит на {len(processed_windows)} семантических окон.")
-    return processed_windows
-
-
-def split_text_into_chunks(text: str) -> List[Tuple[str, str]]:
-    splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=500)
-    chunks = splitter.split_text(text)
-    return [(f"chunk_{i + 1}", chunk) for i, chunk in enumerate(chunks)]
-</file>
-
-<file path="services/extractor.py">
-import networkx as nx
-import os
-import tempfile
-from typing import List
-from models.inputs import DataSource, DataEnum, ExtractedKnowledge, GraphNode, GraphEdge, KeyValue
-
-class DataExtractorService:
-    def extract(self, source: DataSource) -> ExtractedKnowledge:
-        print(f"🔍 [Extractor] Парсинг GraphML: {source.file_name}")
-
-        if source.source_type != DataEnum.GRAPHML:
-            print("❌ Ошибка: поддерживается только GRAPHML")
-            return ExtractedKnowledge()
-
-        try:
-            # Создаем временный файл для networkx
-            with tempfile.NamedTemporaryFile(mode='w+', suffix='.graphml', delete=False, encoding='utf-8') as tmp:
-                tmp.write(str(source.content))
-                tmp_path = tmp.name
-
-            G = nx.read_graphml(tmp_path)
-            os.remove(tmp_path)
-
-            nodes = []
-            edges = []
-
-            # 1. Парсим Узлы
-            for node_id, attrs in G.nodes(data=True):
-                # Ищем атрибуты (разные сервисы могут называть их по-разному)
-                label = attrs.get('label', attrs.get('d2', 'Unknown'))
-                name = attrs.get('name', attrs.get('d1', node_id))
-                desc = attrs.get('description', attrs.get('d4', ''))
-
-                # Собираем все остальное в properties
-                props = []
-                for k, v in attrs.items():
-                    if k not in ['label', 'name', 'description', 'd1', 'd2', 'd4']:
-                        props.append(KeyValue(key=k, value=str(v)[:100]))
-
-                # Формируем читабельный контент
-                content = name
-                if desc and desc != name:
-                    content += f": {desc}"
-
-                nodes.append(GraphNode(
-                    id=node_id,
-                    label=label,
-                    content=content, # <-- Важно: теперь мы заполняем content сразу
-                    properties=props
-                ))
-
-            # 2. Парсим Ребра
-            for u, v, attrs in G.edges(data=True):
-                relation = attrs.get('relation', attrs.get('d10', 'RELATED_TO'))
-                edges.append(GraphEdge(
-                    source=u,
-                    target=v,
-                    relation=relation
-                ))
-
-            return ExtractedKnowledge(
-                summary=f"Граф из файла {source.file_name}",
-                nodes=nodes,
-                edges=edges,
-                source_window_ref=source.file_name
-            )
-
-        except Exception as e:
-            print(f"❌ Ошибка парсинга: {e}")
-            return ExtractedKnowledge(summary=f"Error: {e}")
-</file>
-
-<file path="services/generator.py">
-from models.graph import UnifiedGraph
-from models.document import FullTZDocument, GeneratedSection
-from models.enums import TZSectionEnum
-from utils.llm_client import call_llm_text
-
-class TZGeneratorService:
-    def generate(self, graph: UnifiedGraph, template: dict) -> FullTZDocument:
-        print(f"📝 [Generator] Генерация документа...")
-
-        if graph.conflicts:
-            print(f"⚠️ Найдено {len(graph.conflicts)} конфликтов. Генерация продолжается, но конфликты будут отмечены.")
-
-        sections = []
-        # Определяем порядок разделов
-        sections_to_write = [
-            TZSectionEnum.GENERAL,
-            TZSectionEnum.FUNCTIONAL,
-            TZSectionEnum.STACK,
-            TZSectionEnum.INTERFACE
-        ]
-
-        for sec_enum in sections_to_write:
-            # Фильтруем узлы для текущего раздела
-            relevant_nodes = [n for n in graph.nodes if n.target_section == sec_enum]
-            
-            if not relevant_nodes:
-                continue
-
-            print(f"  > Пишем раздел: {sec_enum.value} ({len(relevant_nodes)} узлов)")
-            
-            node_context = "\n".join([f"- {n.label} ({n.id}): {n.content}" for n in relevant_nodes])
-            
-            prompt = f"""
-            Напиши раздел Технического Задания: '{sec_enum.value}'.
-            Используй ТОЛЬКО предоставленные факты. Стиль: формально-деловой, ГОСТ.
-            Используй Markdown заголовки и списки.
-            """
-            
-            content = call_llm_text(prompt, data=node_context)
-            
-            sections.append(GeneratedSection(
-                section_id=sec_enum,
-                title=sec_enum.name,
-                content_markdown=content,
-                used_node_ids=[n.id for n in relevant_nodes]
-            ))
-
-        return FullTZDocument(
-            project_name="Online Course Platform",
-            version="1.0.0",
-            sections=sections
-        )
-</file>
-
-<file path="services/merger.py">
-from typing import List
-from models.graph import UnifiedGraph, GraphNode, Conflict
-from models.inputs import ExtractedKnowledge
-from utils.llm_client import call_llm_json
-
-class GraphMergerService:
-    def merge(self, chunks: List[ExtractedKnowledge]) -> UnifiedGraph:
-        print(f"🔗 [Merger] Объединение {len(chunks)} графов...")
-        
-        # Упрощенная сериализация
-        context_data = "\n\n".join([
-            f"SOURCE {chunk.source_window_ref}:\nNODES: {chunk.model_dump_json(include={'nodes', 'edges'})}"
-            for chunk in chunks
-        ])
-
-        system_prompt = """
-        Ты Системный Архитектор. Объедини графы знаний в одну структуру UnifiedGraph.
-        
-        1. Объединяй синонимы (Auth = Login).
-        2. Если есть противоречия (MySQL vs Postgres), создай Conflict.
-        3. target_section выбери из: general_info, tech_stack, functional_req, ui_ux.
-        """
-        
-        try:
-            return call_llm_json(
-                schema=UnifiedGraph,
-                prompt=system_prompt,
-                data=context_data
-            )
-        except Exception as e:
-            print(f"❌ Ошибка Merger: {e}")
-            return UnifiedGraph()
-</file>
-
-<file path="utils/llm_client.py">
-import os
-import time
-from typing import Type, TypeVar, Optional, Any
-from pydantic import BaseModel
-from dotenv import load_dotenv
-from google import genai
-from google.genai import types
-
-load_dotenv()
-
-api_key = os.getenv("GOOGLE_API_KEY")
-# Оставляем ТВОЮ модель по умолчанию (если в .env не указано иное)
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-client = None
-
-if api_key:
-    # Инициализация клиента как в твоем рабочем тесте
-    client = genai.Client(api_key=api_key)
-
-T = TypeVar("T", bound=BaseModel)
-
-def call_llm_json(
-    schema: Type[T], 
-    prompt: str, 
-    data: Optional[Any] = None,
-    model_name: str = DEFAULT_MODEL 
-) -> T:
-    if not client:
-        print("⚠️ [MOCK] Нет ключа API. Возвращаю пустой объект.")
-        return _create_empty_model(schema)
-
-    full_prompt = prompt
-    if data:
-        data_str = data.model_dump_json() if hasattr(data, "model_dump_json") else str(data)
-        full_prompt += f"\n\nDATA CONTEXT:\n{data_str}"
-
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=full_prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=schema,
-                )
-            )
-            
-            if response.parsed:
-                return response.parsed
-            return schema.model_validate_json(response.text)
-
-        except Exception as e:
-            error_msg = str(e)
-            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-                if attempt < max_retries - 1:
-                    print(f"  ⚠️ Лимит API (15 запр/мин). Ждем 15 сек... (Попытка {attempt + 1}/{max_retries})")
-                    time.sleep(15)
-                    continue
-            print(f"❌ Gemini Error ({model_name}): {e}")
-            return _create_empty_model(schema)
-
-def call_llm_text(
-    prompt: str, 
-    data: Optional[Any] = None,
-    model_name: str = DEFAULT_MODEL
-) -> str:
-    if not client:
-        return "MOCK TEXT GENERATED"
-
-    full_prompt = prompt
-    if data:
-        full_prompt += f"\n\nCONTEXT:\n{str(data)}"
-
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=full_prompt
-            )
-            return response.text
-        except Exception as e:
-            error_msg = str(e)
-            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-                if attempt < max_retries - 1:
-                    print(f"  ⚠️ Лимит API (15 запр/мин). Ждем 15 сек... (Попытка {attempt + 1}/{max_retries})")
-                    time.sleep(15)
-                    continue
-            print(f"❌ Gemini Text Error: {e}")
-            return ""
-
-def _create_empty_model(schema: Type[T]) -> T:
-    try:
-        return schema.model_construct()
-    except:
-        return schema()
-</file>
-
-<file path=".gitignore">
-# Python-generated files
-__pycache__/
-__pycache__
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
-venv
-.env
 </file>
 
 <file path="FINAL_TZ_1.md">
@@ -2840,87 +1019,7 @@ venv
     *   3.1.1.2. Провести рефакторинг CSS переменных для обеспечения поддержки темной темы.
 </file>
 
-<file path="FINAL_TZ_Sanya.md">
-# Online Course Platform (v1.0.0)
-
-## GENERAL
-## Общие сведения
-
-1.  **Наименование системы:** Платформа для онлайн-курсов.
-2.  **Характеристика системы:** Онлайн платформа для курсов.
-3.  **Назначение системы:** Система предназначена для организации дистанционного обучения.
-4.  **Аналоги системы:** В качестве аналога рассматривается платформа Udemy.
-5.  **Целевые группы пользователей и их основные функции:**
-    *   **Студенты:** Целевая аудитория, выполняющая просмотр видеоматериалов и прохождение тестовых заданий.
-    *   **Преподаватели:** Целевая аудитория, осуществляющая загрузку видеоматериалов.
-    *   **Администратор:** Пользователь, наделенный правами управления системой, включая блокировку пользователей и просмотр статистических данных.
-
-## FUNCTIONAL
-# Функциональные требования
-
-Система должна обеспечивать выполнение следующих функциональных требований:
-
-*   **Загрузка видеоматериалов:** Преподаватели должны иметь возможность осуществлять загрузку видеоматериалов в систему.
-*   **Просмотр видеоматериалов:** Студенты должны иметь возможность просматривать видеоматериалы, размещенные в системе.
-*   **Прохождение тестовых заданий:** Студенты должны иметь возможность проходить тесты.
-*   **Управление блокировкой пользователей:** Администратор должен иметь возможность блокировать (банить) учетные записи пользователей.
-*   **Просмотр статистики продаж:** Администратор должен иметь возможность просматривать статистические данные по продажам.
-*   **Обработка видеоконтента:** Система должна обеспечивать функциональность по обработке видео.
-
-## STACK
-### 3. Технологический стек
-
-Данный раздел описывает набор технологий, фреймворков, библиотек и внешних сервисов, выбранных для реализации проекта.
-
-#### 3.1. Языки программирования
-
-*   **Python.** Выбран в качестве основного языка программирования серверной части проекта (backend компонент) благодаря высокой масштабируемости и наличию обширных библиотек для обработки видео.
-
-#### 3.2. Фреймворки и библиотеки
-
-*   **FastAPI.** Используется в качестве backend фреймворка для реализации серверной части системы.
-*   **React.** Используется в качестве frontend библиотеки для разработки клиентской части системы.
-
-#### 3.3. База данных
-
-*   **PostgreSQL.** Выбрана в качестве системы управления реляционными базами данных (СУБД) за высокую надежность и производительность.
-
-#### 3.4. Внешние сервисы
-
-*   **Хостинг/хранилище видео:**
-    *   **Vimeo.** Выбран в качестве хостинга видеоконтента благодаря встроенным механизмам защиты конфиденциальности.
-    *   *Отклоненные варианты:*
-        *   **AWS S3 (хранилище видео).** Отклонено по причине высокой стоимости хранения.
-        *   **YouTube (хостинг видео).** Отклонено по причине отсутствия необходимого уровня защиты контента.
-*   **Платежный шлюз:**
-    *   **ЮKassa.** Выбран в качестве платежного шлюза, обеспечивающего функционирование платежных операций на территории Российской Федерации.
-    *   *Отклоненный вариант:*
-        *   **Stripe.** Отклонено по причине неработоспособности на территории Российской Федерации.
-
-## INTERFACE
-Ниже представлен раздел Технического Задания, разработанный исключительно на основе предоставленных фактов.
-
----
-
-## 1. Раздел «UI/UX»
-
-### 1.1. Назначение раздела
-
-Настоящий раздел Технического Задания определяет требования к разработке пользовательского интерфейса (UI) и пользовательского опыта (UX) для Панели Администратора.
-
-### 1.2. Описание объекта проектирования
-
-Объектом проектирования UI/UX является Панель Администратора (admin_panel).
-Панель Администратора представляет собой интерфейс, предназначенный для управления платформой администратором.
-
-### 1.3. Требования к UI/UX
-
-1.  **Ориентация на пользователя:** Проектирование UI/UX должно быть ориентировано на целевую аудиторию — администратор.
-2.  **Целевая функция:** Разрабатываемый интерфейс и пользовательский опыт должны обеспечивать администратору возможность эффективного управления платформой.
-3.  **Соответствие назначению:** Все элементы UI и логика взаимодействия (UX) должны быть направлены на поддержку функции управления платформой администратором.
-</file>
-
-<file path="FINAL_TZ.md">
+<file path="FINAL_TZ_2.md">
 # Online Course Platform
 
 ## GENERAL
@@ -3003,95 +1102,935 @@ venv
     *   Добавление нового поля в базу данных для хранения предпочтений темы пользователя.
 </file>
 
-<file path="main.py">
-import os
-from typing import List
+<file path="FINAL_TZ_Sanya.md">
+# Online Course Platform (v1.0.0)
 
-from models.inputs import DataSource, DataEnum
-from models.graph import UnifiedGraph
-from models.document import FullTZDocument
-from services.extractor import DataExtractorService
-from services.merger import GraphMergerService
-from services.generator import TZGeneratorService
+## GENERAL
+## Общие сведения
 
-def load_graphml(filepath: str) -> DataSource:
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return DataSource(
-            source_type=DataEnum.GRAPHML,
-            content=f.read(),
-            file_name=os.path.basename(filepath)
-        )
+1.  **Наименование системы:** Платформа для онлайн-курсов.
+2.  **Характеристика системы:** Онлайн платформа для курсов.
+3.  **Назначение системы:** Система предназначена для организации дистанционного обучения.
+4.  **Аналоги системы:** В качестве аналога рассматривается платформа Udemy.
+5.  **Целевые группы пользователей и их основные функции:**
+    *   **Студенты:** Целевая аудитория, выполняющая просмотр видеоматериалов и прохождение тестовых заданий.
+    *   **Преподаватели:** Целевая аудитория, осуществляющая загрузку видеоматериалов.
+    *   **Администратор:** Пользователь, наделенный правами управления системой, включая блокировку пользователей и просмотр статистических данных.
 
-def main():
-    print("==========================================")
-    print("🚀 ГЕНЕРАТОР ТЗ (GRAPHML EDITION)")
-    print("==========================================\n")
+## FUNCTIONAL
+# Функциональные требования
 
-    extractor = DataExtractorService()
-    merger = GraphMergerService()
-    generator = TZGeneratorService()
+Система должна обеспечивать выполнение следующих функциональных требований:
 
-    # Берем 3 графа: твой backend и 2 новых от друга
-    files = [
-        "data/telegram_backend_team.graphml",
-        "data/frontend_app.graphml",
-        "data/deploy_infra.graphml"
-    ]
-    
-    inputs = []
-    print("📂 Загрузка графов:")
-    for f in files:
-        if os.path.exists(f):
-            inputs.append(load_graphml(f))
-            print(f"  - {f} (ok)")
-        else:
-            print(f"  - {f} (НЕ НАЙДЕН)")
+*   **Загрузка видеоматериалов:** Преподаватели должны иметь возможность осуществлять загрузку видеоматериалов в систему.
+*   **Просмотр видеоматериалов:** Студенты должны иметь возможность просматривать видеоматериалы, размещенные в системе.
+*   **Прохождение тестовых заданий:** Студенты должны иметь возможность проходить тесты.
+*   **Управление блокировкой пользователей:** Администратор должен иметь возможность блокировать (банить) учетные записи пользователей.
+*   **Просмотр статистики продаж:** Администратор должен иметь возможность просматривать статистические данные по продажам.
+*   **Обработка видеоконтента:** Система должна обеспечивать функциональность по обработке видео.
 
-    # 1. PARSING (Без LLM)
-    print("\n--- ЭТАП 1: ПАРСИНГ ГРАФОВ ---")
-    chunks = []
-    for src in inputs:
-        chunk = extractor.extract(src)
-        chunks.append(chunk)
-        print(f"  ✅ {src.file_name}: узлов={len(chunk.nodes)}, связей={len(chunk.edges)}")
+## STACK
+### 3. Технологический стек
 
-    # 2. MERGING (С LLM)
-    print("\n--- ЭТАП 2: СЛИЯНИЕ (LLM) ---")
-    unified_graph = merger.merge(chunks)
-    print(f"  ✅ Граф объединен. Узлов: {len(unified_graph.nodes)}")
-    
-    # 3. GENERATION (С LLM)
-    print("\n--- ЭТАП 3: ГЕНЕРАЦИЯ ТЗ ---")
-    try:
-        doc = generator.generate(unified_graph, template={})
-        with open("FINAL_TZ.md", "w", encoding="utf-8") as f:
-            f.write(f"# {doc.project_name}\n\n")
-            for sec in doc.sections:
-                f.write(f"## {sec.title}\n{sec.content_markdown}\n\n")
-        print(f"\n🎉 ГОТОВО! Файл: FINAL_TZ.md")
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
+Данный раздел описывает набор технологий, фреймворков, библиотек и внешних сервисов, выбранных для реализации проекта.
 
-if __name__ == "__main__":
-    main()
+#### 3.1. Языки программирования
+
+*   **Python.** Выбран в качестве основного языка программирования серверной части проекта (backend компонент) благодаря высокой масштабируемости и наличию обширных библиотек для обработки видео.
+
+#### 3.2. Фреймворки и библиотеки
+
+*   **FastAPI.** Используется в качестве backend фреймворка для реализации серверной части системы.
+*   **React.** Используется в качестве frontend библиотеки для разработки клиентской части системы.
+
+#### 3.3. База данных
+
+*   **PostgreSQL.** Выбрана в качестве системы управления реляционными базами данных (СУБД) за высокую надежность и производительность.
+
+#### 3.4. Внешние сервисы
+
+*   **Хостинг/хранилище видео:**
+    *   **Vimeo.** Выбран в качестве хостинга видеоконтента благодаря встроенным механизмам защиты конфиденциальности.
+    *   *Отклоненные варианты:*
+        *   **AWS S3 (хранилище видео).** Отклонено по причине высокой стоимости хранения.
+        *   **YouTube (хостинг видео).** Отклонено по причине отсутствия необходимого уровня защиты контента.
+*   **Платежный шлюз:**
+    *   **ЮKassa.** Выбран в качестве платежного шлюза, обеспечивающего функционирование платежных операций на территории Российской Федерации.
+    *   *Отклоненный вариант:*
+        *   **Stripe.** Отклонено по причине неработоспособности на территории Российской Федерации.
+
+## INTERFACE
+Ниже представлен раздел Технического Задания, разработанный исключительно на основе предоставленных фактов.
+
+---
+
+## 1. Раздел «UI/UX»
+
+### 1.1. Назначение раздела
+
+Настоящий раздел Технического Задания определяет требования к разработке пользовательского интерфейса (UI) и пользовательского опыта (UX) для Панели Администратора.
+
+### 1.2. Описание объекта проектирования
+
+Объектом проектирования UI/UX является Панель Администратора (admin_panel).
+Панель Администратора представляет собой интерфейс, предназначенный для управления платформой администратором.
+
+### 1.3. Требования к UI/UX
+
+1.  **Ориентация на пользователя:** Проектирование UI/UX должно быть ориентировано на целевую аудиторию — администратор.
+2.  **Целевая функция:** Разрабатываемый интерфейс и пользовательский опыт должны обеспечивать администратору возможность эффективного управления платформой.
+3.  **Соответствие назначению:** Все элементы UI и логика взаимодействия (UX) должны быть направлены на поддержку функции управления платформой администратором.
 </file>
 
 <file path="README.md">
 
 </file>
 
+<file path="layer1_miner/__init__.py">
+from .extractor import MinerProcessor
+</file>
+
+<file path="layer2_merger/__init__.py">
+from .merger import SmartGraphMerger
+</file>
+
+<file path="layer2_merger/merger.py">
+import logging
+import networkx as nx
+from typing import List
+from pydantic import BaseModel, Field
+from schemas.graph import ExtractedKnowledge, UnifiedGraph, GraphNode, GraphEdge, Conflict
+from schemas.enums import TZSectionEnum, NodeLabel
+from utils.llm_client import acall_llm_json
+
+logger = logging.getLogger(__name__)
+
+
+class MergeAction(BaseModel):
+    is_duplicate: bool = Field(description="Это одна и та же сущность?")
+    ids_to_merge: List[str] = Field(description="Список ID, которые нужно слить в один")
+    unified_id: str = Field(description="Новый ID для слитого узла")
+    unified_name: str = Field(description="Общее имя")
+    unified_desc: str = Field(description="Объединенное описание")
+
+
+class MergeBatchResult(BaseModel):
+    actions: List[MergeAction] = Field(default_factory=list)
+
+
+class SectionAssignment(BaseModel):
+    node_id: str
+    target_section: TZSectionEnum
+
+
+class SectionBatchResult(BaseModel):
+    assignments: List[SectionAssignment]
+
+
+class SmartGraphMerger:
+    def __init__(self):
+        self.G = nx.DiGraph()
+        self.conflicts: List[Conflict] = []
+
+    async def smart_merge(self, subgraphs: List[ExtractedKnowledge]) -> UnifiedGraph:
+        logger.info("🔗 СЛОЙ 2: Загрузка подграфов в единый граф NetworkX")
+
+        for sg in subgraphs:
+            for node in sg.nodes:
+                if not self.G.has_node(node.id):
+                    self.G.add_node(node.id, **node.model_dump())
+            for edge in sg.edges:
+                # !!! ИСПРАВЛЕНИЕ 1: Исключаем source и target при добавлении в граф,
+                # так как они уже определены топологией графа (u -> v)
+                edge_data = edge.model_dump(exclude={'source', 'target'})
+                self.G.add_edge(edge.source, edge.target, **edge_data)
+
+        logger.info(f"  -> Исходный размер: {self.G.number_of_nodes()} узлов, {self.G.number_of_edges()} связей.")
+
+        # ... (код дедупликации и распределения по секциям остается без изменений) ...
+
+        nodes_by_label = {}
+        for nid, data in self.G.nodes(data=True):
+            label = data.get("label")
+            if label not in nodes_by_label:
+                nodes_by_label[label] = []
+            nodes_by_label[label].append({"id": nid, "name": data.get("name"), "desc": data.get("description")})
+
+        for label, nodes in nodes_by_label.items():
+            if len(nodes) < 2: continue
+
+            # (Логика дедупликации пропущена для краткости, она не меняется)
+            logger.info(f"  -> Дедупликация группы '{label}' ({len(nodes)} узлов)...")
+            batch_size = 15
+            for i in range(0, len(nodes), batch_size):
+                batch = nodes[i:i + batch_size]
+                prompt = """Ты Архитектор. Найди дубликаты среди этих узлов (синонимы, одно и то же понятие).
+                Если находишь дубликаты, верни MergeAction с is_duplicate=true.
+                Если дубликатов нет, верни пустой список actions."""
+                data_str = "\n".join([f"ID: {n['id']} | Имя: {n['name']} | Описание: {n['desc']}" for n in batch])
+                try:
+                    result = await acall_llm_json(schema=MergeBatchResult, prompt=prompt, data=data_str)
+                    for action in result.actions:
+                        if action.is_duplicate and len(action.ids_to_merge) > 1:
+                            self._merge_nodes_in_graph(action)
+                except Exception as e:
+                    logger.error(f"Ошибка при дедупликации: {e}")
+
+        await self._assign_sections()
+
+        final_nodes = []
+        for nid, data in self.G.nodes(data=True):
+            node_data = data.copy()
+            if "id" not in node_data:
+                node_data["id"] = nid
+
+            if "target_section" in node_data and isinstance(node_data["target_section"], str):
+                try:
+                    node_data["target_section"] = TZSectionEnum(node_data["target_section"])
+                except ValueError:
+                    node_data["target_section"] = TZSectionEnum.UNKNOWN
+
+            final_nodes.append(GraphNode(**node_data))
+
+        # !!! ИСПРАВЛЕНИЕ 2: Безопасное создание ребер
+        final_edges = []
+        for u, v, data in self.G.edges(data=True):
+            # Удаляем source/target из data, если они там случайно оказались,
+            # чтобы избежать конфликта аргументов
+            clean_data = {k: val for k, val in data.items() if k not in {'source', 'target'}}
+            final_edges.append(GraphEdge(source=u, target=v, **clean_data))
+
+        return UnifiedGraph(nodes=final_nodes, edges=final_edges, conflicts=self.conflicts)
+
+    def _merge_nodes_in_graph(self, action: MergeAction):
+        # ... (остальной код метода без изменений) ...
+        valid_ids = [nid for nid in action.ids_to_merge if self.G.has_node(nid)]
+        if not valid_ids: return
+
+        primary_id = action.unified_id
+        if not self.G.has_node(primary_id):
+            base_data = self.G.nodes[valid_ids[0]].copy()
+            base_data.update({
+                "id": primary_id,
+                "name": action.unified_name,
+                "description": action.unified_desc
+            })
+            self.G.add_node(primary_id, **base_data)
+
+        for old_id in valid_ids:
+            if old_id == primary_id: continue
+
+            for u, v, data in list(self.G.edges(old_id, data=True)):
+                if u == old_id: self.G.add_edge(primary_id, v, **data)
+
+            for u, v, data in list(self.G.in_edges(old_id, data=True)):
+                if v == old_id: self.G.add_edge(u, primary_id, **data)
+
+            self.G.remove_node(old_id)
+
+    async def _assign_sections(self):
+        # ... (без изменений) ...
+        logger.info("  -> Распределение узлов по секциям ТЗ...")
+        nodes_to_assign = [{"id": n, "name": d.get("name"), "label": d.get("label")}
+                           for n, d in self.G.nodes(data=True) if d.get("label") != NodeLabel.PERSON]
+
+        if not nodes_to_assign: return
+
+        prompt = """Распредели каждый узел в одну из секций ТЗ:
+        - GENERAL (общая инфа, задачи)
+        - STACK (компоненты, БД, либы)
+        - FUNCTIONAL (требования, фичи)
+        - INTERFACE (всё про UI/UX)"""
+
+        batch_size = 20
+        for i in range(0, len(nodes_to_assign), batch_size):
+            batch = nodes_to_assign[i:i + batch_size]
+            data_str = "\n".join([f"ID:{n['id']} | {n['label']} | {n['name']}" for n in batch])
+            try:
+                result = await acall_llm_json(schema=SectionBatchResult, prompt=prompt, data=data_str)
+                for assignment in result.assignments:
+                    if self.G.has_node(assignment.node_id):
+                        self.G.nodes[assignment.node_id]["target_section"] = assignment.target_section
+            except Exception:
+                pass
+</file>
+
+<file path="layer3_compiler/__init__.py">
+from .generator import TZGenerator
+</file>
+
+<file path="layer3_compiler/generator.py">
+import logging
+import asyncio
+from typing import List
+from schemas.graph import UnifiedGraph, GraphNode
+from schemas.enums import TZSectionEnum
+from schemas.document import FullTZDocument, GeneratedSection
+from utils.llm_client import acall_llm_text
+
+logger = logging.getLogger(__name__)
+
+
+class TZGenerator:
+    def __init__(self, model_name: str = "gemini-2.5-flash"):
+        self.model_name = model_name
+
+    async def generate_tz(self, graph: UnifiedGraph) -> FullTZDocument:
+        logger.info("📝 СЛОЙ 3: Генерация документа ТЗ...")
+
+        if graph.conflicts:
+            logger.warning(f"⚠️ В графе найдено {len(graph.conflicts)} неразрешенных конфликтов!")
+
+        sections_to_write = [
+            TZSectionEnum.GENERAL,
+            TZSectionEnum.FUNCTIONAL,
+            TZSectionEnum.STACK,
+            TZSectionEnum.INTERFACE
+        ]
+
+        tasks = []
+        for sec_enum in sections_to_write:
+            tasks.append(self._generate_section(sec_enum, graph))
+
+        generated_sections = await asyncio.gather(*tasks)
+
+        valid_sections = [sec for sec in generated_sections if sec is not None]
+
+        return FullTZDocument(
+            project_name="Техническое Задание (AI Generated)",
+            version="1.0.0",
+            sections=valid_sections
+        )
+
+    async def _generate_section(self, sec_enum: TZSectionEnum, graph: UnifiedGraph) -> GeneratedSection:
+        relevant_nodes = [n for n in graph.nodes if n.target_section == sec_enum]
+
+        if not relevant_nodes:
+            return None
+
+        logger.info(f"  -> Пишем раздел: {sec_enum.value} ({len(relevant_nodes)} узлов)")
+
+        node_context = "\n".join([f"- {n.name} (ID: {n.id}): {n.description}" for n in relevant_nodes])
+
+        prompt = f"""
+Напиши раздел Технического Задания: '{sec_enum.value}'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+{node_context}
+"""
+        try:
+            content_markdown = await acall_llm_text(prompt=prompt, model_name=self.model_name)
+            return GeneratedSection(
+                section_id=sec_enum,
+                title=sec_enum.name,
+                content_markdown=content_markdown
+            )
+        except Exception as e:
+            logger.error(f"Ошибка генерации раздела {sec_enum.value}: {e}")
+            return None
+</file>
+
+<file path="output/FINAL_TZ.md">
+# Техническое Задание (AI Generated)
+**Версия:** 1.0.0
+
+---
+
+## GENERAL
+
+```markdown
+## Общая информация
+
+### Основные компоненты
+
+*   Database schema
+*   User entity
+*   Order entity
+```
+
+---
+
+## FUNCTIONAL
+
+# Функциональные требования
+
+Система должна реализовывать процесс аутентификации пользователя (Login Flow), включающий следующие функциональные требования:
+
+*   Для авторизации пользователей должна применяться технология JSON Web Token (JWT).
+*   Механизм аутентификации должен предусматривать использование access и refresh токенов.
+*   Должна быть реализована валидация полей ввода 'email' и 'password'.
+
+---
+
+## STACK
+
+## 3. Стек технологий
+
+Настоящий раздел описывает ключевые технологии, используемые при разработке и функционировании системы.
+
+*   **PostgreSQL**: Система управления реляционными базами данных.
+*   **JSONB**: Бинарный тип данных JSON для PostgreSQL.
+*   **FastAPI сервис**: Сервис, разработанный с использованием фреймворка FastAPI.
+*   **Vue**: Прогрессивный JavaScript фреймворк для создания пользовательских интерфейсов.
+
+---
+
+## INTERFACE
+
+# Раздел: UI/UX
+
+## 1. Общие положения
+
+В данном разделе определяются требования к пользовательскому интерфейсу (UI) и пользовательскому опыту (UX) разрабатываемой системы.
+
+## 2. Технологии и компоненты UI
+
+*   **React UI (ID: react_ui):** Для реализации пользовательского интерфейса будут применяться компоненты и библиотеки, разработанные на базе фреймворка React.
+
+---
+</file>
+
+<file path="schemas/document.py">
+from typing import List, Any, Dict, Optional
+from pydantic import BaseModel, Field
+from .enums import TZSectionEnum, DataEnum
+
+class DataSource(BaseModel):
+    source_type: DataEnum
+    content: Any
+    file_name: str
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+class GeneratedSection(BaseModel):
+    section_id: TZSectionEnum
+    title: str
+    content_markdown: str = Field(description="Текст раздела в формате Markdown")
+
+class FullTZDocument(BaseModel):
+    project_name: str
+    version: str
+    sections: List[GeneratedSection]
+</file>
+
+<file path="schemas/graph.py">
+from typing import List
+from pydantic import BaseModel, Field
+from .enums import NodeLabel, EdgeRelation, TZSectionEnum
+
+class KeyValue(BaseModel):
+    key: str = Field(description="Название свойства")
+    value: str = Field(description="Значение свойства")
+
+class GraphNode(BaseModel):
+    id: str = Field(description="Snake_case ID сущности")
+    label: NodeLabel = Field(description="Тип сущности")
+    name: str = Field(description="Человекочитаемое название")
+    description: str = Field(default="", description="Описание сущности в контексте проекта")
+    properties: List[KeyValue] = Field(default_factory=list, description="Доп. свойства")
+    target_section: TZSectionEnum = Field(default=TZSectionEnum.UNKNOWN, description="К какой секции ТЗ относится узел")
+
+class GraphEdge(BaseModel):
+    source: str = Field(description="ID исходного узла")
+    target: str = Field(description="ID целевого узла")
+    relation: EdgeRelation = Field(description="Тип связи")
+    evidence: str = Field(default="", description="Цитата или обоснование связи")
+
+class ExtractedKnowledge(BaseModel):
+    summary: str = Field(description="Краткая выжимка чанка/окна", default="")
+    nodes: List[GraphNode] = Field(default_factory=list)
+    edges: List[GraphEdge] = Field(default_factory=list)
+    source_ref: str = Field(default="")
+
+class Conflict(BaseModel):
+    id: str = Field(default="unknown_conflict")
+    node_id: str = Field(default="")
+    conflicting_values: List[str] = Field(default_factory=list)
+    description: str
+
+class UnifiedGraph(BaseModel):
+    nodes: List[GraphNode] = Field(default_factory=list)
+    edges: List[GraphEdge] = Field(default_factory=list)
+    conflicts: List[Conflict] = Field(default_factory=list)
+</file>
+
+<file path="utils/preprocessing.py">
+CONFIRMATION_WORDS = {"ок", "да", "давайте", "плюс", "+", "ага", "согласен", "добро", "ок, да"}
+REJECTION_WORDS = {"не", "нет", "не надо", "минус", "-", "отмена"}
+
+def normalize_short_answers(text: str) -> str:
+    if not isinstance(text, str): return ""
+    clean = text.lower().strip().strip(",.!?:")
+    if clean in CONFIRMATION_WORDS: return f"[FLAG: CONFIRMATION]"
+    if clean in REJECTION_WORDS: return f"[FLAG: REJECTION]"
+    return text
+
+def get_clean_text(text_obj) -> str:
+    if isinstance(text_obj, str): return text_obj
+    if isinstance(text_obj, list):
+        return "".join([i if isinstance(i, str) else i.get("text", "") for i in text_obj])
+    return ""
+
+def format_chat_message(msg: dict, msg_lookup: dict = None) -> str:
+    date = msg.get("date", "Unknown Date")
+    author = msg.get("from", msg.get("author", "Unknown"))
+    text = normalize_short_answers(get_clean_text(msg.get("text", "")))
+
+    reply_str = ""
+    reply_id = msg.get("reply_to_message_id")
+    if reply_id and msg_lookup and reply_id in msg_lookup:
+        r_msg = msg_lookup[reply_id]
+        r_author = r_msg.get("from", "Unknown")
+        r_text = get_clean_text(r_msg.get("text", ""))[:40].replace('\n', ' ')
+        reply_str = f"[в ответ {r_author}: \"{r_text}...\"]"
+
+    return f"[{date}] {author}{reply_str}: {text}".strip()
+</file>
+
+<file path=".gitignore">
+# Python-generated files
+__pycache__/
+__pycache__
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+# Virtual environments
+.venv
+venv
+.env
+</file>
+
+<file path="layer1_miner/extractor.py">
+import logging
+import asyncio
+from typing import List, Dict
+from pydantic import BaseModel, Field
+
+from schemas.document import DataSource
+from schemas.enums import NodeLabel
+from schemas.graph import ExtractedKnowledge
+from utils.preprocessing import format_chat_message
+from utils.llm_client import acall_llm_json
+from .windowing import asplit_chat_into_semantic_threads
+
+logger = logging.getLogger(__name__)
+
+
+class GlossaryItem(BaseModel):
+    id: str = Field(description="Snake_case ID")
+    name: str = Field(description="Человекочитаемое название")
+    label: NodeLabel = Field(description="Тип сущности")
+    description: str = Field(description="Краткое описание")
+
+
+class ProjectGlossary(BaseModel):
+    entities: List[GlossaryItem] = Field(default_factory=list)
+
+
+class MinerProcessor:
+    def __init__(self):
+        self.global_glossary_dict: Dict[str, GlossaryItem] = {}
+
+    def _format_glossary(self) -> str:
+        return "\n".join([f"- {e.id} ({e.label.value}): {e.name}" for e in self.global_glossary_dict.values()])
+
+    async def process_source(self, source: DataSource) -> List[ExtractedKnowledge]:
+        logger.info(f"⛏️ СЛОЙ 1: Начинаем извлечение из {source.file_name}")
+        extracted_graphs = []
+        previous_summary = ""
+
+        if source.source_type == "chat":
+            windows = await asplit_chat_into_semantic_threads(source.content)
+            msg_lookup = {m["id"]: m for m in source.content if m.get("type") == "message"}
+
+            for ref, msgs in windows:
+                text_chunk = "\n".join([format_chat_message(m, msg_lookup) for m in msgs])
+                logger.info(f"  -> Анализ окна {ref} ({len(msgs)} сообщений)")
+
+                graph = await self._extract_subgraph_2pass(text_chunk, ref, previous_summary)
+                previous_summary = graph.summary
+                extracted_graphs.append(graph)
+                await asyncio.sleep(2)
+        else:
+            graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
+            extracted_graphs.append(graph)
+
+        return extracted_graphs
+
+    async def _extract_subgraph_2pass(self, text: str, source_ref: str, prev_summary: str) -> ExtractedKnowledge:
+        glossary_prompt = f"""Найди все ключевые сущности в тексте (Люди, Компоненты, Задачи, Требования).
+Если сущность уже есть в ГЛОССАРИИ ниже, используй ЕЕ СТАРЫЙ ID.
+Если это новая сущность — создай новый snake_case ID.
+
+СУЩЕСТВУЮЩИЙ ГЛОССАРИЙ:
+{self._format_glossary() or 'Пока пусто.'}"""
+
+        local_glossary = await acall_llm_json(schema=ProjectGlossary, prompt=glossary_prompt, data=text)
+
+        for entity in local_glossary.entities:
+            if entity.id not in self.global_glossary_dict:
+                self.global_glossary_dict[entity.id] = entity
+
+        graph_prompt = f"""Ты Архитектор. Извлеки граф знаний (узлы и связи).
+СТРОГИЕ ПРАВИЛА:
+1. Используй ТОЛЬКО ID из Глоссария проекта.
+2. Обращай внимание на[FLAG: CONFIRMATION] (означает AGREES_WITH).
+3. Добавляй evidence для каждой связи (почему ты их связал).
+
+ГЛОССАРИЙ ПРОЕКТА:
+{self._format_glossary()}
+
+ПАМЯТЬ ПРОШЛЫХ ОКОН:
+{prev_summary or 'Начало диалога.'}"""
+
+        result = await acall_llm_json(schema=ExtractedKnowledge, prompt=graph_prompt, data=text)
+        result.source_ref = source_ref
+
+        for node in result.nodes:
+            if node.id in self.global_glossary_dict:
+                g_item = self.global_glossary_dict[node.id]
+                if not node.name: node.name = g_item.name
+                if not node.description: node.description = g_item.description
+                if not node.label: node.label = g_item.label
+
+        return result
+</file>
+
+<file path="layer1_miner/windowing.py">
+import asyncio
+import numpy as np
+import networkx as nx
+import community as community_louvain
+from datetime import datetime, timedelta
+from typing import List, Tuple
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+MAX_CHARS_PER_WINDOW = 6000
+OVERLAP_MESSAGES = 4
+SEMANTIC_THRESHOLD = 0.65
+LOOKBACK_WINDOW = 20
+EMBEDDING_BATCH_SIZE = 20
+EMBEDDING_DELAY = 1.0
+
+
+def parse_date(date_str: str) -> datetime:
+    try:
+        return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+    except:
+        return datetime.now()
+
+
+def cosine_similarity(v1: List[float], v2: List[float]) -> float:
+    v1, v2 = np.array(v1), np.array(v2)
+    norm = np.linalg.norm(v1) * np.linalg.norm(v2)
+    return float(np.dot(v1, v2) / norm) if norm > 0 else 0.0
+
+
+async def asplit_chat_into_semantic_threads(messages: List[dict]) -> List[Tuple[str, List[dict]]]:
+    valid_msgs = [m for m in messages if m.get("type") == "message" and m.get("text")]
+    if not valid_msgs: return []
+
+    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    texts_to_embed = [str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
+
+    embeddings = []
+    for i in range(0, len(texts_to_embed), EMBEDDING_BATCH_SIZE):
+        batch = texts_to_embed[i: i + EMBEDDING_BATCH_SIZE]
+        try:
+            batch_result = await embeddings_model.aembed_documents(batch)
+            embeddings.extend(batch_result)
+        except Exception:
+            embeddings.extend([[0.0] * 768] * len(batch))
+        await asyncio.sleep(EMBEDDING_DELAY)
+
+    G = nx.Graph()
+    for i, msg in enumerate(valid_msgs):
+        G.add_node(msg["id"], msg=msg, vec=embeddings[i], time=parse_date(msg.get("date", "")))
+
+    for i, msg in enumerate(valid_msgs):
+        reply_id = msg.get("reply_to_message_id")
+        if reply_id and G.has_node(reply_id):
+            G.add_edge(msg["id"], reply_id, weight=1.0)
+            continue
+
+        best_sim = 0.0
+        best_target_id = None
+        for j in range(max(0, i - LOOKBACK_WINDOW), i):
+            if G.nodes[msg["id"]]["time"] - G.nodes[valid_msgs[j]["id"]]["time"] > timedelta(hours=4):
+                continue
+            sim = cosine_similarity(embeddings[i], embeddings[j])
+            if sim > best_sim:
+                best_sim, best_target_id = sim, valid_msgs[j]["id"]
+
+        if best_sim >= SEMANTIC_THRESHOLD and best_target_id:
+            G.add_edge(msg["id"], best_target_id, weight=best_sim)
+
+    if G.number_of_edges() > 0:
+        try:
+            partition = community_louvain.best_partition(G)
+            for node_id, comm_id in partition.items():
+                G.nodes[node_id]["community"] = comm_id
+        except:
+            pass
+
+    threads = []
+    for component in nx.connected_components(G):
+        thread_msgs = [G.nodes[node_id]["msg"] for node_id in component]
+        thread_msgs.sort(key=lambda x: parse_date(x.get("date", "")))
+        threads.append(thread_msgs)
+
+    threads.sort(key=lambda t: parse_date(t[0].get("date", "")))
+
+    processed_windows = []
+    for thread_idx, thread in enumerate(threads):
+        current_window, current_chars = [], 0
+        for msg in thread:
+            msg_len = len(str(msg.get("text", "")))
+            if current_chars + msg_len > MAX_CHARS_PER_WINDOW and len(current_window) > OVERLAP_MESSAGES:
+                ref = f"thread_{thread_idx}_msg_{current_window[0]['id']}_to_{current_window[-1]['id']}"
+                processed_windows.append((ref, current_window))
+                current_window = current_window[-OVERLAP_MESSAGES:]
+                current_chars = sum(len(str(m.get("text", ""))) for m in current_window)
+            current_window.append(msg)
+            current_chars += msg_len
+
+        if current_window:
+            ref = f"thread_{thread_idx}_msg_{current_window[0]['id']}_to_{current_window[-1]['id']}"
+            processed_windows.append((ref, current_window))
+
+    return processed_windows
+</file>
+
+<file path="utils/test_data_gen.py">
+import json
+from datetime import datetime, timedelta
+
+
+def _create_msg(msg_id, author, text, date_obj, reply_to=None):
+    msg = {
+        "id": msg_id,
+        "type": "message",
+        "date": date_obj.isoformat(),
+        "from": author,
+        "text": text
+    }
+    if reply_to:
+        msg["reply_to_message_id"] = reply_to
+    return msg
+
+
+def get_backend_chat_dataset():
+    """Чат команды бэкенда: обсуждают API, Базу, Сервер"""
+    base_date = datetime.now() - timedelta(days=5)
+    messages = []
+
+    # Диалог 1: Архитектура БД
+    messages.append(_create_msg(1, "Alex Lead", "Ребят, давайте утвердим схему БД. Используем PostgreSQL?", base_date))
+    messages.append(_create_msg(2, "Ivan Dev", "Да, Postgres 15. Нам нужен JSONB для хранения конфигов.",
+                                base_date + timedelta(minutes=2), reply_to=1))
+    messages.append(
+        _create_msg(3, "Alex Lead", "Ок, принято. Создаю сущность User и Order.", base_date + timedelta(minutes=5)))
+
+    # Диалог 2: API
+    base_date += timedelta(hours=3)
+    messages.append(_create_msg(4, "Petr DevOps", "Надо поднять FastAPI сервис.", base_date))
+    messages.append(_create_msg(5, "Ivan Dev", "Согласен. И обязательно JWT авторизацию прикрутить.",
+                                base_date + timedelta(minutes=10)))
+    messages.append(_create_msg(6, "Alex Lead", "Тогда эндпоинт /login будет выдавать access и refresh токены.",
+                                base_date + timedelta(minutes=12)))
+
+    return messages
+
+
+def get_frontend_chat_dataset():
+    """Чат команды фронтенда: обсуждают React, Дизайн и интеграцию с API"""
+    base_date = datetime.now() - timedelta(days=4)  # Чуть позже начался
+    messages = []
+
+    # Диалог 1: Стек фронта
+    messages.append(_create_msg(101, "Maria UI", "Дизайн в Фигме готов. Делаем на React или Vue?", base_date))
+    messages.append(
+        _create_msg(102, "Dmitry Front", "Давай React + Vite. Так быстрее.", base_date + timedelta(minutes=5),
+                    reply_to=101))
+    messages.append(_create_msg(103, "Maria UI", "Ок. Используем библиотеку компонентов Ant Design.",
+                                base_date + timedelta(minutes=7)))
+
+    # Диалог 2: Интеграция (связь с бэкендом)
+    base_date += timedelta(hours=5)
+    messages.append(_create_msg(104, "Dmitry Front", "Как нам авторизовываться?", base_date))
+    messages.append(_create_msg(105, "Ivan Dev", "Стучитесь в POST /login, мы там JWT отдаем.",
+                                base_date + timedelta(minutes=20)))  # Иван (из бэкенда) пришел к фронтам
+    messages.append(_create_msg(106, "Dmitry Front", "Понял. Тогда я сделаю форму входа (LoginScreen).",
+                                base_date + timedelta(minutes=22)))
+    messages.append(
+        _create_msg(107, "Maria UI", "И добавь валидацию полей email/password.", base_date + timedelta(minutes=25)))
+
+    return messages
+</file>
+
 <file path="requirements.txt">
 pydantic>=2.5.0
 python-dotenv>=1.0.0
-google-generativeai>=0.7.0  # Библиотека для работы с Gemini
-colorama>=0.4.6
-networkx>=3.0
+google-generativeai>=0.7.0
 langchain>=0.1.0
+langchain-core>=0.1.0
 langchain-google-genai>=1.0.0
+networkx>=3.0
 numpy>=1.24.0
 tenacity>=8.5.0
 python-louvain>=0.16
 langchain-text-splitters
+colorama>=0.4.6
+</file>
+
+<file path="utils/llm_client.py">
+import os
+import logging
+from typing import Type, TypeVar
+
+from dotenv import load_dotenv
+from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, wait_exponential
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+load_dotenv()
+logger = logging.getLogger(__name__)
+
+api_key = os.getenv("GOOGLE_API_KEY")
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+
+# Проверка ключа
+if not api_key:
+    logger.warning("⚠️ GOOGLE_API_KEY не найден в .env. Будет ошибка при вызовах LLM.")
+
+llm_text = ChatGoogleGenerativeAI(model=DEFAULT_MODEL, temperature=0.1, max_retries=3)
+
+T = TypeVar("T", bound=BaseModel)
+
+
+@retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=2, min=5, max=60))
+async def acall_llm_json(schema: Type[T], prompt: str, data: str = "", model_name: str = DEFAULT_MODEL) -> T:
+    try:
+        llm_structured = ChatGoogleGenerativeAI(model=model_name, temperature=0.0,
+                                                max_retries=3).with_structured_output(schema)
+        full_prompt = prompt
+        if data:
+            full_prompt += f"\n\n--- ВХОДНЫЕ ДАННЫЕ ---\n{data}"
+
+        return await llm_structured.ainvoke(full_prompt)
+    except Exception as e:
+        logger.error(f"❌ Ошибка LLM JSON: {e}")
+        raise e
+
+
+@retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=2, min=5, max=60))
+async def acall_llm_text(prompt: str, data: str = "", model_name: str = DEFAULT_MODEL) -> str:
+    try:
+        llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.2, max_retries=3)
+        full_prompt = prompt
+        if data:
+            full_prompt += f"\n\n--- ВХОДНЫЕ ДАННЫЕ ---\n{data}"
+
+        result = await llm.ainvoke(full_prompt)
+        return result.content
+    except Exception as e:
+        logger.error(f"❌ Ошибка LLM Text: {e}")
+        raise e
+</file>
+
+<file path="main.py">
+import os
+import asyncio
+import logging
+from dotenv import load_dotenv
+
+from schemas.document import DataSource
+from schemas.enums import DataEnum
+from layer1_miner.extractor import MinerProcessor
+from layer2_merger.merger import SmartGraphMerger
+from layer3_compiler.generator import TZGenerator
+from utils.test_data_gen import get_backend_chat_dataset, get_frontend_chat_dataset
+
+load_dotenv()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
+logger = logging.getLogger(__name__)
+
+
+async def main():
+    print("==================================================")
+    print("🚀 ГЕНЕРАТОР ТЗ (3-LAYER GRAPH PIPELINE)")
+    print("==================================================\n")
+
+    # Инициализация слоев
+    miner = MinerProcessor()
+    merger = SmartGraphMerger()
+    compiler = TZGenerator()
+
+    # Входные данные (имитация чата)
+    sources = [
+        DataSource(
+            source_type=DataEnum.CHAT,
+            content=get_backend_chat_dataset(),
+            file_name="chat_backend_team"
+        ),
+        DataSource(
+            source_type=DataEnum.CHAT,
+            content=get_frontend_chat_dataset(),
+            file_name="chat_frontend_team"
+        )
+    ]
+
+    # ---------------------------------------------------------
+    # ЭТАП 1: MINER (Извлечение подграфов из всех источников)
+    # ---------------------------------------------------------
+    logger.info(">>> СТАРТ ЭТАПА 1: Майнинг знаний")
+
+    all_extracted_subgraphs = []
+
+    for source in sources:
+        logger.info(f"📂 Обработка источника: {source.file_name}")
+        # Майнер использует накопленный глоссарий для улучшения связности
+        subgraphs = await miner.process_source(source)
+        all_extracted_subgraphs.extend(subgraphs)
+        logger.info(f"   -> Извлечено {len(subgraphs)} чанков из {source.file_name}")
+
+    # ---------------------------------------------------------
+    # ЭТАП 2: MERGER (Дедупликация и Слияние)
+    # ---------------------------------------------------------
+    logger.info(">>> СТАРТ ЭТАПА 2")
+    unified_graph = await merger.smart_merge(all_extracted_subgraphs)
+    logger.info(f"✅ Граф объединен. Итоговых узлов: {len(unified_graph.nodes)}")
+    print("-" * 50)
+
+    # ---------------------------------------------------------
+    # ЭТАП 3: COMPILER (Генерация Markdown)
+    # ---------------------------------------------------------
+    logger.info(">>> СТАРТ ЭТАПА 3")
+    doc = await compiler.generate_tz(unified_graph)
+
+    # Сохранение результата
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, "FINAL_TZ.md")
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(f"# {doc.project_name}\n")
+        f.write(f"**Версия:** {doc.version}\n\n")
+        f.write("---\n\n")
+        for sec in doc.sections:
+            f.write(f"## {sec.title}\n\n")
+            f.write(f"{sec.content_markdown}\n\n")
+            f.write("---\n\n")
+
+    logger.info(f"🎉 ГОТОВО! Техническое задание сохранено: {output_path}")
+    print("==================================================")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 </file>
 
 </files>

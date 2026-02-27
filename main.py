@@ -9,23 +9,35 @@ from layer1_miner.extractor import MinerProcessor
 from layer2_merger.merger import SmartGraphMerger
 from layer3_compiler.generator import TZGenerator
 from utils.test_data_gen import get_backend_chat_dataset, get_frontend_chat_dataset
+from utils.state_logger import init_logs_dir
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
+
+# Инициализируем папку логов
+init_logs_dir()
+
+# Настраиваем двойное логирование (в консоль и в файл app.log)
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s', 
+    datefmt='%H:%M:%S',
+    handlers=[
+        logging.FileHandler("logs/app.log", encoding="utf-8", mode="w"),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
 
 async def main():
     print("==================================================")
-    print("🚀 ГЕНЕРАТОР ТЗ (3-LAYER GRAPH PIPELINE)")
+    print("🚀 ГЕНЕРАТОР ТЗ (3-LAYER GRAPH PIPELINE С ЛОГАМИ)")
     print("==================================================\n")
 
-    # Инициализация слоев
     miner = MinerProcessor()
     merger = SmartGraphMerger()
     compiler = TZGenerator()
 
-    # Входные данные (имитация чата)
     sources = [
         DataSource(
             source_type=DataEnum.CHAT,
@@ -39,35 +51,29 @@ async def main():
         )
     ]
 
-    # ---------------------------------------------------------
-    # ЭТАП 1: MINER (Извлечение подграфов из всех источников)
-    # ---------------------------------------------------------
+    # --- ЭТАП 1: MINER ---
     logger.info(">>> СТАРТ ЭТАПА 1: Майнинг знаний")
-
     all_extracted_subgraphs = []
 
     for source in sources:
         logger.info(f"📂 Обработка источника: {source.file_name}")
-        # Майнер использует накопленный глоссарий для улучшения связности
         subgraphs = await miner.process_source(source)
         all_extracted_subgraphs.extend(subgraphs)
         logger.info(f"   -> Извлечено {len(subgraphs)} чанков из {source.file_name}")
 
-    # ---------------------------------------------------------
-    # ЭТАП 2: MERGER (Дедупликация и Слияние)
-    # ---------------------------------------------------------
-    logger.info(">>> СТАРТ ЭТАПА 2")
-    unified_graph = await merger.smart_merge(all_extracted_subgraphs)
-    logger.info(f"✅ Граф объединен. Итоговых узлов: {len(unified_graph.nodes)}")
     print("-" * 50)
 
-    # ---------------------------------------------------------
-    # ЭТАП 3: COMPILER (Генерация Markdown)
-    # ---------------------------------------------------------
-    logger.info(">>> СТАРТ ЭТАПА 3")
+    # --- ЭТАП 2: MERGER ---
+    logger.info(">>> СТАРТ ЭТАПА 2: Слияние")
+    unified_graph = await merger.smart_merge(all_extracted_subgraphs)
+    logger.info(f"✅ Граф объединен. Итоговых узлов: {len(unified_graph.nodes)}")
+    
+    print("-" * 50)
+
+    # --- ЭТАП 3: COMPILER ---
+    logger.info(">>> СТАРТ ЭТАПА 3: Генерация")
     doc = await compiler.generate_tz(unified_graph)
 
-    # Сохранение результата
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "FINAL_TZ.md")

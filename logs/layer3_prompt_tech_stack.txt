@@ -1,0 +1,13 @@
+
+Напиши раздел Технического Задания: 'tech_stack'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- PostgreSQL (ID: postgresql): Система управления базами данных PostgreSQL
+- JSONB (ID: jsonb): Тип данных JSONB для хранения JSON в PostgreSQL
+- FastAPI сервис (ID: fastapi_service): Сервис, построенный на фреймворке FastAPI
+- React (ID: react_frontend): Фронтенд на React
+- Vue (ID: vue_frontend): Фронтенд на Vue
+- Vite (ID: vite_build_tool): Сборщик Vite
+- Ant Design (ID: ant_design_components): Библиотека компонентов Ant Design

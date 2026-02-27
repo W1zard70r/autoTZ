@@ -1,0 +1,190 @@
+{
+  "summary": "",
+  "nodes": [
+    {
+      "id": "alex_lead",
+      "label": "Person",
+      "name": "Alex Lead",
+      "description": "Alex Lead",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ivan_dev",
+      "label": "Person",
+      "name": "Ivan Dev",
+      "description": "Ivan Dev",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "petr_devops",
+      "label": "Person",
+      "name": "Petr DevOps",
+      "description": "Petr DevOps",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "database_schema",
+      "label": "Concept",
+      "name": "схему БД",
+      "description": "Схема базы данных",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "postgresql",
+      "label": "Component",
+      "name": "PostgreSQL",
+      "description": "Система управления базами данных PostgreSQL",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "postgresql_15",
+      "label": "Component",
+      "name": "Postgres 15",
+      "description": "Версия PostgreSQL 15",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "jsonb",
+      "label": "Component",
+      "name": "JSONB",
+      "description": "Тип данных JSONB для хранения JSON в PostgreSQL",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "user_entity",
+      "label": "Concept",
+      "name": "User",
+      "description": "Сущность пользователя",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "order_entity",
+      "label": "Concept",
+      "name": "Order",
+      "description": "Сущность заказа",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "fastapi_service",
+      "label": "Component",
+      "name": "FastAPI сервис",
+      "description": "Сервис, построенный на фреймворке FastAPI",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "jwt_authorization",
+      "label": "Requirement",
+      "name": "JWT авторизацию",
+      "description": "Требование по реализации авторизации с использованием JWT",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "login_endpoint",
+      "label": "Component",
+      "name": "эндпоинт /login",
+      "description": "Эндпоинт для аутентификации пользователей",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "access_refresh_tokens",
+      "label": "Concept",
+      "name": "access и refresh токены",
+      "description": "Токены доступа и обновления для аутентификации",
+      "properties": [],
+      "target_section": "uncategorized"
+    }
+  ],
+  "edges": [
+    {
+      "source": "alex_lead",
+      "target": "database_schema",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Ребят, давайте утвердим схему БД."
+    },
+    {
+      "source": "alex_lead",
+      "target": "postgresql",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Используем PostgreSQL?"
+    },
+    {
+      "source": "ivan_dev",
+      "target": "postgresql_15",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Да, Postgres 15."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jsonb",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "alex_lead",
+      "target": "user_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Создаю сущность User"
+    },
+    {
+      "source": "alex_lead",
+      "target": "order_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: и Order."
+    },
+    {
+      "source": "petr_devops",
+      "target": "fastapi_service",
+      "relation": "MENTIONS",
+      "evidence": "Petr DevOps: Надо поднять FastAPI сервис."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jwt_authorization",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: И обязательно JWT авторизацию прикрутить."
+    },
+    {
+      "source": "alex_lead",
+      "target": "login_endpoint",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    },
+    {
+      "source": "alex_lead",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: ...access и refresh токены."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "fastapi_service",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Согласен."
+    },
+    {
+      "source": "postgresql_15",
+      "target": "jsonb",
+      "relation": "DEPENDS_ON",
+      "evidence": "Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "login_endpoint",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    }
+  ],
+  "source_ref": "thread_0_msg_1_to_6"
+}

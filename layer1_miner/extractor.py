@@ -8,6 +8,7 @@ from schemas.enums import NodeLabel
 from schemas.graph import ExtractedKnowledge
 from utils.preprocessing import format_chat_message
 from utils.llm_client import acall_llm_json
+from utils.state_logger import log_pydantic, log_dict
 from .windowing import asplit_chat_into_semantic_threads
 
 logger = logging.getLogger(__name__)
@@ -47,10 +48,23 @@ class MinerProcessor:
                 graph = await self._extract_subgraph_2pass(text_chunk, ref, previous_summary)
                 previous_summary = graph.summary
                 extracted_graphs.append(graph)
+                
+                # --- LOGGING: Сохраняем каждый извлеченный подграф ---
+                safe_ref = ref.replace(":", "_").replace("/", "_")
+                log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
+                
                 await asyncio.sleep(2)
         else:
             graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
             extracted_graphs.append(graph)
+            
+            # --- LOGGING: Сохраняем подграф ---
+            safe_ref = source.file_name.replace(":", "_").replace("/", "_")
+            log_pydantic(f"layer1_subgraph_{safe_ref}.json", graph)
+
+        # --- LOGGING: Дамп полного глоссария ---
+        glossary_dump = {k: v.model_dump() for k, v in self.global_glossary_dict.items()}
+        log_dict("layer1_global_glossary.json", glossary_dump)
 
         return extracted_graphs
 
@@ -71,7 +85,7 @@ class MinerProcessor:
         graph_prompt = f"""Ты Архитектор. Извлеки граф знаний (узлы и связи).
 СТРОГИЕ ПРАВИЛА:
 1. Используй ТОЛЬКО ID из Глоссария проекта.
-2. Обращай внимание на[FLAG: CONFIRMATION] (означает AGREES_WITH).
+2. Обращай внимание на [FLAG: CONFIRMATION] (означает AGREES_WITH).
 3. Добавляй evidence для каждой связи (почему ты их связал).
 
 ГЛОССАРИЙ ПРОЕКТА:

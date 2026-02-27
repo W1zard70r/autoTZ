@@ -1,0 +1,58 @@
+18:08:28 - INFO - >>> СТАРТ ЭТАПА 1: Майнинг знаний
+18:08:28 - INFO - 📂 Обработка источника: chat_backend_team
+18:08:28 - INFO - ⛏️ СЛОЙ 1: Начинаем извлечение из chat_backend_team
+18:08:29 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+18:08:30 - INFO -   -> Анализ окна thread_0_msg_1_to_6 (6 сообщений)
+18:08:30 - INFO - AFC is enabled with max remote calls: 10.
+18:08:32 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:32 - INFO - AFC is enabled with max remote calls: 10.
+18:08:36 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:38 - INFO -    -> Извлечено 1 чанков из chat_backend_team
+18:08:38 - INFO - 📂 Обработка источника: chat_frontend_team
+18:08:38 - INFO - ⛏️ СЛОЙ 1: Начинаем извлечение из chat_frontend_team
+18:08:39 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+18:08:40 - INFO -   -> Анализ окна thread_0_msg_101_to_103 (3 сообщений)
+18:08:40 - INFO - AFC is enabled with max remote calls: 10.
+18:08:42 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:42 - INFO - AFC is enabled with max remote calls: 10.
+18:08:44 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:46 - INFO -   -> Анализ окна thread_1_msg_104_to_107 (4 сообщений)
+18:08:46 - INFO - AFC is enabled with max remote calls: 10.
+18:08:47 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:47 - INFO - AFC is enabled with max remote calls: 10.
+18:08:49 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:51 - INFO -    -> Извлечено 2 чанков из chat_frontend_team
+18:08:51 - INFO - >>> СТАРТ ЭТАПА 2: Слияние
+18:08:51 - INFO - 🔗 СЛОЙ 2: Загрузка подграфов в единый граф NetworkX
+18:08:51 - INFO -   -> Исходный размер: 22 узлов, 26 связей.
+18:08:51 - INFO -   -> Дедупликация группы 'Person' (5 узлов)...
+18:08:51 - INFO - AFC is enabled with max remote calls: 10.
+18:08:52 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:52 - INFO -   -> Дедупликация группы 'Concept' (5 узлов)...
+18:08:52 - INFO - AFC is enabled with max remote calls: 10.
+18:08:53 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:53 - INFO -   -> Дедупликация группы 'Component' (10 узлов)...
+18:08:53 - INFO - AFC is enabled with max remote calls: 10.
+18:08:55 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:55 - INFO -   -> Дедупликация группы 'Requirement' (2 узлов)...
+18:08:55 - INFO - AFC is enabled with max remote calls: 10.
+18:08:57 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:57 - INFO -   -> Распределение узлов по секциям ТЗ...
+18:08:57 - INFO - AFC is enabled with max remote calls: 10.
+18:08:59 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+18:08:59 - INFO - ✅ Граф объединен. Итоговых узлов: 20
+18:08:59 - INFO - >>> СТАРТ ЭТАПА 3: Генерация
+18:08:59 - INFO - 📝 СЛОЙ 3: Генерация документа ТЗ...
+18:08:59 - INFO -   -> Пишем раздел: general_info (3 узлов)
+18:08:59 - INFO -   -> Пишем раздел: functional_req (4 узлов)
+18:08:59 - INFO -   -> Пишем раздел: tech_stack (7 узлов)
+18:08:59 - INFO -   -> Пишем раздел: ui_ux (1 узлов)
+18:08:59 - INFO - AFC is enabled with max remote calls: 10.
+18:08:59 - INFO - AFC is enabled with max remote calls: 10.
+18:08:59 - INFO - AFC is enabled with max remote calls: 10.
+18:08:59 - INFO - AFC is enabled with max remote calls: 10.
+18:09:03 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+18:09:06 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+18:09:07 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+18:09:07 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+18:09:07 - INFO - 🎉 ГОТОВО! Техническое задание сохранено: output/FINAL_TZ.md

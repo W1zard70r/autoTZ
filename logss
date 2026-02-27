@@ -1,0 +1,1569 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: *.json, *.txt, *.graphml
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+layer1_global_glossary.json
+layer1_subgraph_chat_backend_team_thread_0_msg_1_to_6.json
+layer1_subgraph_chat_frontend_team_thread_0_msg_101_to_103.json
+layer1_subgraph_chat_frontend_team_thread_1_msg_104_to_107.json
+layer2_step1_initial_combined.graphml
+layer2_step2_merge_actions.json
+layer2_step3_final_unified.graphml
+layer2_step3_final_unified.json
+layer3_prompt_functional_req.txt
+layer3_prompt_general_info.txt
+layer3_prompt_tech_stack.txt
+layer3_prompt_ui_ux.txt
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="layer1_global_glossary.json">
+{
+  "alex_lead": {
+    "id": "alex_lead",
+    "name": "Alex Lead",
+    "label": "Person",
+    "description": "Alex Lead"
+  },
+  "ivan_dev": {
+    "id": "ivan_dev",
+    "name": "Ivan Dev",
+    "label": "Person",
+    "description": "Ivan Dev"
+  },
+  "petr_devops": {
+    "id": "petr_devops",
+    "name": "Petr DevOps",
+    "label": "Person",
+    "description": "Petr DevOps"
+  },
+  "database_schema": {
+    "id": "database_schema",
+    "name": "схему БД",
+    "label": "Concept",
+    "description": "Схема базы данных"
+  },
+  "postgresql": {
+    "id": "postgresql",
+    "name": "PostgreSQL",
+    "label": "Component",
+    "description": "Система управления базами данных PostgreSQL"
+  },
+  "postgresql_15": {
+    "id": "postgresql_15",
+    "name": "Postgres 15",
+    "label": "Component",
+    "description": "Версия PostgreSQL 15"
+  },
+  "jsonb": {
+    "id": "jsonb",
+    "name": "JSONB",
+    "label": "Component",
+    "description": "Тип данных JSONB для хранения JSON в PostgreSQL"
+  },
+  "user_entity": {
+    "id": "user_entity",
+    "name": "User",
+    "label": "Concept",
+    "description": "Сущность пользователя"
+  },
+  "order_entity": {
+    "id": "order_entity",
+    "name": "Order",
+    "label": "Concept",
+    "description": "Сущность заказа"
+  },
+  "fastapi_service": {
+    "id": "fastapi_service",
+    "name": "FastAPI сервис",
+    "label": "Component",
+    "description": "Сервис, построенный на фреймворке FastAPI"
+  },
+  "jwt_authorization": {
+    "id": "jwt_authorization",
+    "name": "JWT авторизацию",
+    "label": "Requirement",
+    "description": "Требование по реализации авторизации с использованием JWT"
+  },
+  "login_endpoint": {
+    "id": "login_endpoint",
+    "name": "эндпоинт /login",
+    "label": "Component",
+    "description": "Эндпоинт для аутентификации пользователей"
+  },
+  "access_refresh_tokens": {
+    "id": "access_refresh_tokens",
+    "name": "access и refresh токены",
+    "label": "Concept",
+    "description": "Токены доступа и обновления для аутентификации"
+  },
+  "maria_ui": {
+    "id": "maria_ui",
+    "name": "Maria UI",
+    "label": "Person",
+    "description": "Дизайнер"
+  },
+  "figma_design": {
+    "id": "figma_design",
+    "name": "Дизайн в Фигме",
+    "label": "Concept",
+    "description": "Дизайн, созданный в Figma"
+  },
+  "react_frontend": {
+    "id": "react_frontend",
+    "name": "React",
+    "label": "Component",
+    "description": "Фронтенд на React"
+  },
+  "vue_frontend": {
+    "id": "vue_frontend",
+    "name": "Vue",
+    "label": "Component",
+    "description": "Фронтенд на Vue"
+  },
+  "dmitry_front": {
+    "id": "dmitry_front",
+    "name": "Dmitry Front",
+    "label": "Person",
+    "description": "Разработчик"
+  },
+  "vite_build_tool": {
+    "id": "vite_build_tool",
+    "name": "Vite",
+    "label": "Component",
+    "description": "Сборщик Vite"
+  },
+  "ant_design_components": {
+    "id": "ant_design_components",
+    "name": "Ant Design",
+    "label": "Component",
+    "description": "Библиотека компонентов Ant Design"
+  },
+  "login_screen": {
+    "id": "login_screen",
+    "name": "LoginScreen",
+    "label": "Component",
+    "description": "форма входа (LoginScreen)"
+  },
+  "email_password_validation": {
+    "id": "email_password_validation",
+    "name": "email/password validation",
+    "label": "Requirement",
+    "description": "валидацию полей email/password"
+  }
+}
+</file>
+
+<file path="layer1_subgraph_chat_backend_team_thread_0_msg_1_to_6.json">
+{
+  "summary": "",
+  "nodes": [
+    {
+      "id": "alex_lead",
+      "label": "Person",
+      "name": "Alex Lead",
+      "description": "Alex Lead",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ivan_dev",
+      "label": "Person",
+      "name": "Ivan Dev",
+      "description": "Ivan Dev",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "petr_devops",
+      "label": "Person",
+      "name": "Petr DevOps",
+      "description": "Petr DevOps",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "database_schema",
+      "label": "Concept",
+      "name": "схему БД",
+      "description": "Схема базы данных",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "postgresql",
+      "label": "Component",
+      "name": "PostgreSQL",
+      "description": "Система управления базами данных PostgreSQL",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "postgresql_15",
+      "label": "Component",
+      "name": "Postgres 15",
+      "description": "Версия PostgreSQL 15",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "jsonb",
+      "label": "Component",
+      "name": "JSONB",
+      "description": "Тип данных JSONB для хранения JSON в PostgreSQL",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "user_entity",
+      "label": "Concept",
+      "name": "User",
+      "description": "Сущность пользователя",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "order_entity",
+      "label": "Concept",
+      "name": "Order",
+      "description": "Сущность заказа",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "fastapi_service",
+      "label": "Component",
+      "name": "FastAPI сервис",
+      "description": "Сервис, построенный на фреймворке FastAPI",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "jwt_authorization",
+      "label": "Requirement",
+      "name": "JWT авторизацию",
+      "description": "Требование по реализации авторизации с использованием JWT",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "login_endpoint",
+      "label": "Component",
+      "name": "эндпоинт /login",
+      "description": "Эндпоинт для аутентификации пользователей",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "access_refresh_tokens",
+      "label": "Concept",
+      "name": "access и refresh токены",
+      "description": "Токены доступа и обновления для аутентификации",
+      "properties": [],
+      "target_section": "uncategorized"
+    }
+  ],
+  "edges": [
+    {
+      "source": "alex_lead",
+      "target": "database_schema",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Ребят, давайте утвердим схему БД."
+    },
+    {
+      "source": "alex_lead",
+      "target": "postgresql",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Используем PostgreSQL?"
+    },
+    {
+      "source": "ivan_dev",
+      "target": "postgresql_15",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Да, Postgres 15."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jsonb",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "alex_lead",
+      "target": "user_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Создаю сущность User"
+    },
+    {
+      "source": "alex_lead",
+      "target": "order_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: и Order."
+    },
+    {
+      "source": "petr_devops",
+      "target": "fastapi_service",
+      "relation": "MENTIONS",
+      "evidence": "Petr DevOps: Надо поднять FastAPI сервис."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jwt_authorization",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: И обязательно JWT авторизацию прикрутить."
+    },
+    {
+      "source": "alex_lead",
+      "target": "login_endpoint",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    },
+    {
+      "source": "alex_lead",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: ...access и refresh токены."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "fastapi_service",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Согласен."
+    },
+    {
+      "source": "postgresql_15",
+      "target": "jsonb",
+      "relation": "DEPENDS_ON",
+      "evidence": "Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "login_endpoint",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    }
+  ],
+  "source_ref": "thread_0_msg_1_to_6"
+}
+</file>
+
+<file path="layer1_subgraph_chat_frontend_team_thread_0_msg_101_to_103.json">
+{
+  "summary": "",
+  "nodes": [
+    {
+      "id": "maria_ui",
+      "label": "Person",
+      "name": "Maria UI",
+      "description": "Дизайнер",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "figma_design",
+      "label": "Concept",
+      "name": "Дизайн в Фигме",
+      "description": "Дизайн, созданный в Figma",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "react_frontend",
+      "label": "Component",
+      "name": "React",
+      "description": "Фронтенд на React",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "vue_frontend",
+      "label": "Component",
+      "name": "Vue",
+      "description": "Фронтенд на Vue",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "dmitry_front",
+      "label": "Person",
+      "name": "Dmitry Front",
+      "description": "Разработчик",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "vite_build_tool",
+      "label": "Component",
+      "name": "Vite",
+      "description": "Сборщик Vite",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ant_design_components",
+      "label": "Component",
+      "name": "Ant Design",
+      "description": "Библиотека компонентов Ant Design",
+      "properties": [],
+      "target_section": "uncategorized"
+    }
+  ],
+  "edges": [
+    {
+      "source": "maria_ui",
+      "target": "figma_design",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов."
+    },
+    {
+      "source": "maria_ui",
+      "target": "react_frontend",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?"
+    },
+    {
+      "source": "maria_ui",
+      "target": "vue_frontend",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?"
+    },
+    {
+      "source": "dmitry_front",
+      "target": "react_frontend",
+      "relation": "AGREES_WITH",
+      "evidence": "Dmitry Front[в ответ Maria UI: \"Дизайн в Фигме готов. Делаем на React ил...\"]. Давай React + Vite. Так быстрее."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "vite_build_tool",
+      "relation": "AGREES_WITH",
+      "evidence": "Dmitry Front[в ответ Maria UI: \"Дизайн в Фигме готов. Делаем на React ил...\"]. Давай React + Vite. Так быстрее."
+    },
+    {
+      "source": "maria_ui",
+      "target": "ant_design_components",
+      "relation": "AGREES_WITH",
+      "evidence": "Maria UI: Ок. Используем библиотеку компонентов Ant Design."
+    }
+  ],
+  "source_ref": "thread_0_msg_101_to_103"
+}
+</file>
+
+<file path="layer1_subgraph_chat_frontend_team_thread_1_msg_104_to_107.json">
+{
+  "summary": "",
+  "nodes": [
+    {
+      "id": "dmitry_front",
+      "label": "Person",
+      "name": "Dmitry Front",
+      "description": "Разработчик",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ivan_dev",
+      "label": "Person",
+      "name": "Ivan Dev",
+      "description": "Ivan Dev",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "login_endpoint",
+      "label": "Component",
+      "name": "POST /login",
+      "description": "Эндпоинт для аутентификации пользователей",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "jwt_authorization",
+      "label": "Requirement",
+      "name": "JWT авторизацию",
+      "description": "Требование по реализации авторизации с использованием JWT",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "login_screen",
+      "label": "Component",
+      "name": "LoginScreen",
+      "description": "форма входа (LoginScreen)",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "email_password_validation",
+      "label": "Requirement",
+      "name": "email/password validation",
+      "description": "валидацию полей email/password",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "maria_ui",
+      "label": "Person",
+      "name": "Maria UI",
+      "description": "Дизайнер",
+      "properties": [],
+      "target_section": "uncategorized"
+    }
+  ],
+  "edges": [
+    {
+      "source": "dmitry_front",
+      "target": "login_endpoint",
+      "relation": "MENTIONS",
+      "evidence": "Dmitry Front: Как нам авторизовываться?"
+    },
+    {
+      "source": "ivan_dev",
+      "target": "login_endpoint",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jwt_authorization",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "login_endpoint",
+      "target": "jwt_authorization",
+      "relation": "RELATES_TO",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "login_screen",
+      "relation": "MENTIONS",
+      "evidence": "Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen)."
+    },
+    {
+      "source": "login_screen",
+      "target": "login_endpoint",
+      "relation": "DEPENDS_ON",
+      "evidence": "Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen)."
+    },
+    {
+      "source": "maria_ui",
+      "target": "email_password_validation",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: И добавь валидацию полей email/password."
+    },
+    {
+      "source": "login_screen",
+      "target": "email_password_validation",
+      "relation": "DEPENDS_ON",
+      "evidence": "Maria UI: И добавь валидацию полей email/password."
+    }
+  ],
+  "source_ref": "thread_1_msg_104_to_107"
+}
+</file>
+
+<file path="layer2_step1_initial_combined.graphml">
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d7" for="edge" attr.name="evidence" attr.type="string"/>
+<key id="d6" for="edge" attr.name="relation" attr.type="string"/>
+<key id="d5" for="node" attr.name="target_section" attr.type="string"/>
+<key id="d4" for="node" attr.name="properties" attr.type="string"/>
+<key id="d3" for="node" attr.name="description" attr.type="string"/>
+<key id="d2" for="node" attr.name="name" attr.type="string"/>
+<key id="d1" for="node" attr.name="label" attr.type="string"/>
+<key id="d0" for="node" attr.name="id" attr.type="string"/>
+<graph edgedefault="directed"><node id="alex_lead">
+  <data key="d0">alex_lead</data>
+  <data key="d1">Person</data>
+  <data key="d2">Alex Lead</data>
+  <data key="d3">Alex Lead</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="ivan_dev">
+  <data key="d0">ivan_dev</data>
+  <data key="d1">Person</data>
+  <data key="d2">Ivan Dev</data>
+  <data key="d3">Ivan Dev</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="petr_devops">
+  <data key="d0">petr_devops</data>
+  <data key="d1">Person</data>
+  <data key="d2">Petr DevOps</data>
+  <data key="d3">Petr DevOps</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="database_schema">
+  <data key="d0">database_schema</data>
+  <data key="d1">Concept</data>
+  <data key="d2">схему БД</data>
+  <data key="d3">Схема базы данных</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="postgresql">
+  <data key="d0">postgresql</data>
+  <data key="d1">Component</data>
+  <data key="d2">PostgreSQL</data>
+  <data key="d3">Система управления базами данных PostgreSQL</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="postgresql_15">
+  <data key="d0">postgresql_15</data>
+  <data key="d1">Component</data>
+  <data key="d2">Postgres 15</data>
+  <data key="d3">Версия PostgreSQL 15</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="jsonb">
+  <data key="d0">jsonb</data>
+  <data key="d1">Component</data>
+  <data key="d2">JSONB</data>
+  <data key="d3">Тип данных JSONB для хранения JSON в PostgreSQL</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="user_entity">
+  <data key="d0">user_entity</data>
+  <data key="d1">Concept</data>
+  <data key="d2">User</data>
+  <data key="d3">Сущность пользователя</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="order_entity">
+  <data key="d0">order_entity</data>
+  <data key="d1">Concept</data>
+  <data key="d2">Order</data>
+  <data key="d3">Сущность заказа</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="fastapi_service">
+  <data key="d0">fastapi_service</data>
+  <data key="d1">Component</data>
+  <data key="d2">FastAPI сервис</data>
+  <data key="d3">Сервис, построенный на фреймворке FastAPI</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="jwt_authorization">
+  <data key="d0">jwt_authorization</data>
+  <data key="d1">Requirement</data>
+  <data key="d2">JWT авторизацию</data>
+  <data key="d3">Требование по реализации авторизации с использованием JWT</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="login_endpoint">
+  <data key="d0">login_endpoint</data>
+  <data key="d1">Component</data>
+  <data key="d2">эндпоинт /login</data>
+  <data key="d3">Эндпоинт для аутентификации пользователей</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="access_refresh_tokens">
+  <data key="d0">access_refresh_tokens</data>
+  <data key="d1">Concept</data>
+  <data key="d2">access и refresh токены</data>
+  <data key="d3">Токены доступа и обновления для аутентификации</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="maria_ui">
+  <data key="d0">maria_ui</data>
+  <data key="d1">Person</data>
+  <data key="d2">Maria UI</data>
+  <data key="d3">Дизайнер</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="figma_design">
+  <data key="d0">figma_design</data>
+  <data key="d1">Concept</data>
+  <data key="d2">Дизайн в Фигме</data>
+  <data key="d3">Дизайн, созданный в Figma</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="react_frontend">
+  <data key="d0">react_frontend</data>
+  <data key="d1">Component</data>
+  <data key="d2">React</data>
+  <data key="d3">Фронтенд на React</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="vue_frontend">
+  <data key="d0">vue_frontend</data>
+  <data key="d1">Component</data>
+  <data key="d2">Vue</data>
+  <data key="d3">Фронтенд на Vue</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="dmitry_front">
+  <data key="d0">dmitry_front</data>
+  <data key="d1">Person</data>
+  <data key="d2">Dmitry Front</data>
+  <data key="d3">Разработчик</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="vite_build_tool">
+  <data key="d0">vite_build_tool</data>
+  <data key="d1">Component</data>
+  <data key="d2">Vite</data>
+  <data key="d3">Сборщик Vite</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="ant_design_components">
+  <data key="d0">ant_design_components</data>
+  <data key="d1">Component</data>
+  <data key="d2">Ant Design</data>
+  <data key="d3">Библиотека компонентов Ant Design</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="login_screen">
+  <data key="d0">login_screen</data>
+  <data key="d1">Component</data>
+  <data key="d2">LoginScreen</data>
+  <data key="d3">форма входа (LoginScreen)</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="email_password_validation">
+  <data key="d0">email_password_validation</data>
+  <data key="d1">Requirement</data>
+  <data key="d2">email/password validation</data>
+  <data key="d3">валидацию полей email/password</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<edge source="alex_lead" target="database_schema">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Ребят, давайте утвердим схему БД.</data>
+</edge>
+<edge source="alex_lead" target="postgresql">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Используем PostgreSQL?</data>
+</edge>
+<edge source="alex_lead" target="user_entity">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Создаю сущность User</data>
+</edge>
+<edge source="alex_lead" target="order_entity">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: и Order.</data>
+</edge>
+<edge source="alex_lead" target="login_endpoint">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены.</data>
+</edge>
+<edge source="alex_lead" target="access_refresh_tokens">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: ...access и refresh токены.</data>
+</edge>
+<edge source="ivan_dev" target="postgresql_15">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Ivan Dev: Да, Postgres 15.</data>
+</edge>
+<edge source="ivan_dev" target="jsonb">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Нам нужен JSONB для хранения конфигов.</data>
+</edge>
+<edge source="ivan_dev" target="jwt_authorization">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="ivan_dev" target="fastapi_service">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Ivan Dev: Согласен.</data>
+</edge>
+<edge source="ivan_dev" target="login_endpoint">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="petr_devops" target="fastapi_service">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Petr DevOps: Надо поднять FastAPI сервис.</data>
+</edge>
+<edge source="postgresql_15" target="jsonb">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов.</data>
+</edge>
+<edge source="login_endpoint" target="access_refresh_tokens">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены.</data>
+</edge>
+<edge source="login_endpoint" target="jwt_authorization">
+  <data key="d6">RELATES_TO</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="maria_ui" target="figma_design">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов.</data>
+</edge>
+<edge source="maria_ui" target="react_frontend">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?</data>
+</edge>
+<edge source="maria_ui" target="vue_frontend">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?</data>
+</edge>
+<edge source="maria_ui" target="ant_design_components">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Maria UI: Ок. Используем библиотеку компонентов Ant Design.</data>
+</edge>
+<edge source="maria_ui" target="email_password_validation">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: И добавь валидацию полей email/password.</data>
+</edge>
+<edge source="dmitry_front" target="react_frontend">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Dmitry Front[в ответ Maria UI: "Дизайн в Фигме готов. Делаем на React ил..."]. Давай React + Vite. Так быстрее.</data>
+</edge>
+<edge source="dmitry_front" target="vite_build_tool">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Dmitry Front[в ответ Maria UI: "Дизайн в Фигме готов. Делаем на React ил..."]. Давай React + Vite. Так быстрее.</data>
+</edge>
+<edge source="dmitry_front" target="login_endpoint">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Dmitry Front: Как нам авторизовываться?</data>
+</edge>
+<edge source="dmitry_front" target="login_screen">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen).</data>
+</edge>
+<edge source="login_screen" target="login_endpoint">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen).</data>
+</edge>
+<edge source="login_screen" target="email_password_validation">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Maria UI: И добавь валидацию полей email/password.</data>
+</edge>
+</graph></graphml>
+</file>
+
+<file path="layer2_step2_merge_actions.json">
+{
+  "actions": [
+    {
+      "is_duplicate": true,
+      "ids_to_merge": [
+        "postgresql",
+        "postgresql_15"
+      ],
+      "unified_id": "postgresql",
+      "unified_name": "PostgreSQL",
+      "unified_desc": "Система управления базами данных PostgreSQL"
+    },
+    {
+      "is_duplicate": true,
+      "ids_to_merge": [
+        "login_endpoint",
+        "login_screen"
+      ],
+      "unified_id": "login",
+      "unified_name": "Аутентификация",
+      "unified_desc": "Эндпоинт и экран для аутентификации пользователей"
+    }
+  ]
+}
+</file>
+
+<file path="layer2_step3_final_unified.graphml">
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d7" for="edge" attr.name="evidence" attr.type="string"/>
+<key id="d6" for="edge" attr.name="relation" attr.type="string"/>
+<key id="d5" for="node" attr.name="target_section" attr.type="string"/>
+<key id="d4" for="node" attr.name="properties" attr.type="string"/>
+<key id="d3" for="node" attr.name="description" attr.type="string"/>
+<key id="d2" for="node" attr.name="name" attr.type="string"/>
+<key id="d1" for="node" attr.name="label" attr.type="string"/>
+<key id="d0" for="node" attr.name="id" attr.type="string"/>
+<graph edgedefault="directed"><node id="alex_lead">
+  <data key="d0">alex_lead</data>
+  <data key="d1">Person</data>
+  <data key="d2">Alex Lead</data>
+  <data key="d3">Alex Lead</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="ivan_dev">
+  <data key="d0">ivan_dev</data>
+  <data key="d1">Person</data>
+  <data key="d2">Ivan Dev</data>
+  <data key="d3">Ivan Dev</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="petr_devops">
+  <data key="d0">petr_devops</data>
+  <data key="d1">Person</data>
+  <data key="d2">Petr DevOps</data>
+  <data key="d3">Petr DevOps</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="database_schema">
+  <data key="d0">database_schema</data>
+  <data key="d1">Concept</data>
+  <data key="d2">схему БД</data>
+  <data key="d3">Схема базы данных</data>
+  <data key="d4">[]</data>
+  <data key="d5">general_info</data>
+</node>
+<node id="postgresql">
+  <data key="d0">postgresql</data>
+  <data key="d1">Component</data>
+  <data key="d2">PostgreSQL</data>
+  <data key="d3">Система управления базами данных PostgreSQL</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="jsonb">
+  <data key="d0">jsonb</data>
+  <data key="d1">Component</data>
+  <data key="d2">JSONB</data>
+  <data key="d3">Тип данных JSONB для хранения JSON в PostgreSQL</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="user_entity">
+  <data key="d0">user_entity</data>
+  <data key="d1">Concept</data>
+  <data key="d2">User</data>
+  <data key="d3">Сущность пользователя</data>
+  <data key="d4">[]</data>
+  <data key="d5">general_info</data>
+</node>
+<node id="order_entity">
+  <data key="d0">order_entity</data>
+  <data key="d1">Concept</data>
+  <data key="d2">Order</data>
+  <data key="d3">Сущность заказа</data>
+  <data key="d4">[]</data>
+  <data key="d5">general_info</data>
+</node>
+<node id="fastapi_service">
+  <data key="d0">fastapi_service</data>
+  <data key="d1">Component</data>
+  <data key="d2">FastAPI сервис</data>
+  <data key="d3">Сервис, построенный на фреймворке FastAPI</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="jwt_authorization">
+  <data key="d0">jwt_authorization</data>
+  <data key="d1">Requirement</data>
+  <data key="d2">JWT авторизацию</data>
+  <data key="d3">Требование по реализации авторизации с использованием JWT</data>
+  <data key="d4">[]</data>
+  <data key="d5">functional_req</data>
+</node>
+<node id="access_refresh_tokens">
+  <data key="d0">access_refresh_tokens</data>
+  <data key="d1">Concept</data>
+  <data key="d2">access и refresh токены</data>
+  <data key="d3">Токены доступа и обновления для аутентификации</data>
+  <data key="d4">[]</data>
+  <data key="d5">functional_req</data>
+</node>
+<node id="maria_ui">
+  <data key="d0">maria_ui</data>
+  <data key="d1">Person</data>
+  <data key="d2">Maria UI</data>
+  <data key="d3">Дизайнер</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="figma_design">
+  <data key="d0">figma_design</data>
+  <data key="d1">Concept</data>
+  <data key="d2">Дизайн в Фигме</data>
+  <data key="d3">Дизайн, созданный в Figma</data>
+  <data key="d4">[]</data>
+  <data key="d5">ui_ux</data>
+</node>
+<node id="react_frontend">
+  <data key="d0">react_frontend</data>
+  <data key="d1">Component</data>
+  <data key="d2">React</data>
+  <data key="d3">Фронтенд на React</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="vue_frontend">
+  <data key="d0">vue_frontend</data>
+  <data key="d1">Component</data>
+  <data key="d2">Vue</data>
+  <data key="d3">Фронтенд на Vue</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="dmitry_front">
+  <data key="d0">dmitry_front</data>
+  <data key="d1">Person</data>
+  <data key="d2">Dmitry Front</data>
+  <data key="d3">Разработчик</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="vite_build_tool">
+  <data key="d0">vite_build_tool</data>
+  <data key="d1">Component</data>
+  <data key="d2">Vite</data>
+  <data key="d3">Сборщик Vite</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="ant_design_components">
+  <data key="d0">ant_design_components</data>
+  <data key="d1">Component</data>
+  <data key="d2">Ant Design</data>
+  <data key="d3">Библиотека компонентов Ant Design</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="email_password_validation">
+  <data key="d0">email_password_validation</data>
+  <data key="d1">Requirement</data>
+  <data key="d2">email/password validation</data>
+  <data key="d3">валидацию полей email/password</data>
+  <data key="d4">[]</data>
+  <data key="d5">functional_req</data>
+</node>
+<node id="login">
+  <data key="d0">login</data>
+  <data key="d1">Component</data>
+  <data key="d2">Аутентификация</data>
+  <data key="d3">Эндпоинт и экран для аутентификации пользователей</data>
+  <data key="d4">[]</data>
+  <data key="d5">functional_req</data>
+</node>
+<edge source="alex_lead" target="database_schema">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Ребят, давайте утвердим схему БД.</data>
+</edge>
+<edge source="alex_lead" target="postgresql">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Используем PostgreSQL?</data>
+</edge>
+<edge source="alex_lead" target="user_entity">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Создаю сущность User</data>
+</edge>
+<edge source="alex_lead" target="order_entity">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: и Order.</data>
+</edge>
+<edge source="alex_lead" target="access_refresh_tokens">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: ...access и refresh токены.</data>
+</edge>
+<edge source="alex_lead" target="login">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены.</data>
+</edge>
+<edge source="ivan_dev" target="jsonb">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Нам нужен JSONB для хранения конфигов.</data>
+</edge>
+<edge source="ivan_dev" target="jwt_authorization">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="ivan_dev" target="fastapi_service">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Ivan Dev: Согласен.</data>
+</edge>
+<edge source="ivan_dev" target="postgresql">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Ivan Dev: Да, Postgres 15.</data>
+</edge>
+<edge source="ivan_dev" target="login">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="petr_devops" target="fastapi_service">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Petr DevOps: Надо поднять FastAPI сервис.</data>
+</edge>
+<edge source="postgresql" target="jsonb">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов.</data>
+</edge>
+<edge source="maria_ui" target="figma_design">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов.</data>
+</edge>
+<edge source="maria_ui" target="react_frontend">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?</data>
+</edge>
+<edge source="maria_ui" target="vue_frontend">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?</data>
+</edge>
+<edge source="maria_ui" target="ant_design_components">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Maria UI: Ок. Используем библиотеку компонентов Ant Design.</data>
+</edge>
+<edge source="maria_ui" target="email_password_validation">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: И добавь валидацию полей email/password.</data>
+</edge>
+<edge source="dmitry_front" target="react_frontend">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Dmitry Front[в ответ Maria UI: "Дизайн в Фигме готов. Делаем на React ил..."]. Давай React + Vite. Так быстрее.</data>
+</edge>
+<edge source="dmitry_front" target="vite_build_tool">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Dmitry Front[в ответ Maria UI: "Дизайн в Фигме готов. Делаем на React ил..."]. Давай React + Vite. Так быстрее.</data>
+</edge>
+<edge source="dmitry_front" target="login">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen).</data>
+</edge>
+<edge source="login" target="access_refresh_tokens">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены.</data>
+</edge>
+<edge source="login" target="jwt_authorization">
+  <data key="d6">RELATES_TO</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="login" target="email_password_validation">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Maria UI: И добавь валидацию полей email/password.</data>
+</edge>
+<edge source="login" target="login">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen).</data>
+</edge>
+</graph></graphml>
+</file>
+
+<file path="layer2_step3_final_unified.json">
+{
+  "nodes": [
+    {
+      "id": "alex_lead",
+      "label": "Person",
+      "name": "Alex Lead",
+      "description": "Alex Lead",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ivan_dev",
+      "label": "Person",
+      "name": "Ivan Dev",
+      "description": "Ivan Dev",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "petr_devops",
+      "label": "Person",
+      "name": "Petr DevOps",
+      "description": "Petr DevOps",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "database_schema",
+      "label": "Concept",
+      "name": "схему БД",
+      "description": "Схема базы данных",
+      "properties": [],
+      "target_section": "general_info"
+    },
+    {
+      "id": "postgresql",
+      "label": "Component",
+      "name": "PostgreSQL",
+      "description": "Система управления базами данных PostgreSQL",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "jsonb",
+      "label": "Component",
+      "name": "JSONB",
+      "description": "Тип данных JSONB для хранения JSON в PostgreSQL",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "user_entity",
+      "label": "Concept",
+      "name": "User",
+      "description": "Сущность пользователя",
+      "properties": [],
+      "target_section": "general_info"
+    },
+    {
+      "id": "order_entity",
+      "label": "Concept",
+      "name": "Order",
+      "description": "Сущность заказа",
+      "properties": [],
+      "target_section": "general_info"
+    },
+    {
+      "id": "fastapi_service",
+      "label": "Component",
+      "name": "FastAPI сервис",
+      "description": "Сервис, построенный на фреймворке FastAPI",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "jwt_authorization",
+      "label": "Requirement",
+      "name": "JWT авторизацию",
+      "description": "Требование по реализации авторизации с использованием JWT",
+      "properties": [],
+      "target_section": "functional_req"
+    },
+    {
+      "id": "access_refresh_tokens",
+      "label": "Concept",
+      "name": "access и refresh токены",
+      "description": "Токены доступа и обновления для аутентификации",
+      "properties": [],
+      "target_section": "functional_req"
+    },
+    {
+      "id": "maria_ui",
+      "label": "Person",
+      "name": "Maria UI",
+      "description": "Дизайнер",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "figma_design",
+      "label": "Concept",
+      "name": "Дизайн в Фигме",
+      "description": "Дизайн, созданный в Figma",
+      "properties": [],
+      "target_section": "ui_ux"
+    },
+    {
+      "id": "react_frontend",
+      "label": "Component",
+      "name": "React",
+      "description": "Фронтенд на React",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "vue_frontend",
+      "label": "Component",
+      "name": "Vue",
+      "description": "Фронтенд на Vue",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "dmitry_front",
+      "label": "Person",
+      "name": "Dmitry Front",
+      "description": "Разработчик",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "vite_build_tool",
+      "label": "Component",
+      "name": "Vite",
+      "description": "Сборщик Vite",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "ant_design_components",
+      "label": "Component",
+      "name": "Ant Design",
+      "description": "Библиотека компонентов Ant Design",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "email_password_validation",
+      "label": "Requirement",
+      "name": "email/password validation",
+      "description": "валидацию полей email/password",
+      "properties": [],
+      "target_section": "functional_req"
+    },
+    {
+      "id": "login",
+      "label": "Component",
+      "name": "Аутентификация",
+      "description": "Эндпоинт и экран для аутентификации пользователей",
+      "properties": [],
+      "target_section": "functional_req"
+    }
+  ],
+  "edges": [
+    {
+      "source": "alex_lead",
+      "target": "database_schema",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Ребят, давайте утвердим схему БД."
+    },
+    {
+      "source": "alex_lead",
+      "target": "postgresql",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Используем PostgreSQL?"
+    },
+    {
+      "source": "alex_lead",
+      "target": "user_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Создаю сущность User"
+    },
+    {
+      "source": "alex_lead",
+      "target": "order_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: и Order."
+    },
+    {
+      "source": "alex_lead",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: ...access и refresh токены."
+    },
+    {
+      "source": "alex_lead",
+      "target": "login",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jsonb",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jwt_authorization",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "fastapi_service",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Согласен."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "postgresql",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Да, Postgres 15."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "login",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "petr_devops",
+      "target": "fastapi_service",
+      "relation": "MENTIONS",
+      "evidence": "Petr DevOps: Надо поднять FastAPI сервис."
+    },
+    {
+      "source": "postgresql",
+      "target": "jsonb",
+      "relation": "DEPENDS_ON",
+      "evidence": "Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "maria_ui",
+      "target": "figma_design",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов."
+    },
+    {
+      "source": "maria_ui",
+      "target": "react_frontend",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?"
+    },
+    {
+      "source": "maria_ui",
+      "target": "vue_frontend",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?"
+    },
+    {
+      "source": "maria_ui",
+      "target": "ant_design_components",
+      "relation": "AGREES_WITH",
+      "evidence": "Maria UI: Ок. Используем библиотеку компонентов Ant Design."
+    },
+    {
+      "source": "maria_ui",
+      "target": "email_password_validation",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: И добавь валидацию полей email/password."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "react_frontend",
+      "relation": "AGREES_WITH",
+      "evidence": "Dmitry Front[в ответ Maria UI: \"Дизайн в Фигме готов. Делаем на React ил...\"]. Давай React + Vite. Так быстрее."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "vite_build_tool",
+      "relation": "AGREES_WITH",
+      "evidence": "Dmitry Front[в ответ Maria UI: \"Дизайн в Фигме готов. Делаем на React ил...\"]. Давай React + Vite. Так быстрее."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "login",
+      "relation": "MENTIONS",
+      "evidence": "Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen)."
+    },
+    {
+      "source": "login",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    },
+    {
+      "source": "login",
+      "target": "jwt_authorization",
+      "relation": "RELATES_TO",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "login",
+      "target": "email_password_validation",
+      "relation": "DEPENDS_ON",
+      "evidence": "Maria UI: И добавь валидацию полей email/password."
+    },
+    {
+      "source": "login",
+      "target": "login",
+      "relation": "DEPENDS_ON",
+      "evidence": "Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen)."
+    }
+  ],
+  "conflicts": []
+}
+</file>
+
+<file path="layer3_prompt_functional_req.txt">
+Напиши раздел Технического Задания: 'functional_req'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- JWT авторизацию (ID: jwt_authorization): Требование по реализации авторизации с использованием JWT
+- access и refresh токены (ID: access_refresh_tokens): Токены доступа и обновления для аутентификации
+- email/password validation (ID: email_password_validation): валидацию полей email/password
+- Аутентификация (ID: login): Эндпоинт и экран для аутентификации пользователей
+</file>
+
+<file path="layer3_prompt_general_info.txt">
+Напиши раздел Технического Задания: 'general_info'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- схему БД (ID: database_schema): Схема базы данных
+- User (ID: user_entity): Сущность пользователя
+- Order (ID: order_entity): Сущность заказа
+</file>
+
+<file path="layer3_prompt_tech_stack.txt">
+Напиши раздел Технического Задания: 'tech_stack'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- PostgreSQL (ID: postgresql): Система управления базами данных PostgreSQL
+- JSONB (ID: jsonb): Тип данных JSONB для хранения JSON в PostgreSQL
+- FastAPI сервис (ID: fastapi_service): Сервис, построенный на фреймворке FastAPI
+- React (ID: react_frontend): Фронтенд на React
+- Vue (ID: vue_frontend): Фронтенд на Vue
+- Vite (ID: vite_build_tool): Сборщик Vite
+- Ant Design (ID: ant_design_components): Библиотека компонентов Ant Design
+</file>
+
+<file path="layer3_prompt_ui_ux.txt">
+Напиши раздел Технического Задания: 'ui_ux'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- Дизайн в Фигме (ID: figma_design): Дизайн, созданный в Figma
+</file>
+
+</files>
