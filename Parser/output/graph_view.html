@@ -1,0 +1,207 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+                <link href="lib/tom-select/tom-select.css" rel="stylesheet">
+                <script src="lib/tom-select/tom-select.complete.min.js"></script>
+            
+
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 800px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+                <div id="select-menu" class="card-header">
+                    <div class="row no-gutters">
+                        <div class="col-10 pb-2">
+                            <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="selectNode([value]);"
+                            id="select-node"
+                            placeholder="Select node..."
+                            >
+                                <option selected>Select a Node by ID</option>
+                                
+                                    <option value="person_alexandr">person_alexandr</option>
+                                
+                                    <option value="task_oauth_authorization">task_oauth_authorization</option>
+                                
+                                    <option value="task_choose_db_for_auth">task_choose_db_for_auth</option>
+                                
+                                    <option value="component_backend">component_backend</option>
+                                
+                                    <option value="person_grisha">person_grisha</option>
+                                
+                                    <option value="component_postgres">component_postgres</option>
+                                
+                                    <option value="requirement_reliable_db">requirement_reliable_db</option>
+                                
+                            </select>
+                        </div>
+                        <div class="col-2 pb-2">
+                            <button type="button" class="btn btn-primary btn-block" onclick="neighbourhoodHighlight({nodes: []});">Reset Selection</button>
+                        </div>
+                    </div>
+                </div>
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+                  new TomSelect("#select-node",{
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      }
+                  });
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#ff9999", "history": "{}", "id": "person_alexandr", "label": "Person", "shape": "dot", "size": 10, "title": "Type: Person\nID: person_alexandr"}, {"color": "#99ff99", "description": "\u0421\u0434\u0435\u043b\u0430\u0442\u044c \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u044e \u0447\u0435\u0440\u0435\u0437 OAuth", "id": "task_oauth_authorization", "label": "Task", "shape": "dot", "size": 10, "title": "Type: Task\nID: task_oauth_authorization"}, {"color": "#99ff99", "id": "task_choose_db_for_auth", "label": "Task", "shape": "dot", "size": 10, "title": "Type: Task\nID: task_choose_db_for_auth"}, {"color": "#99ccff", "id": "component_backend", "label": "Component", "shape": "dot", "size": 10, "title": "Type: Component\nID: component_backend"}, {"color": "#ff9999", "history": "{}", "id": "person_grisha", "label": "Person", "shape": "dot", "size": 10, "title": "Type: Person\nID: person_grisha"}, {"color": "#99ccff", "id": "component_postgres", "label": "Component", "shape": "dot", "size": 10, "title": "Type: Component\nID: component_postgres"}, {"color": "#ffcc99", "id": "requirement_reliable_db", "label": "Requirement", "shape": "dot", "size": 10, "title": "Type: Requirement\nID: requirement_reliable_db"}]);
+                  edges = new vis.DataSet([{"added_at": "2026-02-27T01:56:08.161224", "arrows": "to", "evidence": "\u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440: \u041d\u0430\u043c \u043d\u0443\u0436\u043d\u043e \u0441\u0434\u0435\u043b\u0430\u0442\u044c \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u044e \u0447\u0435\u0440\u0435\u0437 OAuth.", "from": "person_alexandr", "relation": "MENTIONS", "source_ref": "telegram_backend_team::thread_0_msg_1_to_2", "to": "task_oauth_authorization", "width": 1}, {"added_at": "2026-02-27T01:56:10.514570", "arrows": "to", "evidence": "\u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440: \u0410 \u0431\u0430\u0437\u0443 \u0434\u0430\u043d\u043d\u044b\u0445 \u043a\u0430\u043a\u0443\u044e \u0431\u0435\u0440\u0435\u043c \u0434\u043b\u044f \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438?", "from": "person_alexandr", "relation": "MENTIONS", "source_ref": "telegram_backend_team::thread_1_msg_3_to_4", "to": "task_choose_db_for_auth", "width": 1}, {"added_at": "2026-02-27T01:56:08.161224", "arrows": "to", "evidence": "\u0413\u0440\u0438\u0448\u0430[\u0432 \u043e\u0442\u0432\u0435\u0442 \u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440: \"\u041d\u0430\u043c \u043d\u0443\u0436\u043d\u043e \u0441\u0434\u0435\u043b\u0430\u0442\u044c \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u044e \u0447\u0435\u0440\u0435\u0437 OAut...\"]: \u041e\u043a, \u044f \u0432\u043e\u0437\u044c\u043c\u0443 \u043d\u0430 \u0441\u0435\u0431\u044f \u0431\u044d\u043a\u0435\u043d\u0434.", "from": "task_oauth_authorization", "relation": "RELATES_TO", "source_ref": "telegram_backend_team::thread_0_msg_1_to_2", "to": "component_backend", "width": 1}, {"added_at": "2026-02-27T01:56:08.161224", "arrows": "to", "evidence": "\u0413\u0440\u0438\u0448\u0430[\u0432 \u043e\u0442\u0432\u0435\u0442 \u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0440: \"\u041d\u0430\u043c \u043d\u0443\u0436\u043d\u043e \u0441\u0434\u0435\u043b\u0430\u0442\u044c \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u044e \u0447\u0435\u0440\u0435\u0437 OAut...\"]: \u041e\u043a, \u044f \u0432\u043e\u0437\u044c\u043c\u0443 \u043d\u0430 \u0441\u0435\u0431\u044f \u0431\u044d\u043a\u0435\u043d\u0434.", "from": "person_grisha", "relation": "ASSIGNED_TO", "source_ref": "telegram_backend_team::thread_0_msg_1_to_2", "to": "component_backend", "width": 1}, {"added_at": "2026-02-27T01:56:10.514570", "arrows": "to", "evidence": "\u0413\u0440\u0438\u0448\u0430: \u0414\u0430\u0432\u0430\u0439 Postgres.", "from": "person_grisha", "relation": "AGREES_WITH", "source_ref": "telegram_backend_team::thread_1_msg_3_to_4", "to": "component_postgres", "width": 1}, {"added_at": "2026-02-27T01:56:10.514570", "arrows": "to", "evidence": "\u041e\u043d \u043d\u0430\u0434\u0435\u0436\u043d\u044b\u0439.", "from": "component_postgres", "relation": "RELATES_TO", "source_ref": "telegram_backend_team::thread_1_msg_3_to_4", "to": "requirement_reliable_db", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "repulsion": {
+            "centralGravity": 0.2,
+            "damping": 0.09,
+            "nodeDistance": 150,
+            "springConstant": 0.05,
+            "springLength": 200
+        },
+        "solver": "repulsion",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+                    network.on("selectNode", neighbourhoodHighlight);
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
