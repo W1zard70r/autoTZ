@@ -40,10 +40,6 @@ The content is organized as follows:
 </file_summary>
 
 <directory_structure>
-data/
-  deploy_infra.graphml
-  frontend_app.graphml
-  telegram_backend_team.graphml
 layer1_miner/
   __init__.py
   extractor.py
@@ -55,6 +51,7 @@ layer3_compiler/
   __init__.py
   generator.py
 output/
+  FINAL_TZ_3.md
   FINAL_TZ.md
 schemas/
   __init__.py
@@ -65,11 +62,13 @@ utils/
   __init__.py
   llm_client.py
   preprocessing.py
+  state_logger.py
   test_data_gen.py
 .gitignore
 FINAL_TZ_1.md
 FINAL_TZ_2.md
 FINAL_TZ_Sanya.md
+logss
 main.py
 README.md
 requirements.txt
@@ -78,826 +77,64 @@ requirements.txt
 <files>
 This section contains the contents of the repository's files.
 
-<file path="data/deploy_infra.graphml">
-<?xml version='1.0' encoding='utf-8'?>
-<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
-  <key id="d_label" for="node" attr.name="label" attr.type="string" />
-  <key id="d_desc" for="node" attr.name="description" attr.type="string" />
-  <key id="d_rel" for="edge" attr.name="relation" attr.type="string" />
+<file path="output/FINAL_TZ_3.md">
+# Техническое Задание (AI Generated)
+**Версия:** 1.0.0
 
-  <graph edgedefault="directed">
-    <node id="docker_compose">
-      <data key="d_label">TechStack</data>
-      <data key="d_desc">Оркестрация контейнеров для локальной разработки.</data>
-    </node>
-    <node id="postgres_container">
-      <data key="d_label">Component</data>
-      <data key="d_desc">БД PostgreSQL 16 в докере.</data>
-    </node>
-    <node id="req_ci_cd">
-      <data key="d_label">Requirement</data>
-      <data key="d_desc">Автоматический деплой при пуше в master.</data>
-    </node>
-    <node id="github_actions">
-      <data key="d_label">TechStack</data>
-      <data key="d_desc">Платформа для CI/CD пайплайнов.</data>
-    </node>
+---
 
-    <edge source="postgres_container" target="docker_compose">
-      <data key="d_rel">RUNS_IN</data>
-    </edge>
-    <edge source="github_actions" target="req_ci_cd">
-      <data key="d_rel">IMPLEMENTS</data>
-    </edge>
-  </graph>
-</graphml>
-</file>
+## GENERAL
 
-<file path="data/frontend_app.graphml">
-<?xml version='1.0' encoding='utf-8'?>
-<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
-  <key id="d_label" for="node" attr.name="label" attr.type="string" />
-  <key id="d_desc" for="node" attr.name="description" attr.type="string" />
-  <key id="d_rel" for="edge" attr.name="relation" attr.type="string" />
+```markdown
+## Общая информация
 
-  <graph edgedefault="directed">
-    <node id="react_app">
-      <data key="d_label">Component</data>
-      <data key="d_desc">Главное SPA приложение на React 18.</data>
-    </node>
-    <node id="material_ui">
-      <data key="d_label">TechStack</data>
-      <data key="d_desc">Библиотека компонентов UI.</data>
-    </node>
-    <node id="req_mobile_adaptive">
-      <data key="d_label">Requirement</data>
-      <data key="d_desc">Верстка должна быть адаптивной (Mobile First).</data>
-    </node>
-    <node id="auth_page">
-      <data key="d_label">Component</data>
-      <data key="d_desc">Страница входа и регистрации.</data>
-    </node>
+### Основные компоненты
 
-    <edge source="react_app" target="material_ui">
-      <data key="d_rel">USES</data>
-    </edge>
-    <edge source="react_app" target="req_mobile_adaptive">
-      <data key="d_rel">SATISFIES</data>
-    </edge>
-    <edge source="auth_page" target="react_app">
-      <data key="d_rel">PART_OF</data>
-    </edge>
-  </graph>
-</graphml>
-</file>
+*   Database schema
+*   User entity
+*   Order entity
+```
 
-<file path="data/telegram_backend_team.graphml">
-<?xml version='1.0' encoding='utf-8'?>
-<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
-  <key id="d13" for="edge" attr.name="added_at" attr.type="string" />
-  <key id="d12" for="edge" attr.name="source_ref" attr.type="string" />
-  <key id="d11" for="edge" attr.name="evidence" attr.type="string" />
-  <key id="d10" for="edge" attr.name="relation" attr.type="string" />
-  <key id="d9" for="node" attr.name="data_volume" attr.type="string" />
-  <key id="d8" for="node" attr.name="size" attr.type="string" />
-  <key id="d7" for="node" attr.name="estimated_effort" attr.type="string" />
-  <key id="d6" for="node" attr.name="status" attr.type="string" />
-  <key id="d5" for="node" attr.name="role" attr.type="string" />
-  <key id="d4" for="node" attr.name="description" attr.type="string" />
-  <key id="d3" for="node" attr.name="history" attr.type="string" />
-  <key id="d2" for="node" attr.name="label" attr.type="string" />
-  <key id="d1" for="node" attr.name="name" attr.type="string" />
-  <key id="d0" for="graph" attr.name="name" attr.type="string" />
-  <graph edgedefault="directed">
-    <node id="person_alexandr">
-      <data key="d1">Александр</data>
-      <data key="d2">Person</data>
-      <data key="d3">{"description": {"value": "Александр — Сотрудник, интересующийся причиной простоя сервиса.", "timestamp": "2026-02-27T02:48:55.186046", "source": "telegram_backend_team::thread_2_msg_25_to_32"}, "role": {"value": "Участник обсуждения, вероятно, руководитель", "timestamp": "2026-02-27T02:49:07.322782", "source": "telegram_backend_team::thread_4_msg_58_to_60"}}</data>
-      <data key="d4">Александр — Сотрудник, интересующийся причиной простоя сервиса.</data>
-      <data key="d5">Участник обсуждения, вероятно, руководитель</data>
-    </node>
-    <node id="task_oauth_authorization">
-      <data key="d1">OAuth авторизация</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="person_grisha">
-      <data key="d1">Гриша</data>
-      <data key="d2">Person</data>
-      <data key="d3">{"description": {"value": "Гриша — Сотрудник, который допустил ошибку в коде, вызвавшую проблему с базой данных.", "timestamp": "2026-02-27T02:48:55.186046", "source": "telegram_backend_team::thread_2_msg_25_to_32"}}</data>
-      <data key="d4">Гриша — Сотрудник, который допустил ошибку в коде, вызвавшую проблему с базой данных.</data>
-    </node>
-    <node id="requirement_use_google_oauth">
-      <data key="d1">Использовать Google OAuth</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="requirement_use_github_oauth_in_second_iteration">
-      <data key="d1">GitHub во второй итерации</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="person_maria">
-      <data key="d1">Мария</data>
-      <data key="d2">Person</data>
-      <data key="d3">{"role": {"value": "Участник обсуждения", "timestamp": "2026-02-27T02:49:07.322782", "source": "telegram_backend_team::thread_4_msg_58_to_60"}}</data>
-      <data key="d5">Участник обсуждения</data>
-    </node>
-    <node id="task_implement_google_oauth">
-      <data key="d1">Реализовать Google OAuth</data>
-      <data key="d2">Component</data>
-      <data key="d3">{"name": {"value": "authlib", "timestamp": "2026-02-27T02:48:41.571534", "source": "telegram_backend_team::thread_0_msg_1_to_16"}}</data>
-    </node>
-    <node id="task_implement_github_oauth">
-      <data key="d1">Реализовать GitHub OAuth</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="task_use_env_for_secrets">
-      <data key="d1">Использовать ENV для секретов</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="person_sergey">
-      <data key="d1">Сергей</data>
-      <data key="d2">Person</data>
-      <data key="d3">{"description": {"value": "Сергей — Сотрудник, который обнаружил проблему с базой данных и выполнил откат.", "timestamp": "2026-02-27T02:48:55.186046", "source": "telegram_backend_team::thread_2_msg_25_to_32"}, "role": {"value": "Участник обсуждения", "timestamp": "2026-02-27T02:49:07.322782", "source": "telegram_backend_team::thread_4_msg_58_to_60"}}</data>
-      <data key="d4">Сергей — Сотрудник, который обнаружил проблему с базой данных и выполнил откат.</data>
-      <data key="d5">Участник обсуждения</data>
-    </node>
-    <node id="component_env">
-      <data key="d1">ENV</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="task_store_users_in_postgres">
-      <data key="d1">Хранить пользователей в PostgreSQL</data>
-      <data key="d2">Requirement</data>
-      <data key="d3">{"name": {"value": "Использовать PostgreSQL 16", "timestamp": "2026-02-27T02:48:41.571534", "source": "telegram_backend_team::thread_0_msg_1_to_16"}}</data>
-    </node>
-    <node id="component_mongodb">
-      <data key="d1">MongoDB</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="component_postgresql">
-      <data key="d1">PostgreSQL</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="concept_acid">
-      <data key="d1">ACID</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="task_ensure_api_returns_json">
-      <data key="d1">API должен отдавать JSON</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="component_postgresql_16">
-      <data key="d1">PostgreSQL 16</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="concept_sprint">
-      <data key="d1">Спринт</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="concept_api">
-      <data key="d1">API</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="concept_json">
-      <data key="d1">JSON</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="concept_design">
-      <data key="d1">Дизайн</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="api_v1_login">
-      <data key="d2">Component</data>
-    </node>
-    <node id="cors_error">
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="localhost_3000">
-      <data key="d2">Concept</data>
-    </node>
-    <node id="port_8080">
-      <data key="d2">Concept</data>
-    </node>
-    <node id="requirement_use_postgres_for_users_and_transactions">
-      <data key="d4">Поправь конфиг</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="nginx_configuration">
-      <data key="d4">Это вообще на уровне Nginx надо решать</data>
-      <data key="d2">Task</data>
-      <data key="d3">{"description": {"value": "Это вообще на уровне Nginx надо решать", "timestamp": "2026-02-27T02:48:47.879233", "source": "telegram_backend_team::thread_1_msg_17_to_24"}}</data>
-    </node>
-    <node id="refresh_token_storage">
-      <data key="d4">refresh token мы храним в httpOnly куке?</data>
-      <data key="d2">Task</data>
-      <data key="d3">{"description": {"value": "refresh token мы храним в httpOnly куке?", "timestamp": "2026-02-27T02:48:47.879233", "source": "telegram_backend_team::thread_1_msg_17_to_24"}}</data>
-    </node>
-    <node id="http_only_cookie">
-      <data key="d2">Concept</data>
-    </node>
-    <node id="xss_prevention">
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="zabbix_bot">
-      <data key="d4">Zabbix Bot — Бот, отправляющий оповещения о нагрузке на серверы.</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="production_db">
-      <data key="d4">production-db — Сервер баз данных в продакшене.</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="production_db_high_cpu_load">
-      <data key="d4">High CPU load on production-db (99%) — Оповещение о высокой нагрузке на CPU на сервере production-db, достигающей 99%.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="deployment_on_friday_evening">
-      <data key="d4">деплоил в пятницу вечером — Действие по развертыванию кода в продакшене в пятницу вечером.</data>
-      <data key="d2">Task</data>
-      <data key="d3">{"description": {"value": "Мониторинг после развертывания", "timestamp": "2026-02-27T02:49:07.322782", "source": "telegram_backend_team::thread_4_msg_58_to_60"}}</data>
-    </node>
-    <node id="query_without_index">
-      <data key="d4">запрос без индекса — Запрос к базе данных, который выполняется без использования индекса, что приводит к проблемам с производительностью.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="task_rollback">
-      <data key="d4">откат — Действие по возвращению базы данных к предыдущему стабильному состоянию.</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="task_check_logs">
-      <data key="d4">смотрю логи — Проверка логов для выявления причины проблемы.</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="email_search">
-      <data key="d4">поиск по email — Функциональность поиска пользователей по адресу электронной почты.</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="service_downtime">
-      <data key="d4">сервис лежит — Состояние, когда сервис недоступен или не функционирует должным образом.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="grisha_deployed_buggy_code">
-      <data key="d4">Гриша залил кривой код — Развертывание некорректного или содержащего ошибки кода.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="database_recovery">
-      <data key="d4">База оживает — Процесс восстановления работоспособности базы данных после сбоя.</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="missing_index_on_email_normalized">
-      <data key="d4">Забыл индекс на поле email_normalized — Отсутствие необходимого индекса на поле 'email_normalized' в базе данных.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="person_elena">
-      <data key="d5">HR</data>
-      <data key="d2">Person</data>
-    </node>
-    <node id="pizza_order">
-      <data key="d6">ordered</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="dark_theme_requirement">
-      <data key="d6">requested</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="css_variables_refactoring">
-      <data key="d7">3 days</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="theme_setting_storage">
-      <data key="d4">Theme setting should be stored in user profile for cross-device synchronization.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="add_theme_field_to_users_table">
-      <data key="d4">Add 'theme' field to users table.</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="migration_writing">
-      <data key="d6">to be reviewed</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="users_table">
-      <data key="d1">users</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="redis_for_authorization">
-      <data key="d4">Redis is needed for authorization to store sessions.</data>
-      <data key="d2">Requirement</data>
-    </node>
-    <node id="redis_component">
-      <data key="d1">Redis</data>
-      <data key="d8">small</data>
-      <data key="d9">couple of megabytes</data>
-      <data key="d2">Component</data>
-    </node>
-    <node id="authorization_session_storage">
-      <data key="d4">Storing authorization session information.</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="session_keys">
-      <data key="d4">Identifiers for active user sessions.</data>
-      <data key="d2">Concept</data>
-    </node>
-    <node id="release_in_tuesday">
-      <data key="d6">Запланировано</data>
-      <data key="d2">Task</data>
-    </node>
-    <node id="good_weekend">
-      <data key="d2">Concept</data>
-    </node>
-    <edge source="person_alexandr" target="concept_sprint">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Александр: Коллеги, стартуем спринт.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="task_oauth_authorization">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Александр: Коллеги, стартуем спринт. Главная задача - OAuth авторизация.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="requirement_use_google_oauth">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Александр: Давайте начнем с Google.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="requirement_use_github_oauth_in_second_iteration">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Александр: GitHub во второй итерации.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="task_store_users_in_postgres">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Фиксируем: ставим PostgreSQL 16.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="component_postgresql_16">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Александр: Фиксируем: ставим PostgreSQL 16.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_alexandr" target="refresh_token_storage">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Александр: Гриша, а refresh token мы храним в httpOnly куке?</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_alexandr" target="service_downtime">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">[2026-02-27T22:56:00] Александр: Что случилось? Почему сервис лежит?</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_alexandr" target="pizza_order">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Мне с грибами.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_alexandr" target="dark_theme_requirement">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Вернемся к делам. Клиент хочет темную тему к релизу.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_alexandr" target="theme_setting_storage">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Да, надо хранить. Чтобы на телефоне и компе синхронилось.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_alexandr" target="redis_component">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Александр: Утверждаем Redis.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_alexandr" target="release_in_tuesday">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Александр: Всем спасибо за неделю. Релиз во вторник.</data>
-      <data key="d12">telegram_backend_team::thread_4_msg_58_to_60</data>
-      <data key="d13">2026-02-27T02:49:07.322782</data>
-    </edge>
-    <edge source="person_grisha" target="task_oauth_authorization">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Гриша[в ответ Александр: "Коллеги, стартуем спринт. Главная задача..."]: Принял.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="task_implement_google_oauth">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Гриша: Ок, тогда я беру либу authlib.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="component_env">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: Все будет в .env.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="task_store_users_in_postgres">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Гриша: Не, для юзеров и транзакций нужна реляционка. Я за Postgres.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="component_mongodb">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: В текущую Монгу?</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="concept_acid">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Гриша: Монга не дает ACID. Если платеж отвалится, мы потеряем данные.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="component_postgresql">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша: Нужен PG.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="component_postgresql_16">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша[в ответ Александр: "Фиксируем: ставим PostgreSQL 16...."]: [FLAG: CONFIRMATION]</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="task_ensure_api_returns_json">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Мне без разницы, главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_grisha" target="localhost_3000">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: Странно, я разрешил localhost:3000.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_grisha" target="person_sergey">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша: Сергей, мы пока на локалке. На стейдже ты настроишь.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_grisha" target="http_only_cookie">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: Да, чтобы XSS не прошел.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879777</data>
-    </edge>
-    <edge source="person_grisha" target="xss_prevention">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Да, чтобы XSS не прошел.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879777</data>
-    </edge>
-    <edge source="person_grisha" target="deployment_on_friday_evening">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T22:39:00] Гриша[в ответ Сергей: "Какого черта? Кто деплоил в пятницу вече..."]: Я...</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186046</data>
-    </edge>
-    <edge source="person_grisha" target="task_check_logs">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T22:46:00] Гриша: Понял, смотрю логи.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_grisha" target="email_search">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:46:00] Гриша: Понял, смотрю логи. Кажется, это поиск по email.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_grisha" target="grisha_deployed_buggy_code">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T22:58:00] Сергей: Гриша залил кривой код.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_grisha" target="missing_index_on_email_normalized">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T23:00:00] Гриша: Сорри. Забыл индекс на поле email_normalized.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_grisha" target="pizza_order">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша: Мне 4 сыра.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_grisha" target="add_theme_field_to_users_table">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Гриша: Тогда мне нужно добавить поле `theme` в таблицу users.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_grisha" target="migration_writing">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Гриша: Ладно-ладно, напишу и скину тебе на ревью.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_grisha" target="redis_for_authorization">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Гриша: Саша, я тут подумал. Для авторизации нам нужен Redis. Хранить сессий в PG медленно.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_grisha" target="redis_component">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Гриша: Пару мегабайт. Чисто ключи сессий.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="requirement_use_google_oauth" target="task_implement_google_oauth">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Александр: Давайте начнем с Google.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="requirement_use_github_oauth_in_second_iteration" target="task_implement_github_oauth">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Александр: GitHub во второй итерации.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="concept_design">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: На дизайне нарисованы обе кнопки.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="task_ensure_api_returns_json">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Мне без разницы, главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="concept_api">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="concept_json">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_maria" target="api_v1_login">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Гриша, я стучусь на /api/v1/login и получаю CORS error.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_maria" target="cors_error">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Гриша, я стучусь на /api/v1/login и получаю CORS error.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_maria" target="port_8080">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: У меня порт 8080.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_maria" target="requirement_use_postgres_for_users_and_transactions">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Мария: У меня порт 8080. Поправь конфиг.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_maria" target="pizza_order">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Мария[в ответ Елена (HR): "Ребята, выдыхаем! Давайте закажем пиццу ..."]: О, я за! Пепперони.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_maria" target="css_variables_refactoring">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Мария[в ответ Александр: "Вернемся к делам. Клиент хочет темную те..."]: Это переделывать все CSS переменные... Дня 3 работы.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_maria" target="theme_setting_storage">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Мария: Нет, только если хранить настройку в профиле юзера.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_maria" target="dark_theme_requirement">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Александр: Мария, после обеда оцени точно сроки по Темной теме.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_maria" target="good_weekend">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Мария: Хороших выходных!</data>
-      <data key="d12">telegram_backend_team::thread_4_msg_58_to_60</data>
-      <data key="d13">2026-02-27T02:49:07.322782</data>
-    </edge>
-    <edge source="task_implement_google_oauth" target="task_implement_google_oauth">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Ок, тогда я беру либу authlib.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="task_use_env_for_secrets">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Сергей: Только не хардкодьте секреты в код, используйте ENV!</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="component_mongodb">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">Сергей: У нас уже есть MongoDB на проде.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="component_postgresql">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Сергей: Поднимать еще и Постгрес — это мне лишний геморрой.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="component_postgresql_16">
-      <data key="d10">AGREES_WITH</data>
-      <data key="d11">Сергей[в ответ Александр: "Фиксируем: ставим PostgreSQL 16...."]: [FLAG: CONFIRMATION]</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="person_sergey" target="nginx_configuration">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Сергей: Это вообще на уровне Nginx надо решать, а не в коде.</data>
-      <data key="d12">telegram_backend_team::thread_1_msg_17_to_24</data>
-      <data key="d13">2026-02-27T02:48:47.879233</data>
-    </edge>
-    <edge source="person_sergey" target="deployment_on_friday_evening">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Сергей: Я мониторю, если что.</data>
-      <data key="d12">telegram_backend_team::thread_4_msg_58_to_60</data>
-      <data key="d13">2026-02-27T02:49:07.322782</data>
-    </edge>
-    <edge source="person_sergey" target="query_without_index">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">[2026-02-27T22:41:00] Сергей: У тебя там запрос без индекса положил базу.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186046</data>
-    </edge>
-    <edge source="person_sergey" target="task_rollback">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">[2026-02-27T22:41:00] Сергей: У тебя там запрос без индекса положил базу. Я делаю откат (rollback).</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_sergey" target="database_recovery">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:58:00] Сергей: Гриша залил кривой код. Я откатил. База оживает.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_sergey" target="migration_writing">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Сергей[в ответ Гриша: "Тогда мне нужно добавить поле `theme` в ..."]: Только миграцию нормально напиши в этот раз!</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="person_sergey" target="redis_component">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Сергей: Тогда добро. Дам доступы.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="task_store_users_in_postgres" target="component_postgresql_16">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Александр: Фиксируем: ставим PostgreSQL 16.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="task_ensure_api_returns_json" target="concept_json">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Мария: главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="task_ensure_api_returns_json" target="concept_api">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Мария: главное чтобы API отдавал JSON.</data>
-      <data key="d12">telegram_backend_team::thread_0_msg_1_to_16</data>
-      <data key="d13">2026-02-27T02:48:41.571534</data>
-    </edge>
-    <edge source="zabbix_bot" target="production_db_high_cpu_load">
-      <data key="d10">MENTIONS</data>
-      <data key="d11">[2026-02-27T22:32:00] Zabbix Bot: [ALERT] High CPU load on production-db (99%)</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186046</data>
-    </edge>
-    <edge source="production_db_high_cpu_load" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:32:00] Zabbix Bot: [ALERT] High CPU load on production-db (99%)</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186046</data>
-    </edge>
-    <edge source="query_without_index" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:41:00] Сергей: У тебя там запрос без индекса положил базу.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="task_rollback" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:41:00] Сергей: У тебя там запрос без индекса положил базу. Я делаю откат (rollback).</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="grisha_deployed_buggy_code" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:58:00] Сергей: Гриша залил кривой код.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="database_recovery" target="production_db">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T22:58:00] Сергей: Гриша залил кривой код. Я откатил. База оживает.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="missing_index_on_email_normalized" target="email_search">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T23:00:00] Гриша: Сорри. Забыл индекс на поле email_normalized.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="missing_index_on_email_normalized" target="query_without_index">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">[2026-02-27T23:00:00] Гриша: Сорри. Забыл индекс на поле email_normalized.</data>
-      <data key="d12">telegram_backend_team::thread_2_msg_25_to_32</data>
-      <data key="d13">2026-02-27T02:48:55.186551</data>
-    </edge>
-    <edge source="person_elena" target="pizza_order">
-      <data key="d10">ASSIGNED_TO</data>
-      <data key="d11">Елена (HR): Ок, заказала. Через 40 мин будет.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="css_variables_refactoring" target="dark_theme_requirement">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Мария[в ответ Александр: "Вернемся к делам. Клиент хочет темную те..."]: Это переделывать все CSS переменные... Дня 3 работы.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="add_theme_field_to_users_table" target="users_table">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Тогда мне нужно добавить поле `theme` в таблицу users.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="add_theme_field_to_users_table" target="theme_setting_storage">
-      <data key="d10">DEPENDS_ON</data>
-      <data key="d11">Гриша: Тогда мне нужно добавить поле `theme` в таблицу users.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="migration_writing" target="add_theme_field_to_users_table">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Сергей[в ответ Гриша: "Тогда мне нужно добавить поле `theme` в ..."]: Только миграцию нормально напиши в этот раз!</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="redis_for_authorization" target="authorization_session_storage">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Саша, я тут подумал. Для авторизации нам нужен Redis. Хранить сессий в PG медленно.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="redis_component" target="authorization_session_storage">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Саша, я тут подумал. Для авторизации нам нужен Redis. Хранить сессий в PG медленно.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <edge source="redis_component" target="session_keys">
-      <data key="d10">RELATES_TO</data>
-      <data key="d11">Гриша: Пару мегабайт. Чисто ключи сессий.</data>
-      <data key="d12">telegram_backend_team::thread_3_msg_33_to_57</data>
-      <data key="d13">2026-02-27T02:49:04.454042</data>
-    </edge>
-    <data key="d0">telegram_backend_team</data>
-  </graph>
-</graphml>
+---
+
+## FUNCTIONAL
+
+# Функциональные требования
+
+Система должна реализовывать процесс аутентификации пользователя (Login Flow), включающий следующие функциональные требования:
+
+*   Для авторизации пользователей должна применяться технология JSON Web Token (JWT).
+*   Механизм аутентификации должен предусматривать использование access и refresh токенов.
+*   Должна быть реализована валидация полей ввода 'email' и 'password'.
+
+---
+
+## STACK
+
+## 3. Стек технологий
+
+Настоящий раздел описывает ключевые технологии, используемые при разработке и функционировании системы.
+
+*   **PostgreSQL**: Система управления реляционными базами данных.
+*   **JSONB**: Бинарный тип данных JSON для PostgreSQL.
+*   **FastAPI сервис**: Сервис, разработанный с использованием фреймворка FastAPI.
+*   **Vue**: Прогрессивный JavaScript фреймворк для создания пользовательских интерфейсов.
+
+---
+
+## INTERFACE
+
+# Раздел: UI/UX
+
+## 1. Общие положения
+
+В данном разделе определяются требования к пользовательскому интерфейсу (UI) и пользовательскому опыту (UX) разрабатываемой системы.
+
+## 2. Технологии и компоненты UI
+
+*   **React UI (ID: react_ui):** Для реализации пользовательского интерфейса будут применяться компоненты и библиотеки, разработанные на базе фреймворка React.
+
+---
 </file>
 
 <file path="schemas/__init__.py">
@@ -935,8 +172,65 @@ class EdgeRelation(str, Enum):
     MENTIONS = "MENTIONS"
 </file>
 
-<file path="utils/__init__.py">
+<file path="utils/state_logger.py">
+import os
+import json
+import networkx as nx
+from enum import Enum
+from pydantic import BaseModel
 
+LOG_DIR = "logs"
+
+def init_logs_dir():
+    """Создает директорию для логов, если её нет"""
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+def log_pydantic(filename: str, model: BaseModel):
+    """Сохраняет Pydantic модель в JSON"""
+    filepath = os.path.join(LOG_DIR, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(model.model_dump_json(indent=2))
+
+def log_dict(filename: str, data: dict):
+    """Сохраняет обычный словарь в JSON"""
+    filepath = os.path.join(LOG_DIR, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+def log_text(filename: str, text: str):
+    """Сохраняет простой текст (например, промпты)"""
+    filepath = os.path.join(LOG_DIR, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(text)
+
+def sanitize_for_graphml(val):
+    """Приводит любые сложные объекты к базовым типам (str, int, float, bool) для NetworkX"""
+    if val is None:
+        return ""
+    if isinstance(val, Enum):
+        return str(val.value)
+    if isinstance(val, (list, dict)):
+        return json.dumps(val, ensure_ascii=False)
+    if not isinstance(val, (int, float, str, bool)):
+        return str(val)
+    return val
+
+def log_graphml(filename: str, G: nx.DiGraph):
+    """Безопасно сохраняет NetworkX граф в формат GraphML."""
+    filepath = os.path.join(LOG_DIR, filename)
+    export_g = G.copy()
+    
+    # Очистка атрибутов узлов
+    for nid, data in export_g.nodes(data=True):
+        for k, v in list(data.items()):
+            export_g.nodes[nid][k] = sanitize_for_graphml(v)
+                
+    # Очистка атрибутов ребер
+    for u, v, data in export_g.edges(data=True):
+        for k, val in list(data.items()):
+            export_g.edges[u, v][k] = sanitize_for_graphml(val)
+                
+    nx.write_graphml(export_g, filepath)
 </file>
 
 <file path="FINAL_TZ_1.md">
@@ -1182,6 +476,1578 @@ class EdgeRelation(str, Enum):
 3.  **Соответствие назначению:** Все элементы UI и логика взаимодействия (UX) должны быть направлены на поддержку функции управления платформой администратором.
 </file>
 
+<file path="logss">
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: *.json, *.txt, *.graphml
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+layer1_global_glossary.json
+layer1_subgraph_chat_backend_team_thread_0_msg_1_to_6.json
+layer1_subgraph_chat_frontend_team_thread_0_msg_101_to_103.json
+layer1_subgraph_chat_frontend_team_thread_1_msg_104_to_107.json
+layer2_step1_initial_combined.graphml
+layer2_step2_merge_actions.json
+layer2_step3_final_unified.graphml
+layer2_step3_final_unified.json
+layer3_prompt_functional_req.txt
+layer3_prompt_general_info.txt
+layer3_prompt_tech_stack.txt
+layer3_prompt_ui_ux.txt
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="layer1_global_glossary.json">
+{
+  "alex_lead": {
+    "id": "alex_lead",
+    "name": "Alex Lead",
+    "label": "Person",
+    "description": "Alex Lead"
+  },
+  "ivan_dev": {
+    "id": "ivan_dev",
+    "name": "Ivan Dev",
+    "label": "Person",
+    "description": "Ivan Dev"
+  },
+  "petr_devops": {
+    "id": "petr_devops",
+    "name": "Petr DevOps",
+    "label": "Person",
+    "description": "Petr DevOps"
+  },
+  "database_schema": {
+    "id": "database_schema",
+    "name": "схему БД",
+    "label": "Concept",
+    "description": "Схема базы данных"
+  },
+  "postgresql": {
+    "id": "postgresql",
+    "name": "PostgreSQL",
+    "label": "Component",
+    "description": "Система управления базами данных PostgreSQL"
+  },
+  "postgresql_15": {
+    "id": "postgresql_15",
+    "name": "Postgres 15",
+    "label": "Component",
+    "description": "Версия PostgreSQL 15"
+  },
+  "jsonb": {
+    "id": "jsonb",
+    "name": "JSONB",
+    "label": "Component",
+    "description": "Тип данных JSONB для хранения JSON в PostgreSQL"
+  },
+  "user_entity": {
+    "id": "user_entity",
+    "name": "User",
+    "label": "Concept",
+    "description": "Сущность пользователя"
+  },
+  "order_entity": {
+    "id": "order_entity",
+    "name": "Order",
+    "label": "Concept",
+    "description": "Сущность заказа"
+  },
+  "fastapi_service": {
+    "id": "fastapi_service",
+    "name": "FastAPI сервис",
+    "label": "Component",
+    "description": "Сервис, построенный на фреймворке FastAPI"
+  },
+  "jwt_authorization": {
+    "id": "jwt_authorization",
+    "name": "JWT авторизацию",
+    "label": "Requirement",
+    "description": "Требование по реализации авторизации с использованием JWT"
+  },
+  "login_endpoint": {
+    "id": "login_endpoint",
+    "name": "эндпоинт /login",
+    "label": "Component",
+    "description": "Эндпоинт для аутентификации пользователей"
+  },
+  "access_refresh_tokens": {
+    "id": "access_refresh_tokens",
+    "name": "access и refresh токены",
+    "label": "Concept",
+    "description": "Токены доступа и обновления для аутентификации"
+  },
+  "maria_ui": {
+    "id": "maria_ui",
+    "name": "Maria UI",
+    "label": "Person",
+    "description": "Дизайнер"
+  },
+  "figma_design": {
+    "id": "figma_design",
+    "name": "Дизайн в Фигме",
+    "label": "Concept",
+    "description": "Дизайн, созданный в Figma"
+  },
+  "react_frontend": {
+    "id": "react_frontend",
+    "name": "React",
+    "label": "Component",
+    "description": "Фронтенд на React"
+  },
+  "vue_frontend": {
+    "id": "vue_frontend",
+    "name": "Vue",
+    "label": "Component",
+    "description": "Фронтенд на Vue"
+  },
+  "dmitry_front": {
+    "id": "dmitry_front",
+    "name": "Dmitry Front",
+    "label": "Person",
+    "description": "Разработчик"
+  },
+  "vite_build_tool": {
+    "id": "vite_build_tool",
+    "name": "Vite",
+    "label": "Component",
+    "description": "Сборщик Vite"
+  },
+  "ant_design_components": {
+    "id": "ant_design_components",
+    "name": "Ant Design",
+    "label": "Component",
+    "description": "Библиотека компонентов Ant Design"
+  },
+  "login_screen": {
+    "id": "login_screen",
+    "name": "LoginScreen",
+    "label": "Component",
+    "description": "форма входа (LoginScreen)"
+  },
+  "email_password_validation": {
+    "id": "email_password_validation",
+    "name": "email/password validation",
+    "label": "Requirement",
+    "description": "валидацию полей email/password"
+  }
+}
+</file>
+
+<file path="layer1_subgraph_chat_backend_team_thread_0_msg_1_to_6.json">
+{
+  "summary": "",
+  "nodes": [
+    {
+      "id": "alex_lead",
+      "label": "Person",
+      "name": "Alex Lead",
+      "description": "Alex Lead",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ivan_dev",
+      "label": "Person",
+      "name": "Ivan Dev",
+      "description": "Ivan Dev",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "petr_devops",
+      "label": "Person",
+      "name": "Petr DevOps",
+      "description": "Petr DevOps",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "database_schema",
+      "label": "Concept",
+      "name": "схему БД",
+      "description": "Схема базы данных",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "postgresql",
+      "label": "Component",
+      "name": "PostgreSQL",
+      "description": "Система управления базами данных PostgreSQL",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "postgresql_15",
+      "label": "Component",
+      "name": "Postgres 15",
+      "description": "Версия PostgreSQL 15",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "jsonb",
+      "label": "Component",
+      "name": "JSONB",
+      "description": "Тип данных JSONB для хранения JSON в PostgreSQL",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "user_entity",
+      "label": "Concept",
+      "name": "User",
+      "description": "Сущность пользователя",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "order_entity",
+      "label": "Concept",
+      "name": "Order",
+      "description": "Сущность заказа",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "fastapi_service",
+      "label": "Component",
+      "name": "FastAPI сервис",
+      "description": "Сервис, построенный на фреймворке FastAPI",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "jwt_authorization",
+      "label": "Requirement",
+      "name": "JWT авторизацию",
+      "description": "Требование по реализации авторизации с использованием JWT",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "login_endpoint",
+      "label": "Component",
+      "name": "эндпоинт /login",
+      "description": "Эндпоинт для аутентификации пользователей",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "access_refresh_tokens",
+      "label": "Concept",
+      "name": "access и refresh токены",
+      "description": "Токены доступа и обновления для аутентификации",
+      "properties": [],
+      "target_section": "uncategorized"
+    }
+  ],
+  "edges": [
+    {
+      "source": "alex_lead",
+      "target": "database_schema",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Ребят, давайте утвердим схему БД."
+    },
+    {
+      "source": "alex_lead",
+      "target": "postgresql",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Используем PostgreSQL?"
+    },
+    {
+      "source": "ivan_dev",
+      "target": "postgresql_15",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Да, Postgres 15."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jsonb",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "alex_lead",
+      "target": "user_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Создаю сущность User"
+    },
+    {
+      "source": "alex_lead",
+      "target": "order_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: и Order."
+    },
+    {
+      "source": "petr_devops",
+      "target": "fastapi_service",
+      "relation": "MENTIONS",
+      "evidence": "Petr DevOps: Надо поднять FastAPI сервис."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jwt_authorization",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: И обязательно JWT авторизацию прикрутить."
+    },
+    {
+      "source": "alex_lead",
+      "target": "login_endpoint",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    },
+    {
+      "source": "alex_lead",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: ...access и refresh токены."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "fastapi_service",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Согласен."
+    },
+    {
+      "source": "postgresql_15",
+      "target": "jsonb",
+      "relation": "DEPENDS_ON",
+      "evidence": "Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "login_endpoint",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    }
+  ],
+  "source_ref": "thread_0_msg_1_to_6"
+}
+</file>
+
+<file path="layer1_subgraph_chat_frontend_team_thread_0_msg_101_to_103.json">
+{
+  "summary": "",
+  "nodes": [
+    {
+      "id": "maria_ui",
+      "label": "Person",
+      "name": "Maria UI",
+      "description": "Дизайнер",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "figma_design",
+      "label": "Concept",
+      "name": "Дизайн в Фигме",
+      "description": "Дизайн, созданный в Figma",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "react_frontend",
+      "label": "Component",
+      "name": "React",
+      "description": "Фронтенд на React",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "vue_frontend",
+      "label": "Component",
+      "name": "Vue",
+      "description": "Фронтенд на Vue",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "dmitry_front",
+      "label": "Person",
+      "name": "Dmitry Front",
+      "description": "Разработчик",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "vite_build_tool",
+      "label": "Component",
+      "name": "Vite",
+      "description": "Сборщик Vite",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ant_design_components",
+      "label": "Component",
+      "name": "Ant Design",
+      "description": "Библиотека компонентов Ant Design",
+      "properties": [],
+      "target_section": "uncategorized"
+    }
+  ],
+  "edges": [
+    {
+      "source": "maria_ui",
+      "target": "figma_design",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов."
+    },
+    {
+      "source": "maria_ui",
+      "target": "react_frontend",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?"
+    },
+    {
+      "source": "maria_ui",
+      "target": "vue_frontend",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?"
+    },
+    {
+      "source": "dmitry_front",
+      "target": "react_frontend",
+      "relation": "AGREES_WITH",
+      "evidence": "Dmitry Front[в ответ Maria UI: \"Дизайн в Фигме готов. Делаем на React ил...\"]. Давай React + Vite. Так быстрее."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "vite_build_tool",
+      "relation": "AGREES_WITH",
+      "evidence": "Dmitry Front[в ответ Maria UI: \"Дизайн в Фигме готов. Делаем на React ил...\"]. Давай React + Vite. Так быстрее."
+    },
+    {
+      "source": "maria_ui",
+      "target": "ant_design_components",
+      "relation": "AGREES_WITH",
+      "evidence": "Maria UI: Ок. Используем библиотеку компонентов Ant Design."
+    }
+  ],
+  "source_ref": "thread_0_msg_101_to_103"
+}
+</file>
+
+<file path="layer1_subgraph_chat_frontend_team_thread_1_msg_104_to_107.json">
+{
+  "summary": "",
+  "nodes": [
+    {
+      "id": "dmitry_front",
+      "label": "Person",
+      "name": "Dmitry Front",
+      "description": "Разработчик",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ivan_dev",
+      "label": "Person",
+      "name": "Ivan Dev",
+      "description": "Ivan Dev",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "login_endpoint",
+      "label": "Component",
+      "name": "POST /login",
+      "description": "Эндпоинт для аутентификации пользователей",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "jwt_authorization",
+      "label": "Requirement",
+      "name": "JWT авторизацию",
+      "description": "Требование по реализации авторизации с использованием JWT",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "login_screen",
+      "label": "Component",
+      "name": "LoginScreen",
+      "description": "форма входа (LoginScreen)",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "email_password_validation",
+      "label": "Requirement",
+      "name": "email/password validation",
+      "description": "валидацию полей email/password",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "maria_ui",
+      "label": "Person",
+      "name": "Maria UI",
+      "description": "Дизайнер",
+      "properties": [],
+      "target_section": "uncategorized"
+    }
+  ],
+  "edges": [
+    {
+      "source": "dmitry_front",
+      "target": "login_endpoint",
+      "relation": "MENTIONS",
+      "evidence": "Dmitry Front: Как нам авторизовываться?"
+    },
+    {
+      "source": "ivan_dev",
+      "target": "login_endpoint",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jwt_authorization",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "login_endpoint",
+      "target": "jwt_authorization",
+      "relation": "RELATES_TO",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "login_screen",
+      "relation": "MENTIONS",
+      "evidence": "Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen)."
+    },
+    {
+      "source": "login_screen",
+      "target": "login_endpoint",
+      "relation": "DEPENDS_ON",
+      "evidence": "Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen)."
+    },
+    {
+      "source": "maria_ui",
+      "target": "email_password_validation",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: И добавь валидацию полей email/password."
+    },
+    {
+      "source": "login_screen",
+      "target": "email_password_validation",
+      "relation": "DEPENDS_ON",
+      "evidence": "Maria UI: И добавь валидацию полей email/password."
+    }
+  ],
+  "source_ref": "thread_1_msg_104_to_107"
+}
+</file>
+
+<file path="layer2_step1_initial_combined.graphml">
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d7" for="edge" attr.name="evidence" attr.type="string"/>
+<key id="d6" for="edge" attr.name="relation" attr.type="string"/>
+<key id="d5" for="node" attr.name="target_section" attr.type="string"/>
+<key id="d4" for="node" attr.name="properties" attr.type="string"/>
+<key id="d3" for="node" attr.name="description" attr.type="string"/>
+<key id="d2" for="node" attr.name="name" attr.type="string"/>
+<key id="d1" for="node" attr.name="label" attr.type="string"/>
+<key id="d0" for="node" attr.name="id" attr.type="string"/>
+<graph edgedefault="directed"><node id="alex_lead">
+  <data key="d0">alex_lead</data>
+  <data key="d1">Person</data>
+  <data key="d2">Alex Lead</data>
+  <data key="d3">Alex Lead</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="ivan_dev">
+  <data key="d0">ivan_dev</data>
+  <data key="d1">Person</data>
+  <data key="d2">Ivan Dev</data>
+  <data key="d3">Ivan Dev</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="petr_devops">
+  <data key="d0">petr_devops</data>
+  <data key="d1">Person</data>
+  <data key="d2">Petr DevOps</data>
+  <data key="d3">Petr DevOps</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="database_schema">
+  <data key="d0">database_schema</data>
+  <data key="d1">Concept</data>
+  <data key="d2">схему БД</data>
+  <data key="d3">Схема базы данных</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="postgresql">
+  <data key="d0">postgresql</data>
+  <data key="d1">Component</data>
+  <data key="d2">PostgreSQL</data>
+  <data key="d3">Система управления базами данных PostgreSQL</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="postgresql_15">
+  <data key="d0">postgresql_15</data>
+  <data key="d1">Component</data>
+  <data key="d2">Postgres 15</data>
+  <data key="d3">Версия PostgreSQL 15</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="jsonb">
+  <data key="d0">jsonb</data>
+  <data key="d1">Component</data>
+  <data key="d2">JSONB</data>
+  <data key="d3">Тип данных JSONB для хранения JSON в PostgreSQL</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="user_entity">
+  <data key="d0">user_entity</data>
+  <data key="d1">Concept</data>
+  <data key="d2">User</data>
+  <data key="d3">Сущность пользователя</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="order_entity">
+  <data key="d0">order_entity</data>
+  <data key="d1">Concept</data>
+  <data key="d2">Order</data>
+  <data key="d3">Сущность заказа</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="fastapi_service">
+  <data key="d0">fastapi_service</data>
+  <data key="d1">Component</data>
+  <data key="d2">FastAPI сервис</data>
+  <data key="d3">Сервис, построенный на фреймворке FastAPI</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="jwt_authorization">
+  <data key="d0">jwt_authorization</data>
+  <data key="d1">Requirement</data>
+  <data key="d2">JWT авторизацию</data>
+  <data key="d3">Требование по реализации авторизации с использованием JWT</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="login_endpoint">
+  <data key="d0">login_endpoint</data>
+  <data key="d1">Component</data>
+  <data key="d2">эндпоинт /login</data>
+  <data key="d3">Эндпоинт для аутентификации пользователей</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="access_refresh_tokens">
+  <data key="d0">access_refresh_tokens</data>
+  <data key="d1">Concept</data>
+  <data key="d2">access и refresh токены</data>
+  <data key="d3">Токены доступа и обновления для аутентификации</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="maria_ui">
+  <data key="d0">maria_ui</data>
+  <data key="d1">Person</data>
+  <data key="d2">Maria UI</data>
+  <data key="d3">Дизайнер</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="figma_design">
+  <data key="d0">figma_design</data>
+  <data key="d1">Concept</data>
+  <data key="d2">Дизайн в Фигме</data>
+  <data key="d3">Дизайн, созданный в Figma</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="react_frontend">
+  <data key="d0">react_frontend</data>
+  <data key="d1">Component</data>
+  <data key="d2">React</data>
+  <data key="d3">Фронтенд на React</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="vue_frontend">
+  <data key="d0">vue_frontend</data>
+  <data key="d1">Component</data>
+  <data key="d2">Vue</data>
+  <data key="d3">Фронтенд на Vue</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="dmitry_front">
+  <data key="d0">dmitry_front</data>
+  <data key="d1">Person</data>
+  <data key="d2">Dmitry Front</data>
+  <data key="d3">Разработчик</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="vite_build_tool">
+  <data key="d0">vite_build_tool</data>
+  <data key="d1">Component</data>
+  <data key="d2">Vite</data>
+  <data key="d3">Сборщик Vite</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="ant_design_components">
+  <data key="d0">ant_design_components</data>
+  <data key="d1">Component</data>
+  <data key="d2">Ant Design</data>
+  <data key="d3">Библиотека компонентов Ant Design</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="login_screen">
+  <data key="d0">login_screen</data>
+  <data key="d1">Component</data>
+  <data key="d2">LoginScreen</data>
+  <data key="d3">форма входа (LoginScreen)</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="email_password_validation">
+  <data key="d0">email_password_validation</data>
+  <data key="d1">Requirement</data>
+  <data key="d2">email/password validation</data>
+  <data key="d3">валидацию полей email/password</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<edge source="alex_lead" target="database_schema">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Ребят, давайте утвердим схему БД.</data>
+</edge>
+<edge source="alex_lead" target="postgresql">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Используем PostgreSQL?</data>
+</edge>
+<edge source="alex_lead" target="user_entity">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Создаю сущность User</data>
+</edge>
+<edge source="alex_lead" target="order_entity">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: и Order.</data>
+</edge>
+<edge source="alex_lead" target="login_endpoint">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены.</data>
+</edge>
+<edge source="alex_lead" target="access_refresh_tokens">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: ...access и refresh токены.</data>
+</edge>
+<edge source="ivan_dev" target="postgresql_15">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Ivan Dev: Да, Postgres 15.</data>
+</edge>
+<edge source="ivan_dev" target="jsonb">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Нам нужен JSONB для хранения конфигов.</data>
+</edge>
+<edge source="ivan_dev" target="jwt_authorization">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="ivan_dev" target="fastapi_service">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Ivan Dev: Согласен.</data>
+</edge>
+<edge source="ivan_dev" target="login_endpoint">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="petr_devops" target="fastapi_service">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Petr DevOps: Надо поднять FastAPI сервис.</data>
+</edge>
+<edge source="postgresql_15" target="jsonb">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов.</data>
+</edge>
+<edge source="login_endpoint" target="access_refresh_tokens">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены.</data>
+</edge>
+<edge source="login_endpoint" target="jwt_authorization">
+  <data key="d6">RELATES_TO</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="maria_ui" target="figma_design">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов.</data>
+</edge>
+<edge source="maria_ui" target="react_frontend">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?</data>
+</edge>
+<edge source="maria_ui" target="vue_frontend">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?</data>
+</edge>
+<edge source="maria_ui" target="ant_design_components">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Maria UI: Ок. Используем библиотеку компонентов Ant Design.</data>
+</edge>
+<edge source="maria_ui" target="email_password_validation">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: И добавь валидацию полей email/password.</data>
+</edge>
+<edge source="dmitry_front" target="react_frontend">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Dmitry Front[в ответ Maria UI: "Дизайн в Фигме готов. Делаем на React ил..."]. Давай React + Vite. Так быстрее.</data>
+</edge>
+<edge source="dmitry_front" target="vite_build_tool">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Dmitry Front[в ответ Maria UI: "Дизайн в Фигме готов. Делаем на React ил..."]. Давай React + Vite. Так быстрее.</data>
+</edge>
+<edge source="dmitry_front" target="login_endpoint">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Dmitry Front: Как нам авторизовываться?</data>
+</edge>
+<edge source="dmitry_front" target="login_screen">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen).</data>
+</edge>
+<edge source="login_screen" target="login_endpoint">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen).</data>
+</edge>
+<edge source="login_screen" target="email_password_validation">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Maria UI: И добавь валидацию полей email/password.</data>
+</edge>
+</graph></graphml>
+</file>
+
+<file path="layer2_step2_merge_actions.json">
+{
+  "actions": [
+    {
+      "is_duplicate": true,
+      "ids_to_merge": [
+        "postgresql",
+        "postgresql_15"
+      ],
+      "unified_id": "postgresql",
+      "unified_name": "PostgreSQL",
+      "unified_desc": "Система управления базами данных PostgreSQL"
+    },
+    {
+      "is_duplicate": true,
+      "ids_to_merge": [
+        "login_endpoint",
+        "login_screen"
+      ],
+      "unified_id": "login",
+      "unified_name": "Аутентификация",
+      "unified_desc": "Эндпоинт и экран для аутентификации пользователей"
+    }
+  ]
+}
+</file>
+
+<file path="layer2_step3_final_unified.graphml">
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d7" for="edge" attr.name="evidence" attr.type="string"/>
+<key id="d6" for="edge" attr.name="relation" attr.type="string"/>
+<key id="d5" for="node" attr.name="target_section" attr.type="string"/>
+<key id="d4" for="node" attr.name="properties" attr.type="string"/>
+<key id="d3" for="node" attr.name="description" attr.type="string"/>
+<key id="d2" for="node" attr.name="name" attr.type="string"/>
+<key id="d1" for="node" attr.name="label" attr.type="string"/>
+<key id="d0" for="node" attr.name="id" attr.type="string"/>
+<graph edgedefault="directed"><node id="alex_lead">
+  <data key="d0">alex_lead</data>
+  <data key="d1">Person</data>
+  <data key="d2">Alex Lead</data>
+  <data key="d3">Alex Lead</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="ivan_dev">
+  <data key="d0">ivan_dev</data>
+  <data key="d1">Person</data>
+  <data key="d2">Ivan Dev</data>
+  <data key="d3">Ivan Dev</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="petr_devops">
+  <data key="d0">petr_devops</data>
+  <data key="d1">Person</data>
+  <data key="d2">Petr DevOps</data>
+  <data key="d3">Petr DevOps</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="database_schema">
+  <data key="d0">database_schema</data>
+  <data key="d1">Concept</data>
+  <data key="d2">схему БД</data>
+  <data key="d3">Схема базы данных</data>
+  <data key="d4">[]</data>
+  <data key="d5">general_info</data>
+</node>
+<node id="postgresql">
+  <data key="d0">postgresql</data>
+  <data key="d1">Component</data>
+  <data key="d2">PostgreSQL</data>
+  <data key="d3">Система управления базами данных PostgreSQL</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="jsonb">
+  <data key="d0">jsonb</data>
+  <data key="d1">Component</data>
+  <data key="d2">JSONB</data>
+  <data key="d3">Тип данных JSONB для хранения JSON в PostgreSQL</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="user_entity">
+  <data key="d0">user_entity</data>
+  <data key="d1">Concept</data>
+  <data key="d2">User</data>
+  <data key="d3">Сущность пользователя</data>
+  <data key="d4">[]</data>
+  <data key="d5">general_info</data>
+</node>
+<node id="order_entity">
+  <data key="d0">order_entity</data>
+  <data key="d1">Concept</data>
+  <data key="d2">Order</data>
+  <data key="d3">Сущность заказа</data>
+  <data key="d4">[]</data>
+  <data key="d5">general_info</data>
+</node>
+<node id="fastapi_service">
+  <data key="d0">fastapi_service</data>
+  <data key="d1">Component</data>
+  <data key="d2">FastAPI сервис</data>
+  <data key="d3">Сервис, построенный на фреймворке FastAPI</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="jwt_authorization">
+  <data key="d0">jwt_authorization</data>
+  <data key="d1">Requirement</data>
+  <data key="d2">JWT авторизацию</data>
+  <data key="d3">Требование по реализации авторизации с использованием JWT</data>
+  <data key="d4">[]</data>
+  <data key="d5">functional_req</data>
+</node>
+<node id="access_refresh_tokens">
+  <data key="d0">access_refresh_tokens</data>
+  <data key="d1">Concept</data>
+  <data key="d2">access и refresh токены</data>
+  <data key="d3">Токены доступа и обновления для аутентификации</data>
+  <data key="d4">[]</data>
+  <data key="d5">functional_req</data>
+</node>
+<node id="maria_ui">
+  <data key="d0">maria_ui</data>
+  <data key="d1">Person</data>
+  <data key="d2">Maria UI</data>
+  <data key="d3">Дизайнер</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="figma_design">
+  <data key="d0">figma_design</data>
+  <data key="d1">Concept</data>
+  <data key="d2">Дизайн в Фигме</data>
+  <data key="d3">Дизайн, созданный в Figma</data>
+  <data key="d4">[]</data>
+  <data key="d5">ui_ux</data>
+</node>
+<node id="react_frontend">
+  <data key="d0">react_frontend</data>
+  <data key="d1">Component</data>
+  <data key="d2">React</data>
+  <data key="d3">Фронтенд на React</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="vue_frontend">
+  <data key="d0">vue_frontend</data>
+  <data key="d1">Component</data>
+  <data key="d2">Vue</data>
+  <data key="d3">Фронтенд на Vue</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="dmitry_front">
+  <data key="d0">dmitry_front</data>
+  <data key="d1">Person</data>
+  <data key="d2">Dmitry Front</data>
+  <data key="d3">Разработчик</data>
+  <data key="d4">[]</data>
+  <data key="d5">uncategorized</data>
+</node>
+<node id="vite_build_tool">
+  <data key="d0">vite_build_tool</data>
+  <data key="d1">Component</data>
+  <data key="d2">Vite</data>
+  <data key="d3">Сборщик Vite</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="ant_design_components">
+  <data key="d0">ant_design_components</data>
+  <data key="d1">Component</data>
+  <data key="d2">Ant Design</data>
+  <data key="d3">Библиотека компонентов Ant Design</data>
+  <data key="d4">[]</data>
+  <data key="d5">tech_stack</data>
+</node>
+<node id="email_password_validation">
+  <data key="d0">email_password_validation</data>
+  <data key="d1">Requirement</data>
+  <data key="d2">email/password validation</data>
+  <data key="d3">валидацию полей email/password</data>
+  <data key="d4">[]</data>
+  <data key="d5">functional_req</data>
+</node>
+<node id="login">
+  <data key="d0">login</data>
+  <data key="d1">Component</data>
+  <data key="d2">Аутентификация</data>
+  <data key="d3">Эндпоинт и экран для аутентификации пользователей</data>
+  <data key="d4">[]</data>
+  <data key="d5">functional_req</data>
+</node>
+<edge source="alex_lead" target="database_schema">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Ребят, давайте утвердим схему БД.</data>
+</edge>
+<edge source="alex_lead" target="postgresql">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Используем PostgreSQL?</data>
+</edge>
+<edge source="alex_lead" target="user_entity">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Создаю сущность User</data>
+</edge>
+<edge source="alex_lead" target="order_entity">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: и Order.</data>
+</edge>
+<edge source="alex_lead" target="access_refresh_tokens">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: ...access и refresh токены.</data>
+</edge>
+<edge source="alex_lead" target="login">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены.</data>
+</edge>
+<edge source="ivan_dev" target="jsonb">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Нам нужен JSONB для хранения конфигов.</data>
+</edge>
+<edge source="ivan_dev" target="jwt_authorization">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="ivan_dev" target="fastapi_service">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Ivan Dev: Согласен.</data>
+</edge>
+<edge source="ivan_dev" target="postgresql">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Ivan Dev: Да, Postgres 15.</data>
+</edge>
+<edge source="ivan_dev" target="login">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="petr_devops" target="fastapi_service">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Petr DevOps: Надо поднять FastAPI сервис.</data>
+</edge>
+<edge source="postgresql" target="jsonb">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов.</data>
+</edge>
+<edge source="maria_ui" target="figma_design">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов.</data>
+</edge>
+<edge source="maria_ui" target="react_frontend">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?</data>
+</edge>
+<edge source="maria_ui" target="vue_frontend">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?</data>
+</edge>
+<edge source="maria_ui" target="ant_design_components">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Maria UI: Ок. Используем библиотеку компонентов Ant Design.</data>
+</edge>
+<edge source="maria_ui" target="email_password_validation">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Maria UI: И добавь валидацию полей email/password.</data>
+</edge>
+<edge source="dmitry_front" target="react_frontend">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Dmitry Front[в ответ Maria UI: "Дизайн в Фигме готов. Делаем на React ил..."]. Давай React + Vite. Так быстрее.</data>
+</edge>
+<edge source="dmitry_front" target="vite_build_tool">
+  <data key="d6">AGREES_WITH</data>
+  <data key="d7">Dmitry Front[в ответ Maria UI: "Дизайн в Фигме готов. Делаем на React ил..."]. Давай React + Vite. Так быстрее.</data>
+</edge>
+<edge source="dmitry_front" target="login">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen).</data>
+</edge>
+<edge source="login" target="access_refresh_tokens">
+  <data key="d6">MENTIONS</data>
+  <data key="d7">Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены.</data>
+</edge>
+<edge source="login" target="jwt_authorization">
+  <data key="d6">RELATES_TO</data>
+  <data key="d7">Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем.</data>
+</edge>
+<edge source="login" target="email_password_validation">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Maria UI: И добавь валидацию полей email/password.</data>
+</edge>
+<edge source="login" target="login">
+  <data key="d6">DEPENDS_ON</data>
+  <data key="d7">Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen).</data>
+</edge>
+</graph></graphml>
+</file>
+
+<file path="layer2_step3_final_unified.json">
+{
+  "nodes": [
+    {
+      "id": "alex_lead",
+      "label": "Person",
+      "name": "Alex Lead",
+      "description": "Alex Lead",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "ivan_dev",
+      "label": "Person",
+      "name": "Ivan Dev",
+      "description": "Ivan Dev",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "petr_devops",
+      "label": "Person",
+      "name": "Petr DevOps",
+      "description": "Petr DevOps",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "database_schema",
+      "label": "Concept",
+      "name": "схему БД",
+      "description": "Схема базы данных",
+      "properties": [],
+      "target_section": "general_info"
+    },
+    {
+      "id": "postgresql",
+      "label": "Component",
+      "name": "PostgreSQL",
+      "description": "Система управления базами данных PostgreSQL",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "jsonb",
+      "label": "Component",
+      "name": "JSONB",
+      "description": "Тип данных JSONB для хранения JSON в PostgreSQL",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "user_entity",
+      "label": "Concept",
+      "name": "User",
+      "description": "Сущность пользователя",
+      "properties": [],
+      "target_section": "general_info"
+    },
+    {
+      "id": "order_entity",
+      "label": "Concept",
+      "name": "Order",
+      "description": "Сущность заказа",
+      "properties": [],
+      "target_section": "general_info"
+    },
+    {
+      "id": "fastapi_service",
+      "label": "Component",
+      "name": "FastAPI сервис",
+      "description": "Сервис, построенный на фреймворке FastAPI",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "jwt_authorization",
+      "label": "Requirement",
+      "name": "JWT авторизацию",
+      "description": "Требование по реализации авторизации с использованием JWT",
+      "properties": [],
+      "target_section": "functional_req"
+    },
+    {
+      "id": "access_refresh_tokens",
+      "label": "Concept",
+      "name": "access и refresh токены",
+      "description": "Токены доступа и обновления для аутентификации",
+      "properties": [],
+      "target_section": "functional_req"
+    },
+    {
+      "id": "maria_ui",
+      "label": "Person",
+      "name": "Maria UI",
+      "description": "Дизайнер",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "figma_design",
+      "label": "Concept",
+      "name": "Дизайн в Фигме",
+      "description": "Дизайн, созданный в Figma",
+      "properties": [],
+      "target_section": "ui_ux"
+    },
+    {
+      "id": "react_frontend",
+      "label": "Component",
+      "name": "React",
+      "description": "Фронтенд на React",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "vue_frontend",
+      "label": "Component",
+      "name": "Vue",
+      "description": "Фронтенд на Vue",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "dmitry_front",
+      "label": "Person",
+      "name": "Dmitry Front",
+      "description": "Разработчик",
+      "properties": [],
+      "target_section": "uncategorized"
+    },
+    {
+      "id": "vite_build_tool",
+      "label": "Component",
+      "name": "Vite",
+      "description": "Сборщик Vite",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "ant_design_components",
+      "label": "Component",
+      "name": "Ant Design",
+      "description": "Библиотека компонентов Ant Design",
+      "properties": [],
+      "target_section": "tech_stack"
+    },
+    {
+      "id": "email_password_validation",
+      "label": "Requirement",
+      "name": "email/password validation",
+      "description": "валидацию полей email/password",
+      "properties": [],
+      "target_section": "functional_req"
+    },
+    {
+      "id": "login",
+      "label": "Component",
+      "name": "Аутентификация",
+      "description": "Эндпоинт и экран для аутентификации пользователей",
+      "properties": [],
+      "target_section": "functional_req"
+    }
+  ],
+  "edges": [
+    {
+      "source": "alex_lead",
+      "target": "database_schema",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Ребят, давайте утвердим схему БД."
+    },
+    {
+      "source": "alex_lead",
+      "target": "postgresql",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Используем PostgreSQL?"
+    },
+    {
+      "source": "alex_lead",
+      "target": "user_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Создаю сущность User"
+    },
+    {
+      "source": "alex_lead",
+      "target": "order_entity",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: и Order."
+    },
+    {
+      "source": "alex_lead",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: ...access и refresh токены."
+    },
+    {
+      "source": "alex_lead",
+      "target": "login",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jsonb",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "jwt_authorization",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "fastapi_service",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Согласен."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "postgresql",
+      "relation": "AGREES_WITH",
+      "evidence": "Ivan Dev: Да, Postgres 15."
+    },
+    {
+      "source": "ivan_dev",
+      "target": "login",
+      "relation": "MENTIONS",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "petr_devops",
+      "target": "fastapi_service",
+      "relation": "MENTIONS",
+      "evidence": "Petr DevOps: Надо поднять FastAPI сервис."
+    },
+    {
+      "source": "postgresql",
+      "target": "jsonb",
+      "relation": "DEPENDS_ON",
+      "evidence": "Ivan Dev: Да, Postgres 15. Нам нужен JSONB для хранения конфигов."
+    },
+    {
+      "source": "maria_ui",
+      "target": "figma_design",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов."
+    },
+    {
+      "source": "maria_ui",
+      "target": "react_frontend",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?"
+    },
+    {
+      "source": "maria_ui",
+      "target": "vue_frontend",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: Дизайн в Фигме готов. Делаем на React или Vue?"
+    },
+    {
+      "source": "maria_ui",
+      "target": "ant_design_components",
+      "relation": "AGREES_WITH",
+      "evidence": "Maria UI: Ок. Используем библиотеку компонентов Ant Design."
+    },
+    {
+      "source": "maria_ui",
+      "target": "email_password_validation",
+      "relation": "MENTIONS",
+      "evidence": "Maria UI: И добавь валидацию полей email/password."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "react_frontend",
+      "relation": "AGREES_WITH",
+      "evidence": "Dmitry Front[в ответ Maria UI: \"Дизайн в Фигме готов. Делаем на React ил...\"]. Давай React + Vite. Так быстрее."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "vite_build_tool",
+      "relation": "AGREES_WITH",
+      "evidence": "Dmitry Front[в ответ Maria UI: \"Дизайн в Фигме готов. Делаем на React ил...\"]. Давай React + Vite. Так быстрее."
+    },
+    {
+      "source": "dmitry_front",
+      "target": "login",
+      "relation": "MENTIONS",
+      "evidence": "Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen)."
+    },
+    {
+      "source": "login",
+      "target": "access_refresh_tokens",
+      "relation": "MENTIONS",
+      "evidence": "Alex Lead: Тогда эндпоинт /login будет выдавать access и refresh токены."
+    },
+    {
+      "source": "login",
+      "target": "jwt_authorization",
+      "relation": "RELATES_TO",
+      "evidence": "Ivan Dev: Стучитесь в POST /login, мы там JWT отдаем."
+    },
+    {
+      "source": "login",
+      "target": "email_password_validation",
+      "relation": "DEPENDS_ON",
+      "evidence": "Maria UI: И добавь валидацию полей email/password."
+    },
+    {
+      "source": "login",
+      "target": "login",
+      "relation": "DEPENDS_ON",
+      "evidence": "Dmitry Front: Понял. Тогда я сделаю форму входа (LoginScreen)."
+    }
+  ],
+  "conflicts": []
+}
+</file>
+
+<file path="layer3_prompt_functional_req.txt">
+Напиши раздел Технического Задания: 'functional_req'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- JWT авторизацию (ID: jwt_authorization): Требование по реализации авторизации с использованием JWT
+- access и refresh токены (ID: access_refresh_tokens): Токены доступа и обновления для аутентификации
+- email/password validation (ID: email_password_validation): валидацию полей email/password
+- Аутентификация (ID: login): Эндпоинт и экран для аутентификации пользователей
+</file>
+
+<file path="layer3_prompt_general_info.txt">
+Напиши раздел Технического Задания: 'general_info'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- схему БД (ID: database_schema): Схема базы данных
+- User (ID: user_entity): Сущность пользователя
+- Order (ID: order_entity): Сущность заказа
+</file>
+
+<file path="layer3_prompt_tech_stack.txt">
+Напиши раздел Технического Задания: 'tech_stack'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- PostgreSQL (ID: postgresql): Система управления базами данных PostgreSQL
+- JSONB (ID: jsonb): Тип данных JSONB для хранения JSON в PostgreSQL
+- FastAPI сервис (ID: fastapi_service): Сервис, построенный на фреймворке FastAPI
+- React (ID: react_frontend): Фронтенд на React
+- Vue (ID: vue_frontend): Фронтенд на Vue
+- Vite (ID: vite_build_tool): Сборщик Vite
+- Ant Design (ID: ant_design_components): Библиотека компонентов Ant Design
+</file>
+
+<file path="layer3_prompt_ui_ux.txt">
+Напиши раздел Технического Задания: 'ui_ux'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+- Дизайн в Фигме (ID: figma_design): Дизайн, созданный в Figma
+</file>
+
+</files>
+</file>
+
 <file path="README.md">
 
 </file>
@@ -1194,302 +2060,8 @@ from .extractor import MinerProcessor
 from .merger import SmartGraphMerger
 </file>
 
-<file path="layer2_merger/merger.py">
-import logging
-import networkx as nx
-from typing import List
-from pydantic import BaseModel, Field
-from schemas.graph import ExtractedKnowledge, UnifiedGraph, GraphNode, GraphEdge, Conflict
-from schemas.enums import TZSectionEnum, NodeLabel
-from utils.llm_client import acall_llm_json
-
-logger = logging.getLogger(__name__)
-
-
-class MergeAction(BaseModel):
-    is_duplicate: bool = Field(description="Это одна и та же сущность?")
-    ids_to_merge: List[str] = Field(description="Список ID, которые нужно слить в один")
-    unified_id: str = Field(description="Новый ID для слитого узла")
-    unified_name: str = Field(description="Общее имя")
-    unified_desc: str = Field(description="Объединенное описание")
-
-
-class MergeBatchResult(BaseModel):
-    actions: List[MergeAction] = Field(default_factory=list)
-
-
-class SectionAssignment(BaseModel):
-    node_id: str
-    target_section: TZSectionEnum
-
-
-class SectionBatchResult(BaseModel):
-    assignments: List[SectionAssignment]
-
-
-class SmartGraphMerger:
-    def __init__(self):
-        self.G = nx.DiGraph()
-        self.conflicts: List[Conflict] = []
-
-    async def smart_merge(self, subgraphs: List[ExtractedKnowledge]) -> UnifiedGraph:
-        logger.info("🔗 СЛОЙ 2: Загрузка подграфов в единый граф NetworkX")
-
-        for sg in subgraphs:
-            for node in sg.nodes:
-                if not self.G.has_node(node.id):
-                    self.G.add_node(node.id, **node.model_dump())
-            for edge in sg.edges:
-                # !!! ИСПРАВЛЕНИЕ 1: Исключаем source и target при добавлении в граф,
-                # так как они уже определены топологией графа (u -> v)
-                edge_data = edge.model_dump(exclude={'source', 'target'})
-                self.G.add_edge(edge.source, edge.target, **edge_data)
-
-        logger.info(f"  -> Исходный размер: {self.G.number_of_nodes()} узлов, {self.G.number_of_edges()} связей.")
-
-        # ... (код дедупликации и распределения по секциям остается без изменений) ...
-
-        nodes_by_label = {}
-        for nid, data in self.G.nodes(data=True):
-            label = data.get("label")
-            if label not in nodes_by_label:
-                nodes_by_label[label] = []
-            nodes_by_label[label].append({"id": nid, "name": data.get("name"), "desc": data.get("description")})
-
-        for label, nodes in nodes_by_label.items():
-            if len(nodes) < 2: continue
-
-            # (Логика дедупликации пропущена для краткости, она не меняется)
-            logger.info(f"  -> Дедупликация группы '{label}' ({len(nodes)} узлов)...")
-            batch_size = 15
-            for i in range(0, len(nodes), batch_size):
-                batch = nodes[i:i + batch_size]
-                prompt = """Ты Архитектор. Найди дубликаты среди этих узлов (синонимы, одно и то же понятие).
-                Если находишь дубликаты, верни MergeAction с is_duplicate=true.
-                Если дубликатов нет, верни пустой список actions."""
-                data_str = "\n".join([f"ID: {n['id']} | Имя: {n['name']} | Описание: {n['desc']}" for n in batch])
-                try:
-                    result = await acall_llm_json(schema=MergeBatchResult, prompt=prompt, data=data_str)
-                    for action in result.actions:
-                        if action.is_duplicate and len(action.ids_to_merge) > 1:
-                            self._merge_nodes_in_graph(action)
-                except Exception as e:
-                    logger.error(f"Ошибка при дедупликации: {e}")
-
-        await self._assign_sections()
-
-        final_nodes = []
-        for nid, data in self.G.nodes(data=True):
-            node_data = data.copy()
-            if "id" not in node_data:
-                node_data["id"] = nid
-
-            if "target_section" in node_data and isinstance(node_data["target_section"], str):
-                try:
-                    node_data["target_section"] = TZSectionEnum(node_data["target_section"])
-                except ValueError:
-                    node_data["target_section"] = TZSectionEnum.UNKNOWN
-
-            final_nodes.append(GraphNode(**node_data))
-
-        # !!! ИСПРАВЛЕНИЕ 2: Безопасное создание ребер
-        final_edges = []
-        for u, v, data in self.G.edges(data=True):
-            # Удаляем source/target из data, если они там случайно оказались,
-            # чтобы избежать конфликта аргументов
-            clean_data = {k: val for k, val in data.items() if k not in {'source', 'target'}}
-            final_edges.append(GraphEdge(source=u, target=v, **clean_data))
-
-        return UnifiedGraph(nodes=final_nodes, edges=final_edges, conflicts=self.conflicts)
-
-    def _merge_nodes_in_graph(self, action: MergeAction):
-        # ... (остальной код метода без изменений) ...
-        valid_ids = [nid for nid in action.ids_to_merge if self.G.has_node(nid)]
-        if not valid_ids: return
-
-        primary_id = action.unified_id
-        if not self.G.has_node(primary_id):
-            base_data = self.G.nodes[valid_ids[0]].copy()
-            base_data.update({
-                "id": primary_id,
-                "name": action.unified_name,
-                "description": action.unified_desc
-            })
-            self.G.add_node(primary_id, **base_data)
-
-        for old_id in valid_ids:
-            if old_id == primary_id: continue
-
-            for u, v, data in list(self.G.edges(old_id, data=True)):
-                if u == old_id: self.G.add_edge(primary_id, v, **data)
-
-            for u, v, data in list(self.G.in_edges(old_id, data=True)):
-                if v == old_id: self.G.add_edge(u, primary_id, **data)
-
-            self.G.remove_node(old_id)
-
-    async def _assign_sections(self):
-        # ... (без изменений) ...
-        logger.info("  -> Распределение узлов по секциям ТЗ...")
-        nodes_to_assign = [{"id": n, "name": d.get("name"), "label": d.get("label")}
-                           for n, d in self.G.nodes(data=True) if d.get("label") != NodeLabel.PERSON]
-
-        if not nodes_to_assign: return
-
-        prompt = """Распредели каждый узел в одну из секций ТЗ:
-        - GENERAL (общая инфа, задачи)
-        - STACK (компоненты, БД, либы)
-        - FUNCTIONAL (требования, фичи)
-        - INTERFACE (всё про UI/UX)"""
-
-        batch_size = 20
-        for i in range(0, len(nodes_to_assign), batch_size):
-            batch = nodes_to_assign[i:i + batch_size]
-            data_str = "\n".join([f"ID:{n['id']} | {n['label']} | {n['name']}" for n in batch])
-            try:
-                result = await acall_llm_json(schema=SectionBatchResult, prompt=prompt, data=data_str)
-                for assignment in result.assignments:
-                    if self.G.has_node(assignment.node_id):
-                        self.G.nodes[assignment.node_id]["target_section"] = assignment.target_section
-            except Exception:
-                pass
-</file>
-
 <file path="layer3_compiler/__init__.py">
 from .generator import TZGenerator
-</file>
-
-<file path="layer3_compiler/generator.py">
-import logging
-import asyncio
-from typing import List
-from schemas.graph import UnifiedGraph, GraphNode
-from schemas.enums import TZSectionEnum
-from schemas.document import FullTZDocument, GeneratedSection
-from utils.llm_client import acall_llm_text
-
-logger = logging.getLogger(__name__)
-
-
-class TZGenerator:
-    def __init__(self, model_name: str = "gemini-2.5-flash"):
-        self.model_name = model_name
-
-    async def generate_tz(self, graph: UnifiedGraph) -> FullTZDocument:
-        logger.info("📝 СЛОЙ 3: Генерация документа ТЗ...")
-
-        if graph.conflicts:
-            logger.warning(f"⚠️ В графе найдено {len(graph.conflicts)} неразрешенных конфликтов!")
-
-        sections_to_write = [
-            TZSectionEnum.GENERAL,
-            TZSectionEnum.FUNCTIONAL,
-            TZSectionEnum.STACK,
-            TZSectionEnum.INTERFACE
-        ]
-
-        tasks = []
-        for sec_enum in sections_to_write:
-            tasks.append(self._generate_section(sec_enum, graph))
-
-        generated_sections = await asyncio.gather(*tasks)
-
-        valid_sections = [sec for sec in generated_sections if sec is not None]
-
-        return FullTZDocument(
-            project_name="Техническое Задание (AI Generated)",
-            version="1.0.0",
-            sections=valid_sections
-        )
-
-    async def _generate_section(self, sec_enum: TZSectionEnum, graph: UnifiedGraph) -> GeneratedSection:
-        relevant_nodes = [n for n in graph.nodes if n.target_section == sec_enum]
-
-        if not relevant_nodes:
-            return None
-
-        logger.info(f"  -> Пишем раздел: {sec_enum.value} ({len(relevant_nodes)} узлов)")
-
-        node_context = "\n".join([f"- {n.name} (ID: {n.id}): {n.description}" for n in relevant_nodes])
-
-        prompt = f"""
-Напиши раздел Технического Задания: '{sec_enum.value}'.
-Используй ТОЛЬКО предоставленные факты из узлов. 
-Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
-
-ФАКТЫ ДЛЯ РАЗДЕЛА:
-{node_context}
-"""
-        try:
-            content_markdown = await acall_llm_text(prompt=prompt, model_name=self.model_name)
-            return GeneratedSection(
-                section_id=sec_enum,
-                title=sec_enum.name,
-                content_markdown=content_markdown
-            )
-        except Exception as e:
-            logger.error(f"Ошибка генерации раздела {sec_enum.value}: {e}")
-            return None
-</file>
-
-<file path="output/FINAL_TZ.md">
-# Техническое Задание (AI Generated)
-**Версия:** 1.0.0
-
----
-
-## GENERAL
-
-```markdown
-## Общая информация
-
-### Основные компоненты
-
-*   Database schema
-*   User entity
-*   Order entity
-```
-
----
-
-## FUNCTIONAL
-
-# Функциональные требования
-
-Система должна реализовывать процесс аутентификации пользователя (Login Flow), включающий следующие функциональные требования:
-
-*   Для авторизации пользователей должна применяться технология JSON Web Token (JWT).
-*   Механизм аутентификации должен предусматривать использование access и refresh токенов.
-*   Должна быть реализована валидация полей ввода 'email' и 'password'.
-
----
-
-## STACK
-
-## 3. Стек технологий
-
-Настоящий раздел описывает ключевые технологии, используемые при разработке и функционировании системы.
-
-*   **PostgreSQL**: Система управления реляционными базами данных.
-*   **JSONB**: Бинарный тип данных JSON для PostgreSQL.
-*   **FastAPI сервис**: Сервис, разработанный с использованием фреймворка FastAPI.
-*   **Vue**: Прогрессивный JavaScript фреймворк для создания пользовательских интерфейсов.
-
----
-
-## INTERFACE
-
-# Раздел: UI/UX
-
-## 1. Общие положения
-
-В данном разделе определяются требования к пользовательскому интерфейсу (UI) и пользовательскому опыту (UX) разрабатываемой системы.
-
-## 2. Технологии и компоненты UI
-
-*   **React UI (ID: react_ui):** Для реализации пользовательского интерфейса будут применяться компоненты и библиотеки, разработанные на базе фреймворка React.
-
----
 </file>
 
 <file path="schemas/document.py">
@@ -1555,6 +2127,12 @@ class UnifiedGraph(BaseModel):
     conflicts: List[Conflict] = Field(default_factory=list)
 </file>
 
+<file path="utils/__init__.py">
+from .llm_client import acall_llm_json, acall_llm_text
+from .preprocessing import format_chat_message
+from .state_logger import init_logs_dir, log_pydantic, log_dict, log_text, log_graphml
+</file>
+
 <file path="utils/preprocessing.py">
 CONFIRMATION_WORDS = {"ок", "да", "давайте", "плюс", "+", "ага", "согласен", "добро", "ок, да"}
 REJECTION_WORDS = {"не", "нет", "не надо", "минус", "-", "отмена"}
@@ -1586,117 +2164,6 @@ def format_chat_message(msg: dict, msg_lookup: dict = None) -> str:
         reply_str = f"[в ответ {r_author}: \"{r_text}...\"]"
 
     return f"[{date}] {author}{reply_str}: {text}".strip()
-</file>
-
-<file path=".gitignore">
-# Python-generated files
-__pycache__/
-__pycache__
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-# Virtual environments
-.venv
-venv
-.env
-</file>
-
-<file path="layer1_miner/extractor.py">
-import logging
-import asyncio
-from typing import List, Dict
-from pydantic import BaseModel, Field
-
-from schemas.document import DataSource
-from schemas.enums import NodeLabel
-from schemas.graph import ExtractedKnowledge
-from utils.preprocessing import format_chat_message
-from utils.llm_client import acall_llm_json
-from .windowing import asplit_chat_into_semantic_threads
-
-logger = logging.getLogger(__name__)
-
-
-class GlossaryItem(BaseModel):
-    id: str = Field(description="Snake_case ID")
-    name: str = Field(description="Человекочитаемое название")
-    label: NodeLabel = Field(description="Тип сущности")
-    description: str = Field(description="Краткое описание")
-
-
-class ProjectGlossary(BaseModel):
-    entities: List[GlossaryItem] = Field(default_factory=list)
-
-
-class MinerProcessor:
-    def __init__(self):
-        self.global_glossary_dict: Dict[str, GlossaryItem] = {}
-
-    def _format_glossary(self) -> str:
-        return "\n".join([f"- {e.id} ({e.label.value}): {e.name}" for e in self.global_glossary_dict.values()])
-
-    async def process_source(self, source: DataSource) -> List[ExtractedKnowledge]:
-        logger.info(f"⛏️ СЛОЙ 1: Начинаем извлечение из {source.file_name}")
-        extracted_graphs = []
-        previous_summary = ""
-
-        if source.source_type == "chat":
-            windows = await asplit_chat_into_semantic_threads(source.content)
-            msg_lookup = {m["id"]: m for m in source.content if m.get("type") == "message"}
-
-            for ref, msgs in windows:
-                text_chunk = "\n".join([format_chat_message(m, msg_lookup) for m in msgs])
-                logger.info(f"  -> Анализ окна {ref} ({len(msgs)} сообщений)")
-
-                graph = await self._extract_subgraph_2pass(text_chunk, ref, previous_summary)
-                previous_summary = graph.summary
-                extracted_graphs.append(graph)
-                await asyncio.sleep(2)
-        else:
-            graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
-            extracted_graphs.append(graph)
-
-        return extracted_graphs
-
-    async def _extract_subgraph_2pass(self, text: str, source_ref: str, prev_summary: str) -> ExtractedKnowledge:
-        glossary_prompt = f"""Найди все ключевые сущности в тексте (Люди, Компоненты, Задачи, Требования).
-Если сущность уже есть в ГЛОССАРИИ ниже, используй ЕЕ СТАРЫЙ ID.
-Если это новая сущность — создай новый snake_case ID.
-
-СУЩЕСТВУЮЩИЙ ГЛОССАРИЙ:
-{self._format_glossary() or 'Пока пусто.'}"""
-
-        local_glossary = await acall_llm_json(schema=ProjectGlossary, prompt=glossary_prompt, data=text)
-
-        for entity in local_glossary.entities:
-            if entity.id not in self.global_glossary_dict:
-                self.global_glossary_dict[entity.id] = entity
-
-        graph_prompt = f"""Ты Архитектор. Извлеки граф знаний (узлы и связи).
-СТРОГИЕ ПРАВИЛА:
-1. Используй ТОЛЬКО ID из Глоссария проекта.
-2. Обращай внимание на[FLAG: CONFIRMATION] (означает AGREES_WITH).
-3. Добавляй evidence для каждой связи (почему ты их связал).
-
-ГЛОССАРИЙ ПРОЕКТА:
-{self._format_glossary()}
-
-ПАМЯТЬ ПРОШЛЫХ ОКОН:
-{prev_summary or 'Начало диалога.'}"""
-
-        result = await acall_llm_json(schema=ExtractedKnowledge, prompt=graph_prompt, data=text)
-        result.source_ref = source_ref
-
-        for node in result.nodes:
-            if node.id in self.global_glossary_dict:
-                g_item = self.global_glossary_dict[node.id]
-                if not node.name: node.name = g_item.name
-                if not node.description: node.description = g_item.description
-                if not node.label: node.label = g_item.label
-
-        return result
 </file>
 
 <file path="layer1_miner/windowing.py">
@@ -1804,6 +2271,330 @@ async def asplit_chat_into_semantic_threads(messages: List[dict]) -> List[Tuple[
     return processed_windows
 </file>
 
+<file path="layer2_merger/merger.py">
+import logging
+import networkx as nx
+from typing import List
+from pydantic import BaseModel, Field
+from schemas.graph import ExtractedKnowledge, UnifiedGraph, GraphNode, GraphEdge, Conflict
+from schemas.enums import TZSectionEnum, NodeLabel
+from utils.llm_client import acall_llm_json
+from utils.state_logger import log_graphml, log_pydantic
+
+logger = logging.getLogger(__name__)
+
+
+class MergeAction(BaseModel):
+    is_duplicate: bool = Field(description="Это одна и та же сущность?")
+    ids_to_merge: List[str] = Field(description="Список ID, которые нужно слить в один")
+    unified_id: str = Field(description="Новый ID для слитого узла")
+    unified_name: str = Field(description="Общее имя")
+    unified_desc: str = Field(description="Объединенное описание")
+
+
+class MergeBatchResult(BaseModel):
+    actions: List[MergeAction] = Field(default_factory=list)
+
+
+class SectionAssignment(BaseModel):
+    node_id: str
+    target_section: TZSectionEnum
+
+
+class SectionBatchResult(BaseModel):
+    assignments: List[SectionAssignment]
+
+
+class SmartGraphMerger:
+    def __init__(self):
+        self.G = nx.DiGraph()
+        self.conflicts: List[Conflict] = []
+        self.logged_merge_actions: List[MergeAction] = [] 
+
+    async def smart_merge(self, subgraphs: List[ExtractedKnowledge]) -> UnifiedGraph:
+        logger.info("🔗 СЛОЙ 2: Загрузка подграфов в единый граф NetworkX")
+
+        for sg in subgraphs:
+            for node in sg.nodes:
+                if not self.G.has_node(node.id):
+                    # Используем mode='json' для безопасной конвертации Enum в строки
+                    self.G.add_node(node.id, **node.model_dump(mode='json'))
+            for edge in sg.edges:
+                edge_data = edge.model_dump(mode='json', exclude={'source', 'target'})
+                self.G.add_edge(edge.source, edge.target, **edge_data)
+
+        logger.info(f"  -> Исходный размер: {self.G.number_of_nodes()} узлов, {self.G.number_of_edges()} связей.")
+        
+        # --- LOGGING ---
+        log_graphml("layer2_step1_initial_combined.graphml", self.G)
+
+        nodes_by_label = {}
+        for nid, data in self.G.nodes(data=True):
+            label = data.get("label")
+            if label not in nodes_by_label:
+                nodes_by_label[label] = []
+            nodes_by_label[label].append({"id": nid, "name": data.get("name"), "desc": data.get("description")})
+
+        for label, nodes in nodes_by_label.items():
+            if len(nodes) < 2: continue
+
+            logger.info(f"  -> Дедупликация группы '{label}' ({len(nodes)} узлов)...")
+            batch_size = 15
+            for i in range(0, len(nodes), batch_size):
+                batch = nodes[i:i + batch_size]
+                prompt = """Ты Архитектор. Найди дубликаты среди этих узлов (синонимы, одно и то же понятие).
+                Если находишь дубликаты, верни MergeAction с is_duplicate=true.
+                Если дубликатов нет, верни пустой список actions."""
+                data_str = "\n".join([f"ID: {n['id']} | Имя: {n['name']} | Описание: {n['desc']}" for n in batch])
+                try:
+                    result = await acall_llm_json(schema=MergeBatchResult, prompt=prompt, data=data_str)
+                    for action in result.actions:
+                        if action.is_duplicate and len(action.ids_to_merge) > 1:
+                            self.logged_merge_actions.append(action)
+                            self._merge_nodes_in_graph(action)
+                except Exception as e:
+                    logger.error(f"Ошибка при дедупликации: {e}")
+
+        # --- LOGGING ---
+        log_pydantic("layer2_step2_merge_actions.json", MergeBatchResult(actions=self.logged_merge_actions))
+
+        await self._assign_sections()
+
+        final_nodes = []
+        for nid, data in self.G.nodes(data=True):
+            node_data = data.copy()
+            if "id" not in node_data:
+                node_data["id"] = nid
+
+            if "target_section" in node_data and isinstance(node_data["target_section"], str):
+                try:
+                    node_data["target_section"] = TZSectionEnum(node_data["target_section"])
+                except ValueError:
+                    node_data["target_section"] = TZSectionEnum.UNKNOWN
+
+            final_nodes.append(GraphNode(**node_data))
+
+        final_edges = []
+        for u, v, data in self.G.edges(data=True):
+            clean_data = {k: val for k, val in data.items() if k not in {'source', 'target'}}
+            final_edges.append(GraphEdge(source=u, target=v, **clean_data))
+
+        unified_graph = UnifiedGraph(nodes=final_nodes, edges=final_edges, conflicts=self.conflicts)
+
+        # --- LOGGING ---
+        log_graphml("layer2_step3_final_unified.graphml", self.G)
+        log_pydantic("layer2_step3_final_unified.json", unified_graph)
+
+        return unified_graph
+
+    def _merge_nodes_in_graph(self, action: MergeAction):
+        valid_ids = [nid for nid in action.ids_to_merge if self.G.has_node(nid)]
+        if not valid_ids: return
+
+        primary_id = action.unified_id
+        if not self.G.has_node(primary_id):
+            base_data = self.G.nodes[valid_ids[0]].copy()
+            base_data.update({
+                "id": primary_id,
+                "name": action.unified_name,
+                "description": action.unified_desc
+            })
+            self.G.add_node(primary_id, **base_data)
+
+        for old_id in valid_ids:
+            if old_id == primary_id: continue
+
+            for u, v, data in list(self.G.edges(old_id, data=True)):
+                if u == old_id: self.G.add_edge(primary_id, v, **data)
+
+            for u, v, data in list(self.G.in_edges(old_id, data=True)):
+                if v == old_id: self.G.add_edge(u, primary_id, **data)
+
+            self.G.remove_node(old_id)
+
+    async def _assign_sections(self):
+        logger.info("  -> Распределение узлов по секциям ТЗ...")
+        nodes_to_assign = [{"id": n, "name": d.get("name"), "label": d.get("label")}
+                           for n, d in self.G.nodes(data=True) if d.get("label") != NodeLabel.PERSON]
+
+        if not nodes_to_assign: return
+
+        prompt = """Распредели каждый узел в одну из секций ТЗ:
+        - GENERAL (общая инфа, задачи)
+        - STACK (компоненты, БД, либы)
+        - FUNCTIONAL (требования, фичи)
+        - INTERFACE (всё про UI/UX)"""
+
+        batch_size = 20
+        for i in range(0, len(nodes_to_assign), batch_size):
+            batch = nodes_to_assign[i:i + batch_size]
+            data_str = "\n".join([f"ID:{n['id']} | {n['label']} | {n['name']}" for n in batch])
+            try:
+                result = await acall_llm_json(schema=SectionBatchResult, prompt=prompt, data=data_str)
+                for assignment in result.assignments:
+                    if self.G.has_node(assignment.node_id):
+                        self.G.nodes[assignment.node_id]["target_section"] = assignment.target_section
+            except Exception:
+                pass
+</file>
+
+<file path="layer3_compiler/generator.py">
+import logging
+import asyncio
+from typing import List
+from schemas.graph import UnifiedGraph, GraphNode
+from schemas.enums import TZSectionEnum
+from schemas.document import FullTZDocument, GeneratedSection
+from utils.llm_client import acall_llm_text
+from utils.state_logger import log_text
+
+logger = logging.getLogger(__name__)
+
+
+class TZGenerator:
+    def __init__(self, model_name: str = "gemini-2.5-flash"):
+        self.model_name = model_name
+
+    async def generate_tz(self, graph: UnifiedGraph) -> FullTZDocument:
+        logger.info("📝 СЛОЙ 3: Генерация документа ТЗ...")
+
+        if graph.conflicts:
+            logger.warning(f"⚠️ В графе найдено {len(graph.conflicts)} неразрешенных конфликтов!")
+
+        sections_to_write = [
+            TZSectionEnum.GENERAL,
+            TZSectionEnum.FUNCTIONAL,
+            TZSectionEnum.STACK,
+            TZSectionEnum.INTERFACE
+        ]
+
+        tasks = []
+        for sec_enum in sections_to_write:
+            tasks.append(self._generate_section(sec_enum, graph))
+
+        generated_sections = await asyncio.gather(*tasks)
+
+        valid_sections = [sec for sec in generated_sections if sec is not None]
+
+        return FullTZDocument(
+            project_name="Техническое Задание (AI Generated)",
+            version="1.0.0",
+            sections=valid_sections
+        )
+
+    async def _generate_section(self, sec_enum: TZSectionEnum, graph: UnifiedGraph) -> GeneratedSection:
+        relevant_nodes = [n for n in graph.nodes if n.target_section == sec_enum]
+
+        if not relevant_nodes:
+            return None
+
+        logger.info(f"  -> Пишем раздел: {sec_enum.value} ({len(relevant_nodes)} узлов)")
+
+        node_context = "\n".join([f"- {n.name} (ID: {n.id}): {n.description}" for n in relevant_nodes])
+
+        prompt = f"""
+Напиши раздел Технического Задания: '{sec_enum.value}'.
+Используй ТОЛЬКО предоставленные факты из узлов. 
+Стиль: формально-деловой. Оформление: Markdown (заголовки, списки).
+
+ФАКТЫ ДЛЯ РАЗДЕЛА:
+{node_context}
+"""
+        # --- LOGGING: Сохраняем переданный контекст для дебага ---
+        log_text(f"layer3_prompt_{sec_enum.value}.txt", prompt)
+
+        try:
+            content_markdown = await acall_llm_text(prompt=prompt, model_name=self.model_name)
+            return GeneratedSection(
+                section_id=sec_enum,
+                title=sec_enum.name,
+                content_markdown=content_markdown
+            )
+        except Exception as e:
+            logger.error(f"Ошибка генерации раздела {sec_enum.value}: {e}")
+            return None
+</file>
+
+<file path="output/FINAL_TZ.md">
+# Техническое Задание (AI Generated)
+**Версия:** 1.0.0
+
+---
+
+## GENERAL
+
+```markdown
+## Общая информация
+
+В рамках данного проекта определены следующие ключевые компоненты и сущности:
+
+*   Схема базы данных
+*   Сущность пользователя
+*   Сущность заказа
+```
+
+---
+
+## FUNCTIONAL
+
+### Функциональные требования
+
+#### 1. Аутентификация пользователей
+
+*   Должен быть реализован функционал аутентификации пользователей.
+*   Должны быть предусмотрены эндпоинт и экран для аутентификации пользователей.
+
+#### 2. Механизм авторизации
+
+*   Авторизация должна быть реализована с использованием JWT (JSON Web Tokens).
+*   Для аутентификации должны использоваться токены доступа (access token) и токены обновления (refresh token).
+
+#### 3. Валидация данных
+
+*   Должна быть реализована валидация полей email и password.
+
+---
+
+## STACK
+
+### 3. Технологический стек (Tech Stack)
+
+В рамках реализации проекта предусмотрено использование следующего технологического стека:
+
+#### 3.1. База данных
+
+*   **PostgreSQL**: Система управления базами данных PostgreSQL.
+    *   Для хранения JSON-данных будет использоваться тип данных JSONB.
+
+#### 3.2. Бэкенд
+
+*   **FastAPI сервис**: Сервис, построенный на фреймворке FastAPI.
+
+#### 3.3. Фронтенд
+
+*   **React**: Фронтенд на React.
+*   **Vue**: Фронтенд на Vue.
+*   **Ant Design**: Библиотека компонентов Ant Design.
+
+#### 3.4. Инструменты сборки
+
+*   **Vite**: Сборщик Vite.
+
+---
+
+## INTERFACE
+
+## UI/UX
+
+### Дизайн пользовательского интерфейса и пользовательского опыта
+
+Дизайн пользовательского интерфейса и пользовательского опыта (UI/UX) реализован в графическом редакторе Figma.
+
+*   **Идентификатор:** `figma_design`
+
+---
+</file>
+
 <file path="utils/test_data_gen.py">
 import json
 from datetime import datetime, timedelta
@@ -1871,19 +2662,134 @@ def get_frontend_chat_dataset():
     return messages
 </file>
 
-<file path="requirements.txt">
-pydantic>=2.5.0
-python-dotenv>=1.0.0
-google-generativeai>=0.7.0
-langchain>=0.1.0
-langchain-core>=0.1.0
-langchain-google-genai>=1.0.0
-networkx>=3.0
-numpy>=1.24.0
-tenacity>=8.5.0
-python-louvain>=0.16
-langchain-text-splitters
-colorama>=0.4.6
+<file path="layer1_miner/extractor.py">
+import logging
+import asyncio
+from typing import List, Dict
+from pydantic import BaseModel, Field
+
+from schemas.document import DataSource
+from schemas.enums import NodeLabel
+from schemas.graph import ExtractedKnowledge
+from utils.preprocessing import format_chat_message
+from utils.llm_client import acall_llm_json
+from utils.state_logger import log_pydantic, log_dict
+from .windowing import asplit_chat_into_semantic_threads
+
+logger = logging.getLogger(__name__)
+
+
+class GlossaryItem(BaseModel):
+    id: str = Field(description="Snake_case ID")
+    name: str = Field(description="Человекочитаемое название")
+    label: NodeLabel = Field(description="Тип сущности")
+    description: str = Field(description="Краткое описание")
+
+
+class ProjectGlossary(BaseModel):
+    entities: List[GlossaryItem] = Field(default_factory=list)
+
+
+class MinerProcessor:
+    def __init__(self):
+        self.global_glossary_dict: Dict[str, GlossaryItem] = {}
+
+    def _format_glossary(self) -> str:
+        return "\n".join([f"- {e.id} ({e.label.value}): {e.name}" for e in self.global_glossary_dict.values()])
+
+    async def process_source(self, source: DataSource) -> List[ExtractedKnowledge]:
+        logger.info(f"⛏️ СЛОЙ 1: Начинаем извлечение из {source.file_name}")
+        extracted_graphs = []
+        previous_summary = ""
+
+        if source.source_type == "chat":
+            windows = await asplit_chat_into_semantic_threads(source.content)
+            msg_lookup = {m["id"]: m for m in source.content if m.get("type") == "message"}
+
+            for ref, msgs in windows:
+                text_chunk = "\n".join([format_chat_message(m, msg_lookup) for m in msgs])
+                logger.info(f"  -> Анализ окна {ref} ({len(msgs)} сообщений)")
+
+                graph = await self._extract_subgraph_2pass(text_chunk, ref, previous_summary)
+                previous_summary = graph.summary
+                extracted_graphs.append(graph)
+                
+                # --- LOGGING: Сохраняем каждый извлеченный подграф ---
+                safe_ref = ref.replace(":", "_").replace("/", "_")
+                log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
+                
+                await asyncio.sleep(2)
+        else:
+            graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
+            extracted_graphs.append(graph)
+            
+            # --- LOGGING: Сохраняем подграф ---
+            safe_ref = source.file_name.replace(":", "_").replace("/", "_")
+            log_pydantic(f"layer1_subgraph_{safe_ref}.json", graph)
+
+        # --- LOGGING: Дамп полного глоссария ---
+        glossary_dump = {k: v.model_dump() for k, v in self.global_glossary_dict.items()}
+        log_dict("layer1_global_glossary.json", glossary_dump)
+
+        return extracted_graphs
+
+    async def _extract_subgraph_2pass(self, text: str, source_ref: str, prev_summary: str) -> ExtractedKnowledge:
+        glossary_prompt = f"""Найди все ключевые сущности в тексте (Люди, Компоненты, Задачи, Требования).
+Если сущность уже есть в ГЛОССАРИИ ниже, используй ЕЕ СТАРЫЙ ID.
+Если это новая сущность — создай новый snake_case ID.
+
+СУЩЕСТВУЮЩИЙ ГЛОССАРИЙ:
+{self._format_glossary() or 'Пока пусто.'}"""
+
+        local_glossary = await acall_llm_json(schema=ProjectGlossary, prompt=glossary_prompt, data=text)
+
+        for entity in local_glossary.entities:
+            if entity.id not in self.global_glossary_dict:
+                self.global_glossary_dict[entity.id] = entity
+
+        graph_prompt = f"""Ты Архитектор. Извлеки граф знаний (узлы и связи).
+СТРОГИЕ ПРАВИЛА:
+1. Используй ТОЛЬКО ID из Глоссария проекта.
+2. Обращай внимание на [FLAG: CONFIRMATION] (означает AGREES_WITH).
+3. Добавляй evidence для каждой связи (почему ты их связал).
+
+ГЛОССАРИЙ ПРОЕКТА:
+{self._format_glossary()}
+
+ПАМЯТЬ ПРОШЛЫХ ОКОН:
+{prev_summary or 'Начало диалога.'}"""
+
+        result = await acall_llm_json(schema=ExtractedKnowledge, prompt=graph_prompt, data=text)
+        result.source_ref = source_ref
+
+        for node in result.nodes:
+            if node.id in self.global_glossary_dict:
+                g_item = self.global_glossary_dict[node.id]
+                if not node.name: node.name = g_item.name
+                if not node.description: node.description = g_item.description
+                if not node.label: node.label = g_item.label
+
+        return result
+</file>
+
+<file path=".gitignore">
+# Python-generated files
+__pycache__/
+__pycache__
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+# Virtual environments
+.venv
+venv
+.env
+.idea/
+.vscode/
+# Logs and databases
+*.log
+logs/
 </file>
 
 <file path="utils/llm_client.py">
@@ -1895,18 +2801,45 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-api_key = os.getenv("GOOGLE_API_KEY")
-DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "google").lower()
 
-# Проверка ключа
-if not api_key:
-    logger.warning("⚠️ GOOGLE_API_KEY не найден в .env. Будет ошибка при вызовах LLM.")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-llm_text = ChatGoogleGenerativeAI(model=DEFAULT_MODEL, temperature=0.1, max_retries=3)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
+DEFAULT_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
+
+if LLM_PROVIDER == "google" and not GOOGLE_API_KEY:
+    logger.warning("⚠️ GOOGLE_API_KEY не найден. Google Provider не будет работать.")
+if LLM_PROVIDER == "openai" and not OPENAI_API_KEY:
+    logger.warning("⚠️ OPENAI_API_KEY не найден. OpenAI Provider не будет работать.")
+
+
+def get_llm_client(model_name: str, temperature: float = 0.1):
+    """
+    Фабрика для создания клиента LLM в зависимости от LLM_PROVIDER.
+    """
+    if LLM_PROVIDER == "openai":
+        return ChatOpenAI(
+            model=model_name,
+            temperature=temperature,
+            api_key=OPENAI_API_KEY,
+            base_url=OPENAI_BASE_URL,
+            max_retries=3
+        )
+    else:
+        return ChatGoogleGenerativeAI(
+            model=model_name,
+            temperature=temperature,
+            google_api_key=GOOGLE_API_KEY,
+            max_retries=3
+        )
+
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -1914,22 +2847,24 @@ T = TypeVar("T", bound=BaseModel)
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=2, min=5, max=60))
 async def acall_llm_json(schema: Type[T], prompt: str, data: str = "", model_name: str = DEFAULT_MODEL) -> T:
     try:
-        llm_structured = ChatGoogleGenerativeAI(model=model_name, temperature=0.0,
-                                                max_retries=3).with_structured_output(schema)
+        llm = get_llm_client(model_name=model_name, temperature=0.0)
+        llm_structured = llm.with_structured_output(schema)
+
         full_prompt = prompt
         if data:
             full_prompt += f"\n\n--- ВХОДНЫЕ ДАННЫЕ ---\n{data}"
 
         return await llm_structured.ainvoke(full_prompt)
     except Exception as e:
-        logger.error(f"❌ Ошибка LLM JSON: {e}")
+        logger.error(f"❌ Ошибка LLM JSON ({LLM_PROVIDER}): {e}")
         raise e
 
 
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=2, min=5, max=60))
 async def acall_llm_text(prompt: str, data: str = "", model_name: str = DEFAULT_MODEL) -> str:
     try:
-        llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.2, max_retries=3)
+        llm = get_llm_client(model_name=model_name, temperature=0.2)
+
         full_prompt = prompt
         if data:
             full_prompt += f"\n\n--- ВХОДНЫЕ ДАННЫЕ ---\n{data}"
@@ -1937,7 +2872,7 @@ async def acall_llm_text(prompt: str, data: str = "", model_name: str = DEFAULT_
         result = await llm.ainvoke(full_prompt)
         return result.content
     except Exception as e:
-        logger.error(f"❌ Ошибка LLM Text: {e}")
+        logger.error(f"❌ Ошибка LLM Text ({LLM_PROVIDER}): {e}")
         raise e
 </file>
 
@@ -1953,23 +2888,35 @@ from layer1_miner.extractor import MinerProcessor
 from layer2_merger.merger import SmartGraphMerger
 from layer3_compiler.generator import TZGenerator
 from utils.test_data_gen import get_backend_chat_dataset, get_frontend_chat_dataset
+from utils.state_logger import init_logs_dir
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
+
+# Инициализируем папку логов
+init_logs_dir()
+
+# Настраиваем двойное логирование (в консоль и в файл app.log)
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s', 
+    datefmt='%H:%M:%S',
+    handlers=[
+        logging.FileHandler("logs/app.log", encoding="utf-8", mode="w"),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
 
 async def main():
     print("==================================================")
-    print("🚀 ГЕНЕРАТОР ТЗ (3-LAYER GRAPH PIPELINE)")
+    print("🚀 ГЕНЕРАТОР ТЗ (3-LAYER GRAPH PIPELINE С ЛОГАМИ)")
     print("==================================================\n")
 
-    # Инициализация слоев
     miner = MinerProcessor()
     merger = SmartGraphMerger()
     compiler = TZGenerator()
 
-    # Входные данные (имитация чата)
     sources = [
         DataSource(
             source_type=DataEnum.CHAT,
@@ -1983,35 +2930,29 @@ async def main():
         )
     ]
 
-    # ---------------------------------------------------------
-    # ЭТАП 1: MINER (Извлечение подграфов из всех источников)
-    # ---------------------------------------------------------
+    # --- ЭТАП 1: MINER ---
     logger.info(">>> СТАРТ ЭТАПА 1: Майнинг знаний")
-
     all_extracted_subgraphs = []
 
     for source in sources:
         logger.info(f"📂 Обработка источника: {source.file_name}")
-        # Майнер использует накопленный глоссарий для улучшения связности
         subgraphs = await miner.process_source(source)
         all_extracted_subgraphs.extend(subgraphs)
         logger.info(f"   -> Извлечено {len(subgraphs)} чанков из {source.file_name}")
 
-    # ---------------------------------------------------------
-    # ЭТАП 2: MERGER (Дедупликация и Слияние)
-    # ---------------------------------------------------------
-    logger.info(">>> СТАРТ ЭТАПА 2")
-    unified_graph = await merger.smart_merge(all_extracted_subgraphs)
-    logger.info(f"✅ Граф объединен. Итоговых узлов: {len(unified_graph.nodes)}")
     print("-" * 50)
 
-    # ---------------------------------------------------------
-    # ЭТАП 3: COMPILER (Генерация Markdown)
-    # ---------------------------------------------------------
-    logger.info(">>> СТАРТ ЭТАПА 3")
+    # --- ЭТАП 2: MERGER ---
+    logger.info(">>> СТАРТ ЭТАПА 2: Слияние")
+    unified_graph = await merger.smart_merge(all_extracted_subgraphs)
+    logger.info(f"✅ Граф объединен. Итоговых узлов: {len(unified_graph.nodes)}")
+    
+    print("-" * 50)
+
+    # --- ЭТАП 3: COMPILER ---
+    logger.info(">>> СТАРТ ЭТАПА 3: Генерация")
     doc = await compiler.generate_tz(unified_graph)
 
-    # Сохранение результата
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "FINAL_TZ.md")
@@ -2031,6 +2972,23 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+</file>
+
+<file path="requirements.txt">
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+google-generativeai>=0.7.0
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-google-genai>=1.0.0
+langchain-openai
+langchain-text-splitters
+networkx>=3.0
+numpy>=1.24.0
+tenacity>=8.5.0
+python-louvain>=0.16
+colorama>=0.4.6
+lxml>=4.9.0
 </file>
 
 </files>
