@@ -17,10 +17,6 @@ from utils.state_logger import log_graphml, log_pydantic
 logger = logging.getLogger(__name__)
 
 
-# ─────────────────────────────────────────────
-# Вспомогательные Pydantic-модели
-# ─────────────────────────────────────────────
-
 class MergeAction(BaseModel):
     is_duplicate: bool = Field(description="Это одна и та же сущность?")
     ids_to_merge: List[str] = Field(description="Список ID, которые нужно слить в один")
@@ -41,10 +37,6 @@ class SectionAssignment(BaseModel):
 class SectionBatchResult(BaseModel):
     assignments: List[SectionAssignment]
 
-
-# ─────────────────────────────────────────────
-# Embedding utils
-# ─────────────────────────────────────────────
 
 def _cosine_similarity(v1: List[float], v2: List[float]) -> float:
     a, b = np.array(v1), np.array(v2)
@@ -68,8 +60,8 @@ async def _get_embeddings(texts: List[str]) -> List[List[float]]:
 
 
 async def _find_duplicate_candidates(
-    nodes: List[Dict[str, Any]],
-    similarity_threshold: float = 0.88,
+        nodes: List[Dict[str, Any]],
+        similarity_threshold: float = 0.88,
 ) -> List[Tuple[Dict, Dict, float]]:
     if len(nodes) < 2:
         return []
@@ -88,25 +80,8 @@ async def _find_duplicate_candidates(
     return candidates
 
 
-# ─────────────────────────────────────────────
-# Движок разрешения голосований
-# ─────────────────────────────────────────────
-
-def resolve_decisions(G: nx.DiGraph) -> List[DecisionResolution]:
-    """
-    Находит все Decision-узлы в графе, подсчитывает голоса
-    (VOTED_FOR / VOTED_AGAINST) по каждому варианту и определяет победителя.
-
-    Алгоритм:
-    1. Находим Decision-узлы через label атрибут.
-    2. Находим варианты — соседи Decision через RELATES_TO.
-    3. Для каждого варианта ищем входящие VOTED_FOR / VOTED_AGAINST рёбра.
-    4. Побеждает вариант с наибольшим score = votes_for - votes_against.
-    5. При ничье — фиксируем конфликт, победитель не назначается.
-    6. Добавляем ребро RESOLVED_TO от Decision к победителю.
-    """
+def resolve_decisions(G: nx.MultiDiGraph) -> List[DecisionResolution]:
     resolutions: List[DecisionResolution] = []
-
     decision_nodes = [
         (nid, data) for nid, data in G.nodes(data=True)
         if data.get("label") in (NodeLabel.DECISION.value, NodeLabel.DECISION)
@@ -115,7 +90,6 @@ def resolve_decisions(G: nx.DiGraph) -> List[DecisionResolution]:
     for decision_id, decision_data in decision_nodes:
         decision_name = decision_data.get("name", decision_id)
 
-        # Варианты: соседи Decision через RELATES_TO
         option_ids = [
             v for _, v, edata in G.out_edges(decision_id, data=True)
             if edata.get("relation") in (EdgeRelation.RELATES_TO.value, EdgeRelation.RELATES_TO)
@@ -125,20 +99,18 @@ def resolve_decisions(G: nx.DiGraph) -> List[DecisionResolution]:
             logger.warning(f"⚠️ Decision '{decision_id}' не имеет вариантов (RELATES_TO рёбра не найдены)")
             continue
 
-        # Подсчёт голосов для каждого варианта
         vote_counts: Dict[str, VoteCount] = {}
         for opt_id in option_ids:
             opt_name = G.nodes[opt_id].get("name", opt_id) if G.has_node(opt_id) else opt_id
             vote_counts[opt_id] = VoteCount(option_id=opt_id, option_name=opt_name)
 
-        # Сканируем ВСЕ рёбра графа на VOTED_FOR / VOTED_AGAINST
         for src, tgt, edata in G.edges(data=True):
             relation = edata.get("relation", "")
             if isinstance(relation, EdgeRelation):
                 relation = relation.value
 
             if tgt not in vote_counts:
-                continue  # голос не за один из вариантов этого Decision
+                continue
 
             voter_name = G.nodes[src].get("name", src) if G.has_node(src) else src
 
@@ -151,9 +123,7 @@ def resolve_decisions(G: nx.DiGraph) -> List[DecisionResolution]:
 
         options_list = list(vote_counts.values())
 
-        # Определяем победителя
         if not any(vc.votes_for + vc.votes_against > 0 for vc in options_list):
-            # Голосов вообще нет — просто фиксируем как неразрешённый
             resolution = DecisionResolution(
                 decision_id=decision_id,
                 decision_name=decision_name,
@@ -165,7 +135,6 @@ def resolve_decisions(G: nx.DiGraph) -> List[DecisionResolution]:
             sorted_options = sorted(options_list, key=lambda x: x.score, reverse=True)
             top = sorted_options[0]
             second = sorted_options[1] if len(sorted_options) > 1 else None
-
             is_tie = second is not None and top.score == second.score
 
             if is_tie:
@@ -181,7 +150,6 @@ def resolve_decisions(G: nx.DiGraph) -> List[DecisionResolution]:
                     ),
                 )
             else:
-                # Победитель найден — добавляем RESOLVED_TO в граф
                 resolution = DecisionResolution(
                     decision_id=decision_id,
                     decision_name=decision_name,
@@ -206,35 +174,24 @@ def resolve_decisions(G: nx.DiGraph) -> List[DecisionResolution]:
     return resolutions
 
 
-# ─────────────────────────────────────────────
-# Форматирование отчёта для пользователя
-# ─────────────────────────────────────────────
-
 def format_merge_report(
-    resolutions: List[DecisionResolution],
-    conflicts: List[Conflict],
+        resolutions: List[DecisionResolution],
+        conflicts: List[Conflict],
 ) -> str:
-    """
-    Строит читаемый текстовый отчёт о найденных решениях и конфликтах.
-    Выводится пользователю после мержа.
-    """
     lines: List[str] = []
 
-    # ── Секция голосований ────────────────────────────────────────────────────────────────
     if resolutions:
         lines.append("=" * 60)
         lines.append("🗳️  ИТОГИ ГОЛОСОВАНИЙ")
         lines.append("=" * 60)
-
         for res in resolutions:
             lines.append(f"\n📌 {res.decision_name}")
             lines.append("-" * 40)
-
             for opt in sorted(res.options, key=lambda x: x.score, reverse=True):
-                bar_for     = "✅" * opt.votes_for
+                bar_for = "✅" * opt.votes_for
                 bar_against = "❌" * opt.votes_against
-                score_str   = f"[{opt.score:+d}]"
-                voters_for_str     = f"  За: {', '.join(opt.voters_for)}"     if opt.voters_for     else ""
+                score_str = f"[{opt.score:+d}]"
+                voters_for_str = f"  За: {', '.join(opt.voters_for)}" if opt.voters_for else ""
                 voters_against_str = f"  Против: {', '.join(opt.voters_against)}" if opt.voters_against else ""
 
                 lines.append(
@@ -249,13 +206,12 @@ def format_merge_report(
             elif res.winner_name:
                 lines.append(f"\n  ✅ ПРИНЯТО: {res.winner_name}")
 
-    # ── Секция конфликтов графа ────────────────────────────────────────────────────────────
     if conflicts:
         lines.append("\n" + "=" * 60)
         lines.append("⚡ КОНФЛИКТЫ ГРАФА (требуют внимания)")
         lines.append("=" * 60)
         for conflict in conflicts:
-            lines.append(f"\n  • [{conflict.node_id}] {conflict.description}")
+            lines.append(f"\n  •[{conflict.node_id}] {conflict.description}")
             if conflict.conflicting_values:
                 for val in conflict.conflicting_values:
                     lines.append(f"      ↳ {val}")
@@ -266,13 +222,10 @@ def format_merge_report(
     return "\n".join(lines)
 
 
-# ─────────────────────────────────────────────
-# Основной мержер
-# ─────────────────────────────────────────────
-
 class SmartGraphMerger:
     def __init__(self):
-        self.G = nx.DiGraph()
+        # ИСПОЛЬЗУЕМ МУЛЬТИГРАФ, чтобы не перезаписывать связи между одними и теми же узлами
+        self.G = nx.MultiDiGraph()
         self.conflicts: List[Conflict] = []
         self.logged_merge_actions: List[MergeAction] = []
 
@@ -287,28 +240,18 @@ class SmartGraphMerger:
                 edge_data = edge.model_dump(mode="json", exclude={"source", "target"})
                 self.G.add_edge(edge.source, edge.target, **edge_data)
 
-        logger.info(
-            f"  -> Исходный размер: {self.G.number_of_nodes()} узлов, "
-            f"{self.G.number_of_edges()} связей."
-        )
+        logger.info(f"  -> Исходный размер: {self.G.number_of_nodes()} узлов, {self.G.number_of_edges()} связей.")
         log_graphml("layer2_step1_initial_combined.graphml", self.G)
 
-        # ── Дедупликация с embedding pre-filter ──────────────────────────────────────────
         await self._deduplicate_with_embeddings()
 
-        log_pydantic(
-            "layer2_step2_merge_actions.json",
-            MergeBatchResult(actions=self.logged_merge_actions),
-        )
+        log_pydantic("layer2_step2_merge_actions.json", MergeBatchResult(actions=self.logged_merge_actions))
 
-        # ── Разрешение голосований ────────────────────────────────────────────────────────
         logger.info("  -> Разрешение голосований...")
         resolutions = resolve_decisions(self.G)
 
-        # ── Назначение секций ТЗ ─────────────────────────────────────────────────────────
         await self._assign_sections()
 
-        # ── Сборка финального графа ───────────────────────────────────────────────────────
         final_nodes: List[GraphNode] = []
         for nid, data in self.G.nodes(data=True):
             node_data = data.copy()
@@ -325,6 +268,7 @@ class SmartGraphMerger:
                 logger.warning(f"Пропуск узла {nid}: {e}")
 
         final_edges: List[GraphEdge] = []
+        # MultiDiGraph.edges(data=True) возвращает (u, v, data) для каждого ребра
         for u, v, data in self.G.edges(data=True):
             clean_data = {k: val for k, val in data.items() if k not in {"source", "target"}}
             try:
@@ -342,7 +286,6 @@ class SmartGraphMerger:
         log_graphml("layer2_step3_final_unified.graphml", self.G)
         log_pydantic("layer2_step3_final_unified.json", unified_graph)
 
-        # ── Вывод отчёта пользователю ─────────────────────────────────────────────────────
         report = format_merge_report(resolutions, self.conflicts)
         print("\n" + report + "\n")
         logger.info("📋 Отчёт о голосованиях и конфликтах выведен.")
@@ -350,11 +293,6 @@ class SmartGraphMerger:
         return unified_graph
 
     async def _deduplicate_with_embeddings(self):
-        """
-        Двухэтапная дедупликация:
-        A) Embedding pre-filter — быстро находим похожие пары.
-        B) LLM верифицирует только кандидатов — не случайные батчи.
-        """
         nodes_by_label: Dict[str, List[Dict[str, Any]]] = {}
         for nid, data in self.G.nodes(data=True):
             label = data.get("label", "unknown")
@@ -366,7 +304,6 @@ class SmartGraphMerger:
             if len(nodes) < 2:
                 continue
 
-            # Decision-узлы не дедуплицируем — каждый отдельный вопрос уникален
             if label in (NodeLabel.DECISION.value, NodeLabel.DECISION):
                 continue
 
@@ -377,7 +314,6 @@ class SmartGraphMerger:
                 logger.info(f"     Дубликатов не найдено в '{label}'")
                 continue
 
-            # Union-find кластеризация кандидатов
             id_to_cluster: Dict[str, int] = {}
             clusters: Dict[int, List[str]] = {}
             counter = 0
@@ -391,9 +327,11 @@ class SmartGraphMerger:
                     id_to_cluster[id_a] = id_to_cluster[id_b] = counter
                     counter += 1
                 elif ca is None:
-                    clusters[cb].append(id_a); id_to_cluster[id_a] = cb
+                    clusters[cb].append(id_a);
+                    id_to_cluster[id_a] = cb
                 elif cb is None:
-                    clusters[ca].append(id_b); id_to_cluster[id_b] = ca
+                    clusters[ca].append(id_b);
+                    id_to_cluster[id_b] = ca
                 elif ca != cb:
                     for nid in clusters[cb]: id_to_cluster[nid] = ca
                     clusters[ca].extend(clusters.pop(cb))
@@ -444,10 +382,17 @@ class SmartGraphMerger:
         for old_id in valid_ids:
             if old_id == primary_id:
                 continue
-            for u, v, data in list(self.G.edges(old_id, data=True)):
-                if u == old_id: self.G.add_edge(primary_id, v, **data)
+
+            # В MultiDiGraph правильно перенаправляем ВСЕ рёбра
+            for u, v, data in list(self.G.out_edges(old_id, data=True)):
+                target = primary_id if v == old_id else v
+                self.G.add_edge(primary_id, target, **data)
+
             for u, v, data in list(self.G.in_edges(old_id, data=True)):
-                if v == old_id: self.G.add_edge(u, primary_id, **data)
+                if u == old_id:
+                    continue  # self-loops уже скопированы в out_edges
+                self.G.add_edge(u, primary_id, **data)
+
             self.G.remove_node(old_id)
 
     async def _assign_sections(self):

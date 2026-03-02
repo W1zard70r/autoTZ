@@ -30,15 +30,14 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
 async def asplit_chat_into_semantic_threads(
     messages: List[dict],
 ) -> List[Tuple[str, List[dict]]]:
-    valid_msgs = [m for m in messages if m.get("type") == "message" and m.get("text")]
+    valid_msgs =[m for m in messages if m.get("type") == "message" and m.get("text")]
     if not valid_msgs:
-        return []
+        return[]
 
-    # ── Получаем эмбеддинги ───────────────────────────────────────────────────────────────
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
-    texts_to_embed = [str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
+    texts_to_embed =[str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
 
-    embeddings = []
+    embeddings =[]
     for i in range(0, len(texts_to_embed), EMBEDDING_BATCH_SIZE):
         batch = texts_to_embed[i : i + EMBEDDING_BATCH_SIZE]
         try:
@@ -48,7 +47,6 @@ async def asplit_chat_into_semantic_threads(
             embeddings.extend([[0.0] * 768] * len(batch))
         await asyncio.sleep(EMBEDDING_DELAY)
 
-    # ── Строим граф похожести ─────────────────────────────────────────────────────────────
     G = nx.Graph()
     for i, msg in enumerate(valid_msgs):
         G.add_node(
@@ -61,7 +59,8 @@ async def asplit_chat_into_semantic_threads(
     for i, msg in enumerate(valid_msgs):
         reply_id = msg.get("reply_to_message_id")
         if reply_id and G.has_node(reply_id):
-            G.add_edge(msg["id"], reply_id, weight=1.0)
+            # ЗАЩИТА: Прямой ответ гарантированно удержит сообщения в одном кластере
+            G.add_edge(msg["id"], reply_id, weight=10.0)
             continue
 
         best_sim, best_target_id = 0.0, None
@@ -77,51 +76,36 @@ async def asplit_chat_into_semantic_threads(
         if best_sim >= SEMANTIC_THRESHOLD and best_target_id:
             G.add_edge(msg["id"], best_target_id, weight=best_sim)
 
-    # ── Улучшение 3: Louvain — используем результат для разбивки на треды ────────────────
-    #
-    # БЫЛО: community_louvain.best_partition() вызывался, записывался в атрибуты узлов,
-    # но дальше код переключался на nx.connected_components() — Louvain выбрасывался.
-    #
-    # СТАЛО: Louvain определяет треды (семантические кластеры), connected_components —
-    # только запасной вариант когда рёбер нет вообще.
-    # ─────────────────────────────────────────────────────────────────────────────────────
-
-    threads: List[List[dict]] = []
+    threads: List[List[dict]] =[]
 
     if G.number_of_edges() > 0:
         try:
             partition = community_louvain.best_partition(G)
-            # Группируем сообщения по community_id
             communities: dict[int, List[dict]] = {}
             for node_id, comm_id in partition.items():
                 communities.setdefault(comm_id, []).append(G.nodes[node_id]["msg"])
 
             threads = list(communities.values())
         except Exception as e:
-            # Louvain упал — откат к connected components
             import logging
             logging.getLogger(__name__).warning(
                 f"Louvain failed ({e}), fallback to connected_components"
             )
             for component in nx.connected_components(G):
-                thread_msgs = [G.nodes[nid]["msg"] for nid in component]
+                thread_msgs =[G.nodes[nid]["msg"] for nid in component]
                 threads.append(thread_msgs)
     else:
-        # Нет рёбер — каждое сообщение в своём «треде» (потом склеятся в одно окно)
         threads = [[G.nodes[nid]["msg"]] for nid in G.nodes()]
 
-    # Сортируем сообщения внутри каждого треда по времени
     for thread in threads:
         thread.sort(key=lambda x: parse_date(x.get("date", "")))
 
-    # Сортируем треды по времени первого сообщения
     threads.sort(key=lambda t: parse_date(t[0].get("date", "")))
 
-    # ── Нарезаем треды на окна с перекрытием ─────────────────────────────────────────────
-    processed_windows: List[Tuple[str, List[dict]]] = []
+    processed_windows: List[Tuple[str, List[dict]]] =[]
 
     for thread_idx, thread in enumerate(threads):
-        current_window: List[dict] = []
+        current_window: List[dict] =[]
         current_chars = 0
 
         for msg in thread:

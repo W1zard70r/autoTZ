@@ -1,9 +1,5 @@
 import re
 
-# ─────────────────────────────────────────────
-# Словари для определения позиции
-# ─────────────────────────────────────────────
-
 CONFIRMATION_WORDS = {
     "ок", "да", "давайте", "плюс", "+", "ага", "согласен", "добро",
     "ок, да", "поддерживаю", "за", "голосую за", "тоже за", "я за",
@@ -16,7 +12,6 @@ REJECTION_WORDS = {
     "не вариант", "нет смысла",
 }
 
-# Паттерны для явного голосования: "я за React", "голосую за Vue", "я против Postgres"
 _VOTE_FOR_PATTERNS = [
     r"(?:я\s+)?за\s+(?P<target>\w[\w\s\+#\.]*)",
     r"голосую\s+за\s+(?P<target>\w[\w\s\+#\.]*)",
@@ -33,7 +28,6 @@ _VOTE_AGAINST_PATTERNS = [
 
 
 def normalize_short_answers(text: str) -> str:
-    """Помечает короткие «ок/нет» ответы специальными флагами для LLM."""
     if not isinstance(text, str):
         return ""
     clean = text.lower().strip().strip(",.!?:")
@@ -45,27 +39,11 @@ def normalize_short_answers(text: str) -> str:
 
 
 def detect_vote(text: str) -> tuple[str | None, str | None]:
-    """
-    Пытается определить, за что или против чего проголосовал человек.
-
-    Возвращает:
-        (direction, target_hint) где direction = 'for' | 'against' | None
-        target_hint — фрагмент текста с упомянутым вариантом (может быть None)
-
-    Примеры:
-        "я за React"        → ('for',     'React')
-        "голосую за Vue"    → ('for',     'Vue')
-        "я против Postgres" → ('against', 'Postgres')
-        "давайте"           → ('for',     None)   # безадресное согласие
-        "нет"               → ('against', None)
-        "обсудим детали"    → (None,      None)
-    """
     if not isinstance(text, str):
         return None, None
 
     lower = text.lower().strip()
 
-    # Проверяем явные паттерны "за <вариант>" / "против <вариант>"
     for pattern in _VOTE_FOR_PATTERNS:
         m = re.search(pattern, lower)
         if m:
@@ -76,7 +54,6 @@ def detect_vote(text: str) -> tuple[str | None, str | None]:
         if m:
             return "against", m.group("target").strip()
 
-    # Безадресное согласие / отказ
     clean = lower.strip(",.!?:")
     if clean in CONFIRMATION_WORDS:
         return "for", None
@@ -105,6 +82,14 @@ def format_chat_message(msg: dict, msg_lookup: dict = None) -> str:
         r_msg = msg_lookup[reply_id]
         r_author = r_msg.get("from", "Unknown")
         r_text = get_clean_text(r_msg.get("text", ""))[:40].replace("\n", " ")
-        reply_str = f'[в ответ {r_author}: "{r_text}..."]'
+
+        # Интеграция NLP
+        direction, _ = detect_vote(text)
+        if direction == "for":
+            reply_str = f'[полностью соглашается с {r_author} в том, что: "{r_text}..."]'
+        elif direction == "against":
+            reply_str = f'[категорически не согласен с {r_author} насчет: "{r_text}..."]'
+        else:
+            reply_str = f'[в ответ {r_author}: "{r_text}..."]'
 
     return f"[{date}] {author}{reply_str}: {text}".strip()
