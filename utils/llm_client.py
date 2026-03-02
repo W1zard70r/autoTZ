@@ -17,7 +17,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
-DEFAULT_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
+DEFAULT_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 
 if LLM_PROVIDER == "google" and not GOOGLE_API_KEY:
     logger.warning("⚠️ GOOGLE_API_KEY не найден. Google Provider не будет работать.")
@@ -42,14 +42,14 @@ def get_llm_client(model_name: str, temperature: float = 0.1):
             model=model_name,
             temperature=temperature,
             google_api_key=GOOGLE_API_KEY,
-            max_retries=3
+            max_retries=5
         )
 
 
 T = TypeVar("T", bound=BaseModel)
 
 
-@retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=2, min=5, max=60))
+@retry(stop=stop_after_attempt(7), wait=wait_exponential(multiplier=2, min=5, max=120))
 async def acall_llm_json(schema: Type[T], prompt: str, data: str = "", model_name: str = DEFAULT_MODEL) -> T:
     try:
         llm = get_llm_client(model_name=model_name, temperature=0.3)

@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────
 
 class GlossaryItem(BaseModel):
-    id: str = Field(description="Snake_case ID — только строчные буквы и подчёркивания, например: jwt_auth, postgres_db")
+    id: str = Field(
+        description="Snake_case ID — только строчные буквы и подчёркивания, например: jwt_auth, postgres_db"
+    )
     name: str = Field(description="Человекочитаемое название")
     label: NodeLabel = Field(description="Тип сущности")
     description: str = Field(description="Краткое описание")
@@ -30,7 +32,7 @@ class ProjectGlossary(BaseModel):
 
 
 # ─────────────────────────────────────────────
-# Валидация целостности графа (Улучшение 5)
+# Валидация целостности графа
 # ─────────────────────────────────────────────
 
 def validate_graph_integrity(graph: ExtractedKnowledge, valid_ids: Set[str]) -> ExtractedKnowledge:
@@ -43,26 +45,20 @@ def validate_graph_integrity(graph: ExtractedKnowledge, valid_ids: Set[str]) -> 
     original_node_count = len(graph.nodes)
     original_edge_count = len(graph.edges)
 
-    # Фильтруем узлы
     graph.nodes = [n for n in graph.nodes if n.id in valid_ids]
     present_ids = {n.id for n in graph.nodes}
 
-    # Логируем "призрачные" узлы
-    ghost_ids = {n.id for n in graph.nodes} - valid_ids  # после фильтрации всегда пусто, логируем ДО
-    all_returned_ids = set()  # пересчитаем из оригинального списка ниже
-    ghost_nodes_before = valid_ids - present_ids  # узлы глоссария, которые LLM вообще не вернул — нормально
-    # Настоящие призраки: узлы, которые LLM вернул, но которых нет в глоссарии
     if original_node_count > len(graph.nodes):
         logger.warning(
-            f"⚠️ Валидация: удалено {original_node_count - len(graph.nodes)} призрачных узлов (не из глоссария)"
+            f"⚠️ Валидация: удалено {original_node_count - len(graph.nodes)} "
+            f"призрачных узлов (не из глоссария)"
         )
 
-    # Фильтруем рёбра
     graph.edges = [
         e for e in graph.edges
         if e.source in present_ids
         and e.target in present_ids
-        and e.source != e.target  # убираем петли
+        and e.source != e.target
     ]
 
     if original_edge_count > len(graph.edges):
@@ -105,14 +101,11 @@ class MinerProcessor:
 
                 safe_ref = ref.replace(":", "_").replace("/", "_")
                 log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
-
-                # Убрали жёсткий sleep(2) — tenacity в acall_llm_json сам управляет ретраями
         else:
             graph = await self._extract_subgraph_2pass(
                 str(source.content), source.file_name, previous_summary
             )
             extracted_graphs.append(graph)
-
             safe_ref = source.file_name.replace(":", "_").replace("/", "_")
             log_pydantic(f"layer1_subgraph_{safe_ref}.json", graph)
 
@@ -125,27 +118,38 @@ class MinerProcessor:
         self, text: str, source_ref: str, prev_summary: str
     ) -> ExtractedKnowledge:
 
-        # ── ПРОХОД 1: Извлечение глоссария (Улучшение 2 — few-shot примеры) ──────────────
-
+        # ── ПРОХОД 1: Глоссарий ──────────────────────────────────────────────────────────
         glossary_prompt = f"""Ты — аналитик. Найди ВСЕ ключевые сущности в тексте ниже.
 
 СТРОГИЕ ПРАВИЛА:
-1. ID — ТОЛЬКО snake_case: строчные буквы, цифры и подчёркивания. Пробелы и CamelCase ЗАПРЕЩЕНЫ.
-   ✅ Правильно: jwt_auth, postgres_db, login_screen
-   ❌ Неправильно: JwtAuth, "JWT Auth", loginScreen
-2. Если сущность семантически совпадает с ГЛОССАРИЕМ — используй ЕЁ СТАРЫЙ ID без изменений.
-3. Не дроби одну сущность на несколько (не создавай отдельно "токен" и "JWT токен" — это одно).
-4. Тип (label) выбирай строго из: Person, Component, Task, Requirement, Concept.
+1. ID — ТОЛЬКО snake_case: строчные буквы, цифры и подчёркивания.
+   ✅ jwt_auth, postgres_db, react_framework
+   ❌ JwtAuth, "JWT Auth", loginScreen
+2. Если сущность совпадает с ГЛОССАРИЕМ — используй ЕЁ СТАРЫЙ ID.
+3. Не дроби одну сущность на несколько.
+4. label выбирай строго из: Person, Component, Task, Requirement, Concept, Decision.
 
-FEW-SHOT ПРИМЕР:
-Текст: "Алексей предложил поднять FastAPI-сервис с PostgreSQL и прикрутить JWT авторизацию"
+ВАЖНО — тип Decision:
+   Если в тексте идёт ОБСУЖДЕНИЕ ВЫБОРА между несколькими вариантами
+   ("берём React или Vue?", "какую БД используем?") — создай узел с label=Decision.
+   Каждый вариант выбора (React, Vue) — отдельный узел с подходящим label (Component и т.п.).
+
+FEW-SHOT ПРИМЕР (голосование):
+Текст: "Мы берём React или Vue? — Давайте Vue. — Нет, я за React. — Я тоже за него."
 Ответ entities:
-  - id: alex_lead,       label: Person,      name: Алексей
-  - id: fastapi_service, label: Component,   name: FastAPI сервис
-  - id: postgresql_db,   label: Component,   name: PostgreSQL
-  - id: jwt_auth,        label: Component,   name: JWT авторизация
+  - id: choice_frontend_framework, label: Decision,   name: Выбор фронтенд-фреймворка
+  - id: react_framework,           label: Component,  name: React
+  - id: vue_framework,             label: Component,  name: Vue
 
-СУЩЕСТВУЮЩИЙ ГЛОССАРИЙ (используй эти ID если сущность уже есть):
+FEW-SHOT ПРИМЕР (обычный):
+Текст: "Алексей предложил поднять FastAPI с PostgreSQL и прикрутить JWT авторизацию"
+Ответ entities:
+  - id: alex_lead,       label: Person,     name: Алексей
+  - id: fastapi_service, label: Component,  name: FastAPI сервис
+  - id: postgresql_db,   label: Component,  name: PostgreSQL
+  - id: jwt_auth,        label: Component,  name: JWT авторизация
+
+СУЩЕСТВУЮЩИЙ ГЛОССАРИЙ:
 {self._format_glossary() or "Пока пусто — все сущности новые."}
 """
 
@@ -153,7 +157,6 @@ FEW-SHOT ПРИМЕР:
             schema=ProjectGlossary, prompt=glossary_prompt, data=text
         )
 
-        # Нормализуем ID (на случай если LLM всё же вернул CamelCase)
         for entity in local_glossary.entities:
             entity.id = entity.id.strip().lower().replace(" ", "_").replace("-", "_")
             if entity.id not in self.global_glossary_dict:
@@ -161,26 +164,45 @@ FEW-SHOT ПРИМЕР:
 
         valid_ids: Set[str] = set(self.global_glossary_dict.keys())
 
-        # ── ПРОХОД 2: Извлечение графа (Улучшение 2 — few-shot примеры) ─────────────────
-
+        # ── ПРОХОД 2: Граф + голосования ─────────────────────────────────────────────────
         graph_prompt = f"""Ты — Архитектор знаний. Извлеки граф (узлы + связи) из текста.
 
 СТРОГИЕ ПРАВИЛА:
-1. Используй ТОЛЬКО ID из «Глоссария проекта» ниже — никаких новых ID.
-2. Рёбра: source и target должны быть разными узлами из глоссария.
-3. [FLAG: CONFIRMATION] в тексте → тип связи AGREES_WITH.
-4. evidence — короткая цитата или объяснение, почему эти узлы связаны.
-5. summary — 2-3 предложения о главном в этом фрагменте (для памяти следующих окон).
+1. Используй ТОЛЬКО ID из «Глоссария проекта» — никаких новых ID.
+2. Рёбра: source и target — разные узлы из глоссария.
+3. evidence — короткая цитата, почему эти узлы связаны.
+4. summary — 2-3 предложения о главном в этом фрагменте.
 
-FEW-SHOT ПРИМЕР:
-Глоссарий: alex_lead (Person), fastapi_service (Component), jwt_auth (Component)
-Текст: "Алексей сказал: поднимаем FastAPI с JWT"
-Ответ nodes: [alex_lead, fastapi_service, jwt_auth]
+ПРАВИЛА ДЛЯ ГОЛОСОВАНИЙ (Decision-узлы):
+   Если есть узел с label=Decision и варианты выбора:
+   a) Person высказывается ЗА вариант → ребро Person → Вариант, relation=VOTED_FOR
+   b) Person высказывается ПРОТИВ → ребро Person → Вариант, relation=VOTED_AGAINST
+   c) Безадресное «да/ок/согласен» = VOTED_FOR для последнего упомянутого варианта.
+   d) Безадресное «нет/против»    = VOTED_AGAINST для последнего упомянутого варианта.
+   e) Decision → каждый вариант: relation=RELATES_TO (чтобы обозначить список опций).
+
+FEW-SHOT ПРИМЕР (голосование):
+Глоссарий: choice_frontend_framework (Decision), react_framework (Component),
+           vue_framework (Component), dmitry (Person), maria (Person), ivan (Person)
+Текст:
+  "[Дмитрий]: Давайте Vue.
+   [Мария]: Нет, я за React.
+   [Иван]: Я тоже за него."
 Ответ edges:
-  - source: alex_lead      → target: fastapi_service, relation: MENTIONS,    evidence: "поднимаем FastAPI"
-  - source: fastapi_service → target: jwt_auth,        relation: DEPENDS_ON, evidence: "FastAPI с JWT"
+  - dmitry → vue_framework,             VOTED_FOR,     "Давайте Vue"
+  - maria  → react_framework,           VOTED_FOR,     "я за React"
+  - ivan   → react_framework,           VOTED_FOR,     "тоже за него (React из контекста)"
+  - choice_frontend_framework → react_framework, RELATES_TO, "вариант выбора"
+  - choice_frontend_framework → vue_framework,   RELATES_TO, "вариант выбора"
 
-ГЛОССАРИЙ ПРОЕКТА (разрешённые ID):
+FEW-SHOT ПРИМЕР (обычный):
+Глоссарий: alex_lead (Person), fastapi_service (Component), jwt_auth (Component)
+Текст: "Алексей: поднимаем FastAPI с JWT"
+Ответ edges:
+  - alex_lead → fastapi_service, MENTIONS,   "поднимаем FastAPI"
+  - fastapi_service → jwt_auth,  DEPENDS_ON, "FastAPI с JWT"
+
+ГЛОССАРИЙ ПРОЕКТА:
 {self._format_glossary()}
 
 ПАМЯТЬ ПРОШЛЫХ ОКОН:
@@ -192,16 +214,23 @@ FEW-SHOT ПРИМЕР:
         )
         result.source_ref = source_ref
 
-        # Обогащаем узлы данными из глоссария
+        # Обогащаем узлы из глоссария
         for node in result.nodes:
             if node.id in self.global_glossary_dict:
-                g_item = self.global_glossary_dict[node.id]
-                if not node.name:        node.name = g_item.name
-                if not node.description: node.description = g_item.description
-                if not node.label:       node.label = g_item.label
+                g = self.global_glossary_dict[node.id]
+                if not node.name:        node.name = g.name
+                if not node.description: node.description = g.description
+                if not node.label:       node.label = g.label
 
-        # ── Улучшение 1 + 5: Валидация — удаляем призраков и битые рёбра ─────────────────
+        # Валидация: убираем призраков и битые рёбра
         result = validate_graph_integrity(result, valid_ids)
+
+        vote_edges = [
+            e for e in result.edges
+            if e.relation.value in ("VOTED_FOR", "VOTED_AGAINST")
+        ]
+        if vote_edges:
+            logger.info(f"     🗳️  Найдено {len(vote_edges)} голосов в окне {source_ref}")
 
         logger.info(
             f"     ✅ Граф: {len(result.nodes)} узлов, {len(result.edges)} рёбер (после валидации)"
