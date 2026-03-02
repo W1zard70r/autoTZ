@@ -17,7 +17,7 @@ def get_clean_text(text_obj) -> str:
 def format_chat_message(msg: dict, msg_lookup: dict = None) -> str:
     date = msg.get("date", "Unknown Date")
     author = msg.get("from", msg.get("author", "Unknown"))
-    text = normalize_short_answers(get_clean_text(msg.get("text", "")))
+    text = get_clean_text(msg.get("text", ""))
 
     reply_str = ""
     reply_id = msg.get("reply_to_message_id")

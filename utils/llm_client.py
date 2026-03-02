@@ -52,7 +52,7 @@ T = TypeVar("T", bound=BaseModel)
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(multiplier=2, min=5, max=60))
 async def acall_llm_json(schema: Type[T], prompt: str, data: str = "", model_name: str = DEFAULT_MODEL) -> T:
     try:
-        llm = get_llm_client(model_name=model_name, temperature=0.0)
+        llm = get_llm_client(model_name=model_name, temperature=0.3)
         llm_structured = llm.with_structured_output(schema)
 
         full_prompt = prompt
