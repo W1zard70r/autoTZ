@@ -59,11 +59,11 @@ async def asplit_chat_into_semantic_threads(
     for i, msg in enumerate(valid_msgs):
         reply_id = msg.get("reply_to_message_id")
         if reply_id and G.has_node(reply_id):
-            # ЗАЩИТА: Прямой ответ гарантированно удержит сообщения в одном кластере
-            G.add_edge(msg["id"], reply_id, weight=10.0)
+            G.add_edge(msg["id"], reply_id, weight=15.0)  # ← сильнее
             continue
 
-        best_sim, best_target_id = 0.0, None
+        best_sim = 0.0
+        best_target_id = None
         for j in range(max(0, i - LOOKBACK_WINDOW), i):
             time_i = G.nodes[msg["id"]]["time"]
             time_j = G.nodes[valid_msgs[j]["id"]]["time"]
@@ -73,7 +73,7 @@ async def asplit_chat_into_semantic_threads(
             if sim > best_sim:
                 best_sim, best_target_id = sim, valid_msgs[j]["id"]
 
-        if best_sim >= SEMANTIC_THRESHOLD and best_target_id:
+        if best_sim >= 0.72 and best_target_id:  # ← было 0.65
             G.add_edge(msg["id"], best_target_id, weight=best_sim)
 
     threads: List[List[dict]] =[]
