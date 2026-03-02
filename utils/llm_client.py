@@ -17,7 +17,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
-DEFAULT_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
+DEFAULT_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
 
 if LLM_PROVIDER == "google" and not GOOGLE_API_KEY:
     logger.warning("⚠️ GOOGLE_API_KEY не найден. Google Provider не будет работать.")
