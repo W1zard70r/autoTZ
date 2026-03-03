@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
+
 from .enums import NodeLabel, EdgeRelation, TZSectionEnum
 
 class KeyValue(BaseModel):
@@ -36,3 +37,21 @@ class UnifiedGraph(BaseModel):
     nodes: List[GraphNode] = Field(default_factory=list)
     edges: List[GraphEdge] = Field(default_factory=list)
     conflicts: List[Conflict] = Field(default_factory=list)
+
+# Классы для конфликтов
+class ConflictOption(BaseModel):
+    id: str = Field(description="ID варианта (например, узел 'react_ui')")
+    text: str = Field(description="Текст варианта (например, 'React')")
+    evidence: str = Field(description="Кто и почему это предложил (например, 'Ivan: React быстрее')")
+
+class DetectedConflict(BaseModel):
+    id: str = Field(description="Уникальный ID конфликта")
+    category: str = Field(description="Категория (например, 'Frontend Framework')")
+    description: str = Field(description="Суть конфликта (Выбор между React и Vue)")
+    options: List[ConflictOption] = Field(description="Варианты 1 и 2 (и др.)")
+    ai_recommendation: str = Field(description="Вариант 3: Совет нейросети")
+    
+class ConflictResolution(BaseModel):
+    conflict_id: str
+    selected_option_id: Optional[str] = None # Если выбран один из существующих
+    custom_text: Optional[str] = None # Вариант 4: Свой вариант

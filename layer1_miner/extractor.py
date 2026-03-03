@@ -41,28 +41,53 @@ class MinerProcessor:
             windows = await asplit_chat_into_semantic_threads(source.content)
             msg_lookup = {m["id"]: m for m in source.content if m.get("type") == "message"}
 
-            for ref, msgs in windows:
-                text_chunk = "\n".join([format_chat_message(m, msg_lookup) for m in msgs])
-                logger.info(f"  -> Анализ окна {ref} ({len(msgs)} сообщений)")
+            logger.info(f"  -> Найдено {len(windows)} смысловых окон. Начинаем обработку...")
 
-                graph = await self._extract_subgraph_2pass(text_chunk, ref, previous_summary)
-                previous_summary = graph.summary
+            for i, (ref, msgs) in enumerate(windows):
+                text_chunk = "\n".join([format_chat_message(m, msg_lookup) for m in msgs])
+                logger.info(f"  -> [{i+1}/{len(windows)}] Анализ окна {ref} ({len(msgs)} сообщений)")
+
+                # === ЖЕСТКИЙ ПОВТОР (ЗАЩИТА ОТ ПОТЕРИ ДАННЫХ) ===
+                max_retries = 3
+                retry_count = 0
+                success = False
+
+                while retry_count < max_retries and not success:
+                    try:
+                        graph = await self._extract_subgraph_2pass(text_chunk, ref, previous_summary)
+                        previous_summary = graph.summary
+                        extracted_graphs.append(graph)
+                        
+                        safe_ref = ref.replace(":", "_").replace("/", "_")
+                        log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
+                        
+                        success = True # Выходим из цикла while
+                        
+                        # Штатная задержка для Free Tier
+                        await asyncio.sleep(4) 
+
+                    except Exception as e:
+                        retry_count += 1
+                        wait_time = 10 * retry_count # 10s -> 20s -> 30s
+                        logger.warning(f"⚠️ Ошибка обработки окна {ref} (Попытка {retry_count}/{max_retries}): {str(e)[:100]}")
+                        if retry_count < max_retries:
+                            logger.info(f"⏳ Ожидание {wait_time}с перед повторной попыткой...")
+                            await asyncio.sleep(wait_time)
+                        else:
+                            logger.error(f"❌ ПРОВАЛ: Окно {ref} пропущено после {max_retries} попыток. ВОЗМОЖНА ПОТЕРЯ ДАННЫХ.")
+                
+        else:
+            # Обработка обычного текста (не чат)
+            try:
+                graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
                 extracted_graphs.append(graph)
                 
-                # --- LOGGING: Сохраняем каждый извлеченный подграф ---
-                safe_ref = ref.replace(":", "_").replace("/", "_")
-                log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
-                
-                await asyncio.sleep(2)
-        else:
-            graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
-            extracted_graphs.append(graph)
-            
-            # --- LOGGING: Сохраняем подграф ---
-            safe_ref = source.file_name.replace(":", "_").replace("/", "_")
-            log_pydantic(f"layer1_subgraph_{safe_ref}.json", graph)
+                safe_ref = source.file_name.replace(":", "_").replace("/", "_")
+                log_pydantic(f"layer1_subgraph_{safe_ref}.json", graph)
+            except Exception as e:
+                 logger.error(f"❌ Ошибка обработки документа {source.file_name}: {e}")
 
-        # --- LOGGING: Дамп полного глоссария ---
+        # Сохраняем глобальный глоссарий
         glossary_dump = {k: v.model_dump() for k, v in self.global_glossary_dict.items()}
         log_dict("layer1_global_glossary.json", glossary_dump)
 
