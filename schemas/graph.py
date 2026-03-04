@@ -1,57 +1,77 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-
 from .enums import NodeLabel, EdgeRelation, TZSectionEnum
 
-class KeyValue(BaseModel):
-    key: str = Field(description="Название свойства")
-    value: str = Field(description="Значение свойства")
+# ==========================================
+# 1. СТРУКТУРЫ ДЛЯ LAYER 1 (MINER)
+# ==========================================
 
-class GraphNode(BaseModel):
-    id: str = Field(description="Snake_case ID сущности")
-    label: NodeLabel = Field(description="Тип сущности")
-    name: str = Field(description="Человекочитаемое название")
-    description: str = Field(default="", description="Описание сущности в контексте проекта")
-    properties: List[KeyValue] = Field(default_factory=list, description="Доп. свойства")
-    target_section: TZSectionEnum = Field(default=TZSectionEnum.UNKNOWN, description="К какой секции ТЗ относится узел")
+class KnowledgeNode(BaseModel):
+    """Узел, извлекаемый из сырого текста (Miner)"""
+    id: str
+    label: NodeLabel
+    name: str
+    description: str
+    properties: List[str] = Field(default_factory=list)
 
-class GraphEdge(BaseModel):
-    source: str = Field(description="ID исходного узла")
-    target: str = Field(description="ID целевого узла")
-    relation: EdgeRelation = Field(description="Тип связи")
+class KnowledgeEdge(BaseModel):
+    """Связь, извлекаемая из сырого текста (Miner)"""
+    source: str
+    target: str
+    relation: EdgeRelation
     evidence: str = Field(default="", description="Цитата или обоснование связи")
 
 class ExtractedKnowledge(BaseModel):
-    summary: str = Field(description="Краткая выжимка чанка/окна", default="")
-    nodes: List[GraphNode] = Field(default_factory=list)
-    edges: List[GraphEdge] = Field(default_factory=list)
-    source_ref: str = Field(default="")
+    """Результат обработки одного окна чата"""
+    summary: str = Field(default="", description="Краткое содержание контекста")
+    nodes: List[KnowledgeNode] = Field(default_factory=list)
+    edges: List[KnowledgeEdge] = Field(default_factory=list)
+    source_ref: Optional[str] = None
 
-class Conflict(BaseModel):
-    id: str = Field(default="unknown_conflict")
-    node_id: str = Field(default="")
-    conflicting_values: List[str] = Field(default_factory=list)
+# ==========================================
+# 2. СТРУКТУРЫ ДЛЯ LAYER 2 (MERGER / UNIFIED)
+# ==========================================
+
+class UnifiedNode(BaseModel):
+    """Узел объединенного графа (после слияния)"""
+    id: str
+    label: NodeLabel
+    name: str
     description: str
+    properties: List[str] = Field(default_factory=list)
+    # Поле target_section заполняется в конце Layer 2
+    target_section: Optional[TZSectionEnum] = None 
+
+class UnifiedEdge(BaseModel):
+    """Ребро объединенного графа"""
+    source: str
+    target: str
+    relation: EdgeRelation
+    description: str = ""
 
 class UnifiedGraph(BaseModel):
-    nodes: List[GraphNode] = Field(default_factory=list)
-    edges: List[GraphEdge] = Field(default_factory=list)
-    conflicts: List[Conflict] = Field(default_factory=list)
+    """Итоговый граф знаний"""
+    nodes: List[UnifiedNode] = Field(default_factory=list)
+    edges: List[UnifiedEdge] = Field(default_factory=list)
 
-# Классы для конфликтов
+# ==========================================
+# 3. СТРУКТУРЫ ДЛЯ РАЗРЕШЕНИЯ КОНФЛИКТОВ
+# ==========================================
+
 class ConflictOption(BaseModel):
-    id: str = Field(description="ID варианта (например, узел 'react_ui')")
-    text: str = Field(description="Текст варианта (например, 'React')")
-    evidence: str = Field(description="Кто и почему это предложил (например, 'Ivan: React быстрее')")
+    id: str
+    text: str
 
-class DetectedConflict(BaseModel):
-    id: str = Field(description="Уникальный ID конфликта")
-    category: str = Field(description="Категория (например, 'Frontend Framework')")
-    description: str = Field(description="Суть конфликта (Выбор между React и Vue)")
-    options: List[ConflictOption] = Field(description="Варианты 1 и 2 (и др.)")
-    ai_recommendation: str = Field(description="Вариант 3: Совет нейросети")
-    
+class ConflictSchema(BaseModel):
+    """Модель конфликта, возвращаемая LLM"""
+    id: str
+    description: str
+    category: str = "General"
+    ai_recommendation: str
+    options: List[ConflictOption]
+
 class ConflictResolution(BaseModel):
+    """Решение пользователя"""
     conflict_id: str
-    selected_option_id: Optional[str] = None # Если выбран один из существующих
-    custom_text: Optional[str] = None # Вариант 4: Свой вариант
+    selected_option_id: Optional[str] = None
+    custom_text: Optional[str] = None

@@ -26,3 +26,8 @@ class EdgeRelation(str, Enum):
     RELATES_TO = "RELATES_TO"
     AGREES_WITH = "AGREES_WITH"
     MENTIONS = "MENTIONS"
+
+class TZStandardEnum(str, Enum):
+    GOST_34 = "GOST_34"       # ГОСТ 34.602-89
+    SIMPLE_MD = "SIMPLE_MD"   # Простой Markdown отчет
+    ISO_IEC = "ISO_IEC" 
