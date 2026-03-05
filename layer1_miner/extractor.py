@@ -48,7 +48,7 @@ class MinerProcessor:
                 logger.info(f"  -> [{i+1}/{len(windows)}] Анализ окна {ref} ({len(msgs)} сообщений)")
 
                 # === ЖЕСТКИЙ ПОВТОР (ЗАЩИТА ОТ ПОТЕРИ ДАННЫХ) ===
-                max_retries = 3
+                max_retries = 6
                 retry_count = 0
                 success = False
 

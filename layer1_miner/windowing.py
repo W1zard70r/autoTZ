@@ -33,7 +33,7 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     return float(np.dot(v1, v2) / norm) if norm > 0 else 0.0
 
 
-async def get_embeddings_with_retry(model, batch: List[str], retries=3) -> List[List[float]]:
+async def get_embeddings_with_retry(model, batch: List[str], retries=6) -> List[List[float]]:
     """Получение эмбеддингов с ротацией ключей. БЕЗ заглушек."""
     for attempt in range(retries):
         try:

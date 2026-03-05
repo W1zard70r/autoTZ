@@ -1,6 +1,5 @@
 import os
 import logging
-import random
 from typing import Type, TypeVar
 from itertools import cycle
 
@@ -29,7 +28,7 @@ class KeyManager:
             self.keys = [k.strip() for k in keys_str.split(",") if k.strip()]
         
         if not self.keys:
-            logger.warning("⚠️ Не найдены API ключи в GOOGLE_API_KEYS!")
+            logger.warning("⚠️ GOOGLE_API_KEYS не найдены в .env!")
             self.keys = ["DUMMY_KEY"]
             
         self._iterator = cycle(self.keys)
@@ -39,10 +38,7 @@ class KeyManager:
         prev_key = self.current_key
         self.current_key = next(self._iterator)
         if prev_key != self.current_key:
-            logger.info(f"🔄 Round-Robin: Ключ ...{prev_key[-4:]} -> ...{self.current_key[-4:]}")
-        return self.current_key
-
-    def get_current(self):
+            logger.info(f"🔄 Ротация ключа: ...{prev_key[-4:]} -> ...{self.current_key[-4:]}")
         return self.current_key
 
 key_manager = KeyManager()
@@ -56,8 +52,8 @@ def get_llm_client(model_name: str, temperature: float = 0.1):
     
     api_key = key_manager.next_key()
     
-    # Отключаем фильтры безопасности (чтобы не блокировались слова password, jwt и т.д.)
-    safety = {
+    # Минимальный набор фильтров для экспериментальных моделей (убирает 400 ошибку)
+    safety_settings = {
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
         HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
@@ -68,9 +64,9 @@ def get_llm_client(model_name: str, temperature: float = 0.1):
         model=model_name,
         temperature=temperature,
         google_api_key=api_key,
-        safety_settings=safety,
+        safety_settings=safety_settings,
         max_retries=1,
-        request_timeout=30
+        request_timeout=60 # Увеличили таймаут
     )
 
 def get_embedding_client():
@@ -83,12 +79,15 @@ T = TypeVar("T", bound=BaseModel)
 
 GLOBAL_RETRY_CONFIG = {
     "stop": stop_after_attempt(10), 
-    "wait": wait_exponential(multiplier=1, min=2, max=10),
+    "wait": wait_exponential(multiplier=2, min=4, max=15),
     "retry": retry_if_exception_type((
         google.api_core.exceptions.ResourceExhausted, 
         google.api_core.exceptions.ServiceUnavailable,
-        google.api_core.exceptions.GoogleAPICallError
-    ))
+        google.api_core.exceptions.GoogleAPICallError,
+        google.api_core.exceptions.DeadlineExceeded
+        # 400 Bad Request НЕ ретраим, чтобы видеть ошибку сразу
+    )),
+    "before_sleep": lambda rs: logger.warning(f"🛑 Сбой API (Попытка {rs.attempt_number}). Ищем живой ключ...")
 }
 
 @retry(**GLOBAL_RETRY_CONFIG)

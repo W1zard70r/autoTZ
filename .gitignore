@@ -16,4 +16,5 @@ venv
 *.log
 logs/
 repomix-output.xml
+Danya_version.xml
 output/

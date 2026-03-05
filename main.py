@@ -3,13 +3,15 @@ import asyncio
 import logging
 from dotenv import load_dotenv
 
-from schemas.document import DataSource, DocumentSection
+from schemas.document import DataSource, FinalExportDocument
 from schemas.enums import DataEnum, TZStandardEnum
 from schemas.graph import ConflictResolution
+
 from layer1_miner.extractor import MinerProcessor
 from layer2_merger.merger import SmartGraphMerger
 from layer3_compiler.generator import TZGenerator
-from utils.test_data_gen import get_backend_chat_dataset, get_frontend_chat_dataset, get_product_chat_dataset
+
+from utils.test_data_gen import get_product_chat_dataset, get_backend_chat_dataset, get_frontend_chat_dataset
 from utils.state_logger import init_logs_dir
 
 load_dotenv()
@@ -17,21 +19,28 @@ init_logs_dir()
 
 logging.basicConfig(
     level=logging.INFO, 
-    format='%(asctime)s - %(levelname)s - %(message)s', 
-    datefmt='%H:%M:%S',
-    handlers=[
-        logging.FileHandler("logs/app.log", encoding="utf-8", mode="w"),
-        logging.StreamHandler()
-    ]
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.FileHandler("logs/app.log", encoding="utf-8"), logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 
-async def main():
-    print("🚀 ГЕНЕРАТОР ТЗ (Ultra-Stable Pipeline)")
+def render_to_markdown(doc: FinalExportDocument) -> str:
+    """Программная сборка MD из Pydantic объекта"""
+    lines = [
+        f"# ТЗ: {doc.title_page.project_name}",
+        f"**Организация:** {doc.title_page.organization_name}",
+        f"**Версия:** {doc.version}\n",
+        "---\n"
+    ]
+    for sec in doc.structure:
+        lines.append(f"## {sec.number} {sec.title}\n\n{sec.content.strip()}\n")
+        for sub in sec.subsections:
+            lines.append(f"### {sub.number} {sub.title}\n\n{sub.content.strip()}\n")
+    return "\n".join(lines)
 
-    miner = MinerProcessor()
-    merger = SmartGraphMerger()
-    compiler = TZGenerator()
+async def main():
+    logger.info("🚀 СТАРТ ПАЙПЛАЙНА")
+    miner, merger, compiler = MinerProcessor(), SmartGraphMerger(), TZGenerator()
 
     sources = [
         DataSource(source_type=DataEnum.CHAT, content=get_product_chat_dataset(), file_name="product_chat"),
@@ -39,85 +48,66 @@ async def main():
         DataSource(source_type=DataEnum.CHAT, content=get_frontend_chat_dataset(), file_name="frontend_chat")
     ]
 
-    # --- ЭТАП 1 ---
-    logger.info(">>> ЭТАП 1: Майнинг")
+    # --- ЭТАП 1: Майнинг ---
     all_subgraphs = []
-    
     for src in sources:
         try:
             res = await miner.process_source(src)
             all_subgraphs.extend(res)
-            logger.info("⏳ Пауза 10с между файлами...")
-            await asyncio.sleep(10)
+            logger.info(f"⏳ Охлаждение после {src.file_name} (30 сек)...")
+            await asyncio.sleep(30)
         except Exception as e:
-            logger.error(f"Ошибка майнера {src.file_name}: {e}")
+            logger.error(f"❌ Ошибка майнера {src.file_name}: {e}")
 
-    unified_graph = None
+    if not all_subgraphs:
+        logger.error("❌ Данные не собраны!")
+        return
 
-    # --- ЭТАП 2 ---
-    if all_subgraphs:
-        logger.info(">>> ЭТАП 2: Мерджинг")
-        try:
-            await merger.merge_subgraphs_and_deduplicate(all_subgraphs)
+    # --- ЭТАП 2: Мерджинг и Конфликты ---
+    await merger.merge_subgraphs_and_deduplicate(all_subgraphs)
+    conflicts = await merger.detect_conflicts()
+    
+    if conflicts:
+        print(f"\n🛑 ОБНАРУЖЕНО {len(conflicts)} ТЕХНИЧЕСКИХ ПРОТИВОРЕЧИЙ")
+        resolutions = []
+        for i, conf in enumerate(conflicts):
+            print(f"\n🔹 {i+1}: {conf.description}")
+            for idx, opt in enumerate(conf.options):
+                print(f"   [{idx}] {opt.text} (ID: {opt.id})")
             
-            logger.info("⏳ Пауза 20с перед поиском конфликтов...")
-            await asyncio.sleep(20)
+            u_in = input("\n   👉 Ваш выбор (номер или ID): ").strip()
             
-            conflicts = await merger.detect_conflicts()
-            
-            if conflicts:
-                print(f"\n🛑 НАЙДЕНО {len(conflicts)} КОНФЛИКТОВ")
-                resolutions = []
-                for i, conf in enumerate(conflicts):
-                    print(f"\n🔹 #{i+1}: {conf.description}")
-                    print(f"   Совет AI: {conf.ai_recommendation}")
-                    u_in = input("   👉 Выбор (0-авто, текст-свой): ").strip()
-                    if u_in.isdigit() and len(conf.options) > 0:
-                        resolutions.append(ConflictResolution(conflict_id=conf.id, selected_option_id=conf.options[0].id))
-                    else:
-                        resolutions.append(ConflictResolution(conflict_id=conf.id, custom_text=u_in or "Manual fix"))
-                merger.apply_resolutions(resolutions)
-            
-            unified_graph = await merger.finalize_graph()
-            
-        except Exception as e:
-            logger.error(f"Ошибка мерджинга: {e}")
-            return
+            # Логика: если ввели цифру - берем ID этой опции. Если текст - передаем текст.
+            if u_in.isdigit():
+                idx = int(u_in)
+                if idx < len(conf.options):
+                    resolutions.append(ConflictResolution(
+                        conflict_id=conf.id, 
+                        selected_option_id=conf.options[idx].id
+                    ))
+                    print(f"   ✅ Принят вариант: {conf.options[idx].text}")
+                else:
+                    resolutions.append(ConflictResolution(conflict_id=conf.id, custom_text=u_in))
+            else:
+                resolutions.append(ConflictResolution(conflict_id=conf.id, custom_text=u_in))
+        
+        merger.apply_resolutions(resolutions)
 
-    # --- ЭТАП 3 ---
-    if unified_graph:
-        logger.info(">>> ЭТАП 3: Генерация")
-        logger.info("⏳ Пауза 45с перед генерацией (охлаждение)...")
-        await asyncio.sleep(45)
+    unified_graph = await merger.finalize_graph()
 
-        try:
-            final_doc = await compiler.generate_tz(unified_graph, standard=TZStandardEnum.GOST_34)
+    # --- ЭТАП 3: Генерация ---
+    logger.info(">>> ЭТАП 3: Генерация контента")
+    final_doc = await compiler.generate_tz(unified_graph)
+
+    # Экспорт
+    os.makedirs("output", exist_ok=True)
+    with open("output/FINAL_TZ_PAYLOAD.json", "w", encoding="utf-8") as f:
+        f.write(final_doc.model_dump_json(indent=2, ensure_ascii=False))
+    
+    with open("output/PREVIEW_GOST.md", "w", encoding="utf-8") as f:
+        f.write(render_to_markdown(final_doc))
             
-            # Исправлена ошибка с output_dir
-            output_dir = "output"
-            os.makedirs(output_dir, exist_ok=True)
-            
-            # JSON
-            with open(os.path.join(output_dir, "FINAL_TZ_PAYLOAD.json"), "w", encoding="utf-8") as f:
-                f.write(final_doc.model_dump_json(indent=2, ensure_ascii=False))
-            
-            # MD
-            with open(os.path.join(output_dir, "PREVIEW_GOST.md"), "w", encoding="utf-8") as f:
-                f.write(f"# {final_doc.title_page.project_name}\n\n")
-                def write_md(sec, lvl=1):
-                    indent = "#" * lvl
-                    t = f"{indent} {sec.number} {sec.title}\n\n{sec.content or ''}\n\n"
-                    for s in sec.subsections: t += write_md(s, lvl+1)
-                    return t
-                for sec in final_doc.structure:
-                    f.write(write_md(sec, 2))
-                    
-            logger.info(f"✅ Готово! См. папку {output_dir}")
-            
-        except Exception as e:
-            logger.error(f"Ошибка генерации: {e}", exc_info=True)
-    else:
-        logger.error("❌ Граф не создан!")
+    logger.info("✅ ГОТОВО! Папка output.")
 
 if __name__ == "__main__":
     asyncio.run(main())
