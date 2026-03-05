@@ -4,7 +4,7 @@ import networkx as nx
 import community as community_louvain
 from datetime import datetime, timedelta
 from typing import List, Tuple
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from utils.embeddings import aget_embeddings_safe
 
 MAX_CHARS_PER_WINDOW = 6000
 OVERLAP_MESSAGES = 4
@@ -34,19 +34,13 @@ async def asplit_chat_into_semantic_threads(
     if not valid_msgs:
         return[]
 
-    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
     texts_to_embed =[str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
 
-    embeddings =[]
-    for i in range(0, len(texts_to_embed), EMBEDDING_BATCH_SIZE):
-        batch = texts_to_embed[i : i + EMBEDDING_BATCH_SIZE]
-        try:
-            batch_result = await embeddings_model.aembed_documents(batch)
-            embeddings.extend(batch_result)
-        except Exception:
-            embeddings.extend([[0.0] * 768] * len(batch))
-        await asyncio.sleep(EMBEDDING_DELAY)
-
+    embeddings = await aget_embeddings_safe(
+        texts=texts_to_embed,
+        batch_size=EMBEDDING_BATCH_SIZE,
+        delay=EMBEDDING_DELAY
+    )
     G = nx.Graph()
     for i, msg in enumerate(valid_msgs):
         G.add_node(

@@ -95,14 +95,13 @@ class MinerProcessor:
         else:
             # Обработка обычного текста (не чат)
             try:
-                prev_summary = '' # я поломать(
-                graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, prev_summary)
+                graph = await self._extract_subgraph_3pass(str(source.content), source.file_name)
                 extracted_graphs.append(graph)
 
                 safe_ref = source.file_name.replace(":", "_").replace("/", "_")
                 log_pydantic(f"layer1_subgraph_{safe_ref}.json", graph)
             except Exception as e:
-                 logger.error(f"❌ Ошибка обработки документа {source.file_name}: {e}")
+                logger.error(f"❌ Ошибка обработки документа {source.file_name}: {e}")
 
         # Сохраняем глобальный глоссарий
         glossary_dump = {k: v.model_dump() for k, v in self.global_glossary_dict.items()}
@@ -174,42 +173,13 @@ class MinerProcessor:
     def _apply_fixes(self, graph: ExtractedKnowledge, fixes: FixListSchema) -> ExtractedKnowledge:
         for fix in fixes.fixes:
             logger.info(f" 🔧 Critique fix: {fix.action} — {fix.reason}")
-            # Простая реализация (можно расширить)
+
+            if fix.action == "remove_node" and fix.node_id:
+                graph.nodes = [n for n in graph.nodes if n.id != fix.node_id]
+                graph.edges = [e for e in graph.edges if e.source != fix.node_id and e.target != fix.node_id]
+
+            elif fix.action == "remove_edge" and fix.edge_source and fix.edge_target:
+                graph.edges = [e for e in graph.edges if
+                               not (e.source == fix.edge_source and e.target == fix.edge_target)]
+
         return graph
-    async def _extract_subgraph_2pass(self, text: str, source_ref: str, prev_summary: str) -> ExtractedKnowledge:
-        glossary_prompt = f"""Найди все ключевые сущности в тексте (Люди, Компоненты, Задачи, Требования).
-    Если сущность уже есть в ГЛОССАРИИ ниже, используй ЕЕ СТАРЫЙ ID.
-    Если это новая сущность — создай новый snake_case ID.
-
-    СУЩЕСТВУЮЩИЙ ГЛОССАРИЙ:
-    {self._format_glossary() or 'Пока пусто.'}"""
-
-        local_glossary = await acall_llm_json(schema=ProjectGlossary, prompt=glossary_prompt, data=text)
-
-        for entity in local_glossary.entities:
-            if entity.id not in self.global_glossary_dict:
-                self.global_glossary_dict[entity.id] = entity
-
-        graph_prompt = f"""Ты Архитектор. Извлеки граф знаний (узлы и связи).
-    СТРОГИЕ ПРАВИЛА:
-    1. Используй ТОЛЬКО ID из Глоссария проекта.
-    2. Обращай внимание на [FLAG: CONFIRMATION] (означает AGREES_WITH).
-    3. Добавляй evidence для каждой связи (почему ты их связал).
-
-    ГЛОССАРИЙ ПРОЕКТА:
-    {self._format_glossary()}
-
-    ПАМЯТЬ ПРОШЛЫХ ОКОН:
-    {prev_summary or 'Начало диалога.'}"""
-
-        result = await acall_llm_json(schema=ExtractedKnowledge, prompt=graph_prompt, data=text)
-        result.source_ref = source_ref
-
-        for node in result.nodes:
-            if node.id in self.global_glossary_dict:
-                g_item = self.global_glossary_dict[node.id]
-                if not node.name: node.name = g_item.name
-                if not node.description: node.description = g_item.description
-                if not node.label: node.label = g_item.label
-
-        return result

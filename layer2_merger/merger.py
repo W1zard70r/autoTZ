@@ -8,11 +8,12 @@ from pydantic import BaseModel, Field
 
 from schemas.graph import (
     ExtractedKnowledge, UnifiedGraph, GraphNode, GraphEdge,
-    Conflict, VoteCount, DecisionResolution, DetectedConflict,
+    Conflict, VoteCount, DecisionResolution, DetectedConflict, ConflictResolution,
 )
 from schemas.enums import TZSectionEnum, NodeLabel, EdgeRelation
 from utils.llm_client import acall_llm_json
 from utils.state_logger import log_graphml, log_pydantic
+from utils.embeddings import aget_embeddings_safe
 
 logger = logging.getLogger(__name__)
 
@@ -48,21 +49,6 @@ def _cosine_similarity(v1: List[float], v2: List[float]) -> float:
     return float(np.dot(a, b) / norm) if norm > 0 else 0.0
 
 
-async def _get_embeddings(texts: List[str]) -> List[List[float]]:
-    from langchain_google_genai import GoogleGenerativeAIEmbeddings
-    model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
-    embeddings: List[List[float]] = []
-    for i in range(0, len(texts), 20):
-        batch = texts[i: i + 20]
-        try:
-            embeddings.extend(await model.aembed_documents(batch))
-        except Exception as e:
-            logger.warning(f"Ошибка эмбеддингов (батч {i}): {e}")
-            embeddings.extend([[0.0] * 768] * len(batch))
-        await asyncio.sleep(0.5)
-    return embeddings
-
-
 async def _find_duplicate_candidates(
         nodes: List[Dict[str, Any]],
         similarity_threshold: float = 0.88,
@@ -70,7 +56,9 @@ async def _find_duplicate_candidates(
     if len(nodes) < 2:
         return []
     texts = [f"{n['name']} {n.get('desc', '')}".strip() for n in nodes]
-    embeddings = await _get_embeddings(texts)
+
+    embeddings = await aget_embeddings_safe(texts, batch_size=20, delay=0.5)
+
     candidates = []
     for i in range(len(nodes)):
         for j in range(i + 1, len(nodes)):
@@ -242,7 +230,6 @@ class SmartGraphMerger:
         for sg in subgraphs:
             for node in sg.nodes:
                 if not self.G.has_node(node.id):
-                    self.G.add_node(node.id, **node.model_dump(mode="json"))
                     self.G.add_node(node.id, **node.model_dump(mode='json'))
             for edge in sg.edges:
                 edge_data = edge.model_dump(mode='json', exclude={'source', 'target'})
@@ -507,28 +494,25 @@ class SmartGraphMerger:
 
     async def _assign_sections(self):
         logger.info("  -> Распределение узлов по секциям ТЗ...")
+
         nodes_to_assign = [
             {"id": n, "name": d.get("name"), "label": d.get("label")}
             for n, d in self.G.nodes(data=True)
             if d.get("label") not in (NodeLabel.PERSON.value, NodeLabel.PERSON)
+               and d.get("target_section", "uncategorized") in (
+               "uncategorized", TZSectionEnum.UNKNOWN.value, TZSectionEnum.UNKNOWN)
         ]
+
         if not nodes_to_assign:
             return
-        nodes_to_assign = [
-            {"id": n, "name": d.get("name"), "label": d.get("label")}
-            for n, d in self.G.nodes(data=True)
-            if d.get("label") != NodeLabel.PERSON and d.get("target_section", "uncategorized") == "uncategorized"
-        ]
-
-        if not nodes_to_assign: return
 
         prompt = """Распредели каждый узел в одну из секций ТЗ:
-- GENERAL    (general_info)   — общая информация, цели, задачи
-- STACK      (tech_stack)     — компоненты, БД, библиотеки, Decision-узлы выбора технологий
-- FUNCTIONAL (functional_req) — требования, фичи, бизнес-логика
-- INTERFACE  (ui_ux)          — UI/UX, экраны, формы
-
-Верни assignments для КАЖДОГО узла без пропусков."""
+    - GENERAL    (general_info)   — общая информация, цели, задачи
+    - STACK      (tech_stack)     — компоненты, БД, библиотеки, Decision-узлы выбора технологий
+    - FUNCTIONAL (functional_req) — требования, фичи, бизнес-логика
+    - INTERFACE  (ui_ux)          — UI/UX, экраны, формы
+    
+    Верни assignments для КАЖДОГО узла без пропусков."""
 
         for i in range(0, len(nodes_to_assign), 20):
             batch = nodes_to_assign[i: i + 20]
