@@ -15,3 +15,5 @@ venv
 # Logs and databases
 *.log
 logs/
+repomix-output.xml
+output/
