@@ -95,7 +95,8 @@ class MinerProcessor:
         else:
             # Обработка обычного текста (не чат)
             try:
-                graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
+                prev_summary = '' # я поломать(
+                graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, prev_summary)
                 extracted_graphs.append(graph)
 
                 safe_ref = source.file_name.replace(":", "_").replace("/", "_")
@@ -176,20 +177,20 @@ class MinerProcessor:
             # Простая реализация (можно расширить)
         return graph
     async def _extract_subgraph_2pass(self, text: str, source_ref: str, prev_summary: str) -> ExtractedKnowledge:
-            glossary_prompt = f"""Найди все ключевые сущности в тексте (Люди, Компоненты, Задачи, Требования).
+        glossary_prompt = f"""Найди все ключевые сущности в тексте (Люди, Компоненты, Задачи, Требования).
     Если сущность уже есть в ГЛОССАРИИ ниже, используй ЕЕ СТАРЫЙ ID.
     Если это новая сущность — создай новый snake_case ID.
 
     СУЩЕСТВУЮЩИЙ ГЛОССАРИЙ:
     {self._format_glossary() or 'Пока пусто.'}"""
 
-            local_glossary = await acall_llm_json(schema=ProjectGlossary, prompt=glossary_prompt, data=text)
+        local_glossary = await acall_llm_json(schema=ProjectGlossary, prompt=glossary_prompt, data=text)
 
-            for entity in local_glossary.entities:
-                if entity.id not in self.global_glossary_dict:
-                    self.global_glossary_dict[entity.id] = entity
+        for entity in local_glossary.entities:
+            if entity.id not in self.global_glossary_dict:
+                self.global_glossary_dict[entity.id] = entity
 
-            graph_prompt = f"""Ты Архитектор. Извлеки граф знаний (узлы и связи).
+        graph_prompt = f"""Ты Архитектор. Извлеки граф знаний (узлы и связи).
     СТРОГИЕ ПРАВИЛА:
     1. Используй ТОЛЬКО ID из Глоссария проекта.
     2. Обращай внимание на [FLAG: CONFIRMATION] (означает AGREES_WITH).
@@ -201,14 +202,14 @@ class MinerProcessor:
     ПАМЯТЬ ПРОШЛЫХ ОКОН:
     {prev_summary or 'Начало диалога.'}"""
 
-            result = await acall_llm_json(schema=ExtractedKnowledge, prompt=graph_prompt, data=text)
-            result.source_ref = source_ref
+        result = await acall_llm_json(schema=ExtractedKnowledge, prompt=graph_prompt, data=text)
+        result.source_ref = source_ref
 
-            for node in result.nodes:
-                if node.id in self.global_glossary_dict:
-                    g_item = self.global_glossary_dict[node.id]
-                    if not node.name: node.name = g_item.name
-                    if not node.description: node.description = g_item.description
-                    if not node.label: node.label = g_item.label
+        for node in result.nodes:
+            if node.id in self.global_glossary_dict:
+                g_item = self.global_glossary_dict[node.id]
+                if not node.name: node.name = g_item.name
+                if not node.description: node.description = g_item.description
+                if not node.label: node.label = g_item.label
 
-            return result
+        return result
