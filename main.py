@@ -71,9 +71,12 @@ async def main():
         print(f"\n🛑 ОБНАРУЖЕНО {len(conflicts)} ТЕХНИЧЕСКИХ ПРОТИВОРЕЧИЙ")
         resolutions = []
         for i, conf in enumerate(conflicts):
-            print(f"\n🔹 {i+1}: {conf.description}")
+            print(f"\n🔹 Конфликт #{i+1}: {conf.description}")
+            # ТЕПЕРЬ СОВЕТ БУДЕТ ВИДЕН:
+            print(f"   💡 СОВЕТ АРХИТЕКТОРА: {conf.ai_recommendation}") 
+            print("   Варианты:")
             for idx, opt in enumerate(conf.options):
-                print(f"   [{idx}] {opt.text} (ID: {opt.id})")
+                print(f"     [{idx}] {opt.text} (ID: {opt.id})")
             
             u_in = input("\n   👉 Ваш выбор (номер или ID): ").strip()
             
