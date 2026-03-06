@@ -13,17 +13,14 @@ from .windowing import asplit_chat_into_semantic_threads
 
 logger = logging.getLogger(__name__)
 
-
 class GlossaryItem(BaseModel):
     id: str = Field(description="Snake_case ID")
     name: str = Field(description="Человекочитаемое название")
     label: NodeLabel = Field(description="Тип сущности")
     description: str = Field(description="Краткое описание")
 
-
 class ProjectGlossary(BaseModel):
     entities: List[GlossaryItem] = Field(default_factory=list)
-
 
 class MinerProcessor:
     def __init__(self):
@@ -33,7 +30,7 @@ class MinerProcessor:
         return "\n".join([f"- {e.id} ({e.label.value}): {e.name}" for e in self.global_glossary_dict.values()])
 
     async def process_source(self, source: DataSource) -> List[ExtractedKnowledge]:
-        logger.info(f"⛏️ СЛОЙ 1: Начинаем извлечение из {source.file_name}")
+        logger.info(f"⛏️ СЛОЙ 1: Извлечение из {source.file_name}")
         extracted_graphs = []
         previous_summary = ""
 
@@ -41,92 +38,49 @@ class MinerProcessor:
             windows = await asplit_chat_into_semantic_threads(source.content)
             msg_lookup = {m["id"]: m for m in source.content if m.get("type") == "message"}
 
-            logger.info(f"  -> Найдено {len(windows)} смысловых окон. Начинаем обработку...")
+            logger.info(f"  -> Найдено {len(windows)} окон.")
 
             for i, (ref, msgs) in enumerate(windows):
                 text_chunk = "\n".join([format_chat_message(m, msg_lookup) for m in msgs])
-                logger.info(f"  -> [{i+1}/{len(windows)}] Анализ окна {ref} ({len(msgs)} сообщений)")
+                logger.info(f"  -> [{i+1}/{len(windows)}] Анализ окна {ref}")
 
-                # === ЖЕСТКИЙ ПОВТОР (ЗАЩИТА ОТ ПОТЕРИ ДАННЫХ) ===
-                max_retries = 6
-                retry_count = 0
-                success = False
-
-                while retry_count < max_retries and not success:
-                    try:
-                        graph = await self._extract_subgraph_2pass(text_chunk, ref, previous_summary)
-                        previous_summary = graph.summary
-                        extracted_graphs.append(graph)
-                        
-                        safe_ref = ref.replace(":", "_").replace("/", "_")
-                        log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
-                        
-                        success = True # Выходим из цикла while
-                        
-                        # Штатная задержка для Free Tier
-                        await asyncio.sleep(4) 
-
-                    except Exception as e:
-                        retry_count += 1
-                        wait_time = 10 * retry_count # 10s -> 20s -> 30s
-                        logger.warning(f"⚠️ Ошибка обработки окна {ref} (Попытка {retry_count}/{max_retries}): {str(e)[:100]}")
-                        if retry_count < max_retries:
-                            logger.info(f"⏳ Ожидание {wait_time}с перед повторной попыткой...")
-                            await asyncio.sleep(wait_time)
-                        else:
-                            logger.error(f"❌ ПРОВАЛ: Окно {ref} пропущено после {max_retries} попыток. ВОЗМОЖНА ПОТЕРЯ ДАННЫХ.")
-                
-        else:
-            # Обработка обычного текста (не чат)
-            try:
-                graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
+                # ВАЖНО: Мы убрали ручной цикл while. 
+                # Теперь всю работу делает декоратор @retry в llm_client.py
+                graph = await self._extract_subgraph_2pass(text_chunk, ref, previous_summary)
+                previous_summary = graph.summary
                 extracted_graphs.append(graph)
                 
-                safe_ref = source.file_name.replace(":", "_").replace("/", "_")
-                log_pydantic(f"layer1_subgraph_{safe_ref}.json", graph)
-            except Exception as e:
-                 logger.error(f"❌ Ошибка обработки документа {source.file_name}: {e}")
+                safe_ref = ref.replace(":", "_").replace("/", "_")
+                log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
+                
+                await asyncio.sleep(4) # Базовая задержка между окнами
 
-        # Сохраняем глобальный глоссарий
-        glossary_dump = {k: v.model_dump() for k, v in self.global_glossary_dict.items()}
-        log_dict("layer1_global_glossary.json", glossary_dump)
+        else:
+            graph = await self._extract_subgraph_2pass(str(source.content), source.file_name, previous_summary)
+            extracted_graphs.append(graph)
+            log_pydantic(f"layer1_subgraph_{source.file_name}.json", graph)
 
+        log_dict("layer1_global_glossary.json", {k: v.model_dump() for k, v in self.global_glossary_dict.items()})
         return extracted_graphs
 
     async def _extract_subgraph_2pass(self, text: str, source_ref: str, prev_summary: str) -> ExtractedKnowledge:
-        glossary_prompt = f"""Найди все ключевые сущности в тексте (Люди, Компоненты, Задачи, Требования).
-Если сущность уже есть в ГЛОССАРИИ ниже, используй ЕЕ СТАРЫЙ ID.
-Если это новая сущность — создай новый snake_case ID.
-
-СУЩЕСТВУЮЩИЙ ГЛОССАРИЙ:
-{self._format_glossary() or 'Пока пусто.'}"""
-
-        local_glossary = await acall_llm_json(schema=ProjectGlossary, prompt=glossary_prompt, data=text)
+        # Пасс 1: Глоссарий
+        glossary_prompt = f"Найди ключевые сущности. Используй существующие ID или создай новые snake_case.\nГЛОССАРИЙ:\n{self._format_glossary()}"
+        local_glossary = await acall_llm_json(ProjectGlossary, glossary_prompt, data=text)
 
         for entity in local_glossary.entities:
             if entity.id not in self.global_glossary_dict:
                 self.global_glossary_dict[entity.id] = entity
 
-        graph_prompt = f"""Ты Архитектор. Извлеки граф знаний (узлы и связи).
-СТРОГИЕ ПРАВИЛА:
-1. Используй ТОЛЬКО ID из Глоссария проекта.
-2. Обращай внимание на [FLAG: CONFIRMATION] (означает AGREES_WITH).
-3. Добавляй evidence для каждой связи (почему ты их связал).
-
-ГЛОССАРИЙ ПРОЕКТА:
-{self._format_glossary()}
-
-ПАМЯТЬ ПРОШЛЫХ ОКОН:
-{prev_summary or 'Начало диалога.'}"""
-
-        result = await acall_llm_json(schema=ExtractedKnowledge, prompt=graph_prompt, data=text)
+        # Пасс 2: Граф
+        graph_prompt = f"Извлеки граф знаний. Используй ID из глоссария.\nГЛОССАРИЙ:\n{self._format_glossary()}\nПАМЯТЬ:\n{prev_summary}"
+        result = await acall_llm_json(ExtractedKnowledge, graph_prompt, data=text)
         result.source_ref = source_ref
 
+        # Обогащение данных из глоссария
         for node in result.nodes:
             if node.id in self.global_glossary_dict:
-                g_item = self.global_glossary_dict[node.id]
-                if not node.name: node.name = g_item.name
-                if not node.description: node.description = g_item.description
-                if not node.label: node.label = g_item.label
+                g = self.global_glossary_dict[node.id]
+                node.name, node.description, node.label = g.name, g.description, g.label
 
         return result

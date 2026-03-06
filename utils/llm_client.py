@@ -9,10 +9,11 @@ from tenacity import (
     retry, 
     stop_after_attempt, 
     wait_exponential, 
-    retry_if_exception_type
+    retry_if_exception
 )
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings, HarmBlockThreshold, HarmCategory
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
+import google.genai.errors 
 import google.api_core.exceptions
 
 load_dotenv()
@@ -22,15 +23,9 @@ class KeyManager:
     def __init__(self):
         keys_str = os.getenv("GOOGLE_API_KEYS", "")
         if not keys_str:
-            single_key = os.getenv("GOOGLE_API_KEY")
-            self.keys = [single_key] if single_key else []
+            self.keys = [os.getenv("GOOGLE_API_KEY", "DUMMY")]
         else:
             self.keys = [k.strip() for k in keys_str.split(",") if k.strip()]
-        
-        if not self.keys:
-            logger.warning("⚠️ GOOGLE_API_KEYS не найдены в .env!")
-            self.keys = ["DUMMY_KEY"]
-            
         self._iterator = cycle(self.keys)
         self.current_key = next(self._iterator)
 
@@ -42,52 +37,48 @@ class KeyManager:
         return self.current_key
 
 key_manager = KeyManager()
-
 DEFAULT_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "google").lower()
 
 def get_llm_client(model_name: str, temperature: float = 0.1):
-    if LLM_PROVIDER == "openai":
-        return ChatOpenAI(model=model_name, temperature=temperature, request_timeout=60)
-    
     api_key = key_manager.next_key()
-    
-    # Минимальный набор фильтров для экспериментальных моделей (убирает 400 ошибку)
-    safety_settings = {
-        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-    }
-
+    # УБРАНЫ safety_settings, чтобы избежать 400 ошибки на модели 2.5
     return ChatGoogleGenerativeAI(
-        model=model_name,
-        temperature=temperature,
+        model=model_name, 
+        temperature=temperature, 
         google_api_key=api_key,
-        safety_settings=safety_settings,
-        max_retries=1,
-        request_timeout=60 # Увеличили таймаут
+        max_retries=1, 
+        request_timeout=60
     )
 
 def get_embedding_client():
     return GoogleGenerativeAIEmbeddings(
-        model="models/gemini-embedding-001",
+        model="models/gemini-embedding-001", 
         google_api_key=key_manager.next_key()
     )
 
 T = TypeVar("T", bound=BaseModel)
 
-GLOBAL_RETRY_CONFIG = {
-    "stop": stop_after_attempt(10), 
-    "wait": wait_exponential(multiplier=2, min=4, max=15),
-    "retry": retry_if_exception_type((
-        google.api_core.exceptions.ResourceExhausted, 
+def is_retryable(exception):
+    msg = str(exception).upper()
+    # Ошибку 400 (неверные аргументы) НЕ ретраим
+    if "400" in msg and "INVALID_ARGUMENT" in msg:
+        return False
+    # Ретраим лимиты (429), сервера (500, 503) и ошибки LangChain
+    retryable_errors = (
+        google.genai.errors.ServerError,
+        google.genai.errors.ClientError,
+        google.api_core.exceptions.ResourceExhausted,
         google.api_core.exceptions.ServiceUnavailable,
-        google.api_core.exceptions.GoogleAPICallError,
-        google.api_core.exceptions.DeadlineExceeded
-        # 400 Bad Request НЕ ретраим, чтобы видеть ошибку сразу
-    )),
-    "before_sleep": lambda rs: logger.warning(f"🛑 Сбой API (Попытка {rs.attempt_number}). Ищем живой ключ...")
+        ChatGoogleGenerativeAIError,
+        TimeoutError
+    )
+    return isinstance(exception, retryable_errors) or "429" in msg or "503" in msg
+
+GLOBAL_RETRY_CONFIG = {
+    "stop": stop_after_attempt(20), 
+    "wait": wait_exponential(multiplier=1, min=2, max=10),
+    "retry": retry_if_exception(is_retryable),
+    "before_sleep": lambda rs: logger.warning(f"🛑 Сбой API (Попытка {rs.attempt_number}). Смена ключа...")
 }
 
 @retry(**GLOBAL_RETRY_CONFIG)
