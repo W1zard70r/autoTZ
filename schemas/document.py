@@ -1,6 +1,6 @@
-from typing import List, Any, Dict, Optional
+﻿from typing import List, Any, Dict, Optional
 from pydantic import BaseModel, Field
-from .enums import TZSectionEnum, DataEnum
+from .enums import TZSectionEnum, DataEnum, TemplateType
 
 class DataSource(BaseModel):
     source_type: DataEnum
@@ -16,4 +16,5 @@ class GeneratedSection(BaseModel):
 class FullTZDocument(BaseModel):
     project_name: str
     version: str
-    sections: List[GeneratedSection]
+    template_type: TemplateType = TemplateType.IT_PROJECT
+    sections: List[GeneratedSection] = Field(default_factory=list)

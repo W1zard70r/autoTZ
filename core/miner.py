@@ -11,11 +11,10 @@ from schemas.graph import (
 from utils.preprocessing import format_chat_message, enrich_message_with_vote
 from utils.llm_client import acall_llm_json
 from utils.state_logger import log_pydantic, log_dict
-from .windowing import asplit_chat_into_semantic_threads
+from core.windowing import split_chat_into_windows, split_text_into_windows
 
 logger = logging.getLogger(__name__)
 
-# ---- Schema descriptions for prompts ----
 SCHEMA_DESCRIPTION = """ALLOWED SCHEMAS:
 
 NodeLabel (type of entity):
@@ -110,7 +109,7 @@ class MinerProcessor:
         extracted_graphs = []
 
         if source.source_type == "chat":
-            windows = await asplit_chat_into_semantic_threads(source.content)
+            windows = split_chat_into_windows(source.content)
             msg_lookup = {m["id"]: m for m in source.content if m.get("type") == "message"}
 
             logger.info(f"  -> Found {len(windows)} semantic windows")
@@ -125,13 +124,19 @@ class MinerProcessor:
                 safe_ref = ref.replace(":", "_").replace("/", "_")
                 log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
         else:
-            try:
-                graph = await self._extract_subgraph(str(source.content), source.file_name)
-                extracted_graphs.append(graph)
-                safe_ref = source.file_name.replace(":", "_").replace("/", "_")
-                log_pydantic(f"layer1_subgraph_{safe_ref}.json", graph)
-            except Exception as e:
-                logger.error(f"Error processing {source.file_name}: {e}")
+            text_content = str(source.content)
+            text_windows = split_text_into_windows(text_content, max_chars=50000)
+            logger.info(f"  -> Found {len(text_windows)} text windows")
+
+            for i, (ref, chunk) in enumerate(text_windows):
+                logger.info(f"  -> [{i+1}/{len(text_windows)}] Window {ref} ({len(chunk)} chars)")
+                try:
+                    graph = await self._extract_subgraph(chunk, ref)
+                    extracted_graphs.append(graph)
+                    safe_ref = ref.replace(":", "_").replace("/", "_")
+                    log_pydantic(f"layer1_subgraph_{source.file_name}_{safe_ref}.json", graph)
+                except Exception as e:
+                    logger.error(f"  Error processing window {ref}: {e}")
 
         glossary_dump = {k: v.model_dump() for k, v in self.global_glossary.items()}
         log_dict("layer1_global_glossary.json", glossary_dump)
@@ -142,7 +147,6 @@ class MinerProcessor:
         if not entities:
             return []
 
-        # If glossary is empty, just register all entities directly
         if not self.global_glossary:
             ids = []
             for e in entities:
@@ -153,7 +157,6 @@ class MinerProcessor:
                 ids.append(new_id)
             return ids
 
-        # Send ALL entities to LLM for linking against the full glossary
         data_lines = []
         for i, entity in enumerate(entities):
             data_lines.append(
@@ -204,7 +207,6 @@ Current glossary:
             return ids
 
     async def _extract_subgraph(self, text: str, source_ref: str) -> ExtractedKnowledge:
-        # STEP 1: Extract entities and build graph in a single LLM call
         glossary_context = self._format_glossary()
         key_entities_context = ", ".join(self.key_entity_ids[-20:]) if self.key_entity_ids else "(none yet)"
 
@@ -242,18 +244,17 @@ edges:
 NOW EXTRACT FROM THIS TEXT:"""
 
         result: ExtractedKnowledge = await acall_llm_json(
-            ExtractedKnowledge, extract_prompt, data=text, system=SYSTEM_PROMPT
+            ExtractedKnowledge, extract_prompt, data=text, system=SYSTEM_PROMPT,
+            max_tokens=32768,
         )
         result.source_ref = source_ref
 
-        # STEP 2: Register new entities in glossary via batch linking
         raw_entities = [
             RawEntity(name=n.name, label=n.label, description=n.description)
             for n in result.nodes
         ]
         linked_ids = await self._batch_link_entities(raw_entities)
 
-        # Remap node IDs
         id_remap = {}
         for i, node in enumerate(result.nodes):
             if i < len(linked_ids):
@@ -262,18 +263,14 @@ NOW EXTRACT FROM THIS TEXT:"""
                 id_remap[old_id] = new_id
                 node.id = new_id
 
-        # Remap edge references
         for edge in result.edges:
             edge.source = id_remap.get(edge.source, edge.source)
             edge.target = id_remap.get(edge.target, edge.target)
 
-        # Validate graph integrity
         valid_ids = set(self.global_glossary.keys())
         result = validate_graph_integrity(result, valid_ids)
 
-        # Update key entities deterministically
         self.key_entity_ids.extend([n.id for n in result.nodes])
-        # Keep only last 50
         self.key_entity_ids = self.key_entity_ids[-50:]
 
         logger.info(f" Graph: {len(result.nodes)} nodes, {len(result.edges)} edges")

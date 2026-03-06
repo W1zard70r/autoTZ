@@ -1,4 +1,4 @@
-import os
+﻿import os
 import json
 import networkx as nx
 from enum import Enum
@@ -36,10 +36,10 @@ def log_text(filename, text):
 
 def sanitize_for_graphml(val):
     """Приводит любые сложные объекты к базовым типам (str, int, float, bool) для GraphML."""
-    if isinstance(val, (str, int, float, bool)):
-        return val
     if isinstance(val, Enum):
         return val.value
+    if isinstance(val, (str, int, float, bool)):
+        return val
     if isinstance(val, BaseModel):
         return val.model_dump_json()
     if isinstance(val, (list, dict)):

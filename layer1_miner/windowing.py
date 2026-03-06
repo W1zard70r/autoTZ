@@ -12,6 +12,7 @@ SEMANTIC_THRESHOLD = 0.65
 LOOKBACK_WINDOW = 20
 EMBEDDING_BATCH_SIZE = 20
 EMBEDDING_DELAY = 1.0
+MAX_SEMANTIC_NEIGHBORS = 3
 
 
 def parse_date(date_str: str) -> datetime:
@@ -30,17 +31,18 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
 async def asplit_chat_into_semantic_threads(
     messages: List[dict],
 ) -> List[Tuple[str, List[dict]]]:
-    valid_msgs =[m for m in messages if m.get("type") == "message" and m.get("text")]
+    valid_msgs = [m for m in messages if m.get("type") == "message" and m.get("text")]
     if not valid_msgs:
-        return[]
+        return []
 
-    texts_to_embed =[str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
+    texts_to_embed = [str(m.get("text", "")).strip() or "empty" for m in valid_msgs]
 
     embeddings = await aget_embeddings_safe(
         texts=texts_to_embed,
         batch_size=EMBEDDING_BATCH_SIZE,
         delay=EMBEDDING_DELAY
     )
+
     G = nx.Graph()
     for i, msg in enumerate(valid_msgs):
         G.add_node(
@@ -51,26 +53,29 @@ async def asplit_chat_into_semantic_threads(
         )
 
     for i, msg in enumerate(valid_msgs):
+        # Reply edges: add strong edge but ALSO check semantic neighbors
         reply_id = msg.get("reply_to_message_id")
         if reply_id and G.has_node(reply_id):
-            G.add_edge(msg["id"], reply_id, weight=15.0)  # ← сильнее
-            continue
+            G.add_edge(msg["id"], reply_id, weight=15.0)
 
-        best_sim = 0.0
-        best_target_id = None
+        # Semantic edges: connect to ALL neighbors above threshold (k-NN)
+        neighbors = []
         for j in range(max(0, i - LOOKBACK_WINDOW), i):
             time_i = G.nodes[msg["id"]]["time"]
             time_j = G.nodes[valid_msgs[j]["id"]]["time"]
             if time_i - time_j > timedelta(hours=4):
                 continue
             sim = cosine_similarity(embeddings[i], embeddings[j])
-            if sim > best_sim:
-                best_sim, best_target_id = sim, valid_msgs[j]["id"]
+            if sim >= SEMANTIC_THRESHOLD:
+                neighbors.append((valid_msgs[j]["id"], sim))
 
-        if best_sim >= 0.72 and best_target_id:  # ← было 0.65
-            G.add_edge(msg["id"], best_target_id, weight=best_sim)
+        # Sort by similarity, take top-k
+        neighbors.sort(key=lambda x: x[1], reverse=True)
+        for target_id, sim in neighbors[:MAX_SEMANTIC_NEIGHBORS]:
+            if not G.has_edge(msg["id"], target_id):
+                G.add_edge(msg["id"], target_id, weight=sim)
 
-    threads: List[List[dict]] =[]
+    threads: List[List[dict]] = []
 
     if G.number_of_edges() > 0:
         try:
@@ -78,7 +83,6 @@ async def asplit_chat_into_semantic_threads(
             communities: dict[int, List[dict]] = {}
             for node_id, comm_id in partition.items():
                 communities.setdefault(comm_id, []).append(G.nodes[node_id]["msg"])
-
             threads = list(communities.values())
         except Exception as e:
             import logging
@@ -86,7 +90,7 @@ async def asplit_chat_into_semantic_threads(
                 f"Louvain failed ({e}), fallback to connected_components"
             )
             for component in nx.connected_components(G):
-                thread_msgs =[G.nodes[nid]["msg"] for nid in component]
+                thread_msgs = [G.nodes[nid]["msg"] for nid in component]
                 threads.append(thread_msgs)
     else:
         threads = [[G.nodes[nid]["msg"]] for nid in G.nodes()]
@@ -96,10 +100,10 @@ async def asplit_chat_into_semantic_threads(
 
     threads.sort(key=lambda t: parse_date(t[0].get("date", "")))
 
-    processed_windows: List[Tuple[str, List[dict]]] =[]
+    processed_windows: List[Tuple[str, List[dict]]] = []
 
     for thread_idx, thread in enumerate(threads):
-        current_window: List[dict] =[]
+        current_window: List[dict] = []
         current_chars = 0
 
         for msg in thread:

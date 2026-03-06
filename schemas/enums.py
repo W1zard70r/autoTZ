@@ -1,4 +1,12 @@
-from enum import Enum
+﻿from enum import Enum
+
+
+class TemplateType(str, Enum):
+    GOST = "gost"
+    HOUSEHOLD = "household"
+    IT_PROJECT = "it_project"
+    CONSTRUCTION = "construction"
+    ENGINEERING = "engineering"
 
 
 class DataEnum(str, Enum):
