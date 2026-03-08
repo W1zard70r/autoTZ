@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 # Настройки повторов специально для Google Embeddings API
 EMBEDDING_RETRY_CONFIG = {
-    "stop": stop_after_attempt(6),
-    "wait": wait_exponential(multiplier=2, min=2, max=60),
+    "stop": stop_after_attempt(10),
+    "wait": wait_exponential(multiplier=5, min=10, max=60),
     "retry": retry_if_exception_type((
         google.api_core.exceptions.ResourceExhausted,
         google.api_core.exceptions.ServiceUnavailable,
@@ -47,12 +47,14 @@ async def aget_embeddings_safe(texts: List[str], batch_size: int = 20, delay: fl
 
     for i in range(0, len(texts), batch_size):
         batch = texts[i : i + batch_size]
-        try:
-            batch_result = await _aembed_batch_with_retry(model, batch)
-            embeddings.extend(batch_result)
-        except Exception as e:
-            logger.error(f"❌ ПРОВАЛ эмбеддингов (батч {i}, {len(batch)} текстов) после всех попыток: {e}")
-            embeddings.extend([[1e-5] * 768] * len(batch))
+        for _ in range(3):
+            try:
+                batch_result = await _aembed_batch_with_retry(model, batch)
+                embeddings.extend(batch_result)
+                break
+            except Exception as e:
+                logger.error(f"❌ ПРОВАЛ эмбеддингов (батч {i}, {len(batch)} текстов) после всех попыток: {e}")
+                await asyncio.sleep(20)
 
         if i + batch_size < len(texts):
             await asyncio.sleep(delay)
