@@ -15,5 +15,3 @@ venv
 # Logs and databases
 *.log
 logs/
-output/
-models/
