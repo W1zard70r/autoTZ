@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import List
 
+import numpy as np
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -60,3 +61,14 @@ async def aget_embeddings_safe(texts: List[str], batch_size: int = 20, delay: fl
             await asyncio.sleep(delay)
 
     return embeddings
+
+
+def calculate_cosine_similarity_matrix(embeddings_list: List[List[float]]) -> np.ndarray:
+    """Вычисляет матрицу косинусного сходства для списка эмбеддингов."""
+    if not embeddings_list:
+        return np.array([])
+    vecs = np.array(embeddings_list)
+    norms = np.linalg.norm(vecs, axis=1, keepdims=True)
+    norms[norms == 0] = 1e-10
+    vecs_normalized = vecs / norms
+    return np.dot(vecs_normalized, vecs_normalized.T)

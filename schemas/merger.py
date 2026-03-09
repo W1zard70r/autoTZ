@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional, Set
+from typing import List
 from pydantic import BaseModel, Field
 
 from schemas.enums import TZSectionEnum
@@ -26,5 +26,17 @@ class SectionBatchResult(BaseModel):
     assignments: List[SectionAssignment]
 
 
+class ConflictOption(BaseModel):
+    id: str
+    name: str
+    description: str
+
+
 class ConflictBatchResult(BaseModel):
     conflicts: List[DetectedConflict] = Field(default_factory=list)
+
+
+class ConflictResolution(BaseModel):
+    conflict_id: str
+    selected_option_id: str | None = None
+    custom_text: str | None = None
