@@ -4,13 +4,16 @@ import math
 import networkx as nx
 import numpy as np
 from typing import List, Dict, Any
+from langgraph.graph import StateGraph, END
+from typing import TypedDict, Annotated, Optional, Callable, Awaitable
+import operator
 
 from schemas.graph import (
     ExtractedKnowledge, UnifiedGraph, GraphNode, GraphEdge,
     Conflict, VoteCount, DecisionResolution, DetectedConflict, ConflictResolution,
 )
 from schemas.enums import TZSectionEnum, NodeLabel, EdgeRelation
-from schemas.merger import SectionBatchResult, MergeBatchResult, MergeAction, ConflictBatchResult
+from schemas.merger import SectionBatchResult, MergeBatchResult, MergeAction, ConflictBatchResult, MergerAgentState
 from utils.graph_voting import resolve_decisions, format_merge_report
 from utils.llm_client import acall_llm_json
 from utils.state_logger import log_graphml, log_pydantic
@@ -361,3 +364,98 @@ class SmartGraphMerger:
                         self.G.nodes[assignment.node_id]["target_section"] = assignment.target_section
             except Exception as e:
                 logger.error(f"Ошибка назначения секций: {e}")
+
+    async def run_agentic(
+        self,
+        subgraphs: List[ExtractedKnowledge],
+        human_resolver: Optional[Callable[[List[DetectedConflict]], Awaitable[List[ConflictResolution]]]] = None,
+    ) -> UnifiedGraph:
+        """
+        Главный агентный метод (рекомендуется использовать).
+        Выполняет ВСЁ автоматически.
+        human_resolver — callback, который спрашивает пользователя (CLI / backend).
+        """
+        logger.info("🤖 Запуск Agentic Merger Pipeline (LangGraph)")
+
+        # Сохраняем callback на время выполнения графа
+        self._current_human_resolver = human_resolver
+
+        workflow = StateGraph(MergerAgentState)
+
+        workflow.add_node("deduplicate", self._deduplicate_node)
+        workflow.add_node("detect", self._detect_node)
+        workflow.add_node("resolve", self._resolve_node)
+        workflow.add_node("finalize", self._finalize_node)
+
+        workflow.set_entry_point("deduplicate")
+        workflow.add_edge("deduplicate", "detect")
+        workflow.add_edge("detect", "resolve")
+        workflow.add_edge("resolve", "finalize")
+        workflow.add_edge("finalize", END)
+
+        app = workflow.compile()
+
+        final_state = await app.ainvoke({
+            "subgraphs": subgraphs,
+            "conflicts": [],
+            "resolutions": [],
+            "unified_graph": None,
+            "status": "started",
+            "messages": [{"role": "system", "content": "Начинаю интеллектуальное слияние..."}]
+        })
+
+        logger.info(f"✅ Agentic merger завершён: {final_state['status']}")
+        return final_state["unified_graph"]
+
+    # ====================== НОДЫ АГЕНТА ======================
+
+    async def _deduplicate_node(self, state: MergerAgentState) -> MergerAgentState:
+        await self.merge_subgraphs_and_deduplicate(state["subgraphs"])
+        return {**state, "status": "deduplicated"}
+
+    async def _detect_node(self, state: MergerAgentState) -> MergerAgentState:
+        conflicts = await self.detect_conflicts()
+        return {
+            **state,
+            "conflicts": conflicts,
+            "status": "conflicts_detected" if conflicts else "no_conflicts"
+        }
+
+    async def _resolve_node(self, state: MergerAgentState) -> MergerAgentState:
+        if not state.get("conflicts"):
+            return {**state, "status": "no_conflicts"}
+
+        resolver = getattr(self, "_current_human_resolver", None)
+
+        if resolver:
+            logger.info("👤 Запрос решений от пользователя...")
+            resolutions = await resolver(state["conflicts"])
+            msg = f"Пользователь разрешил {len(resolutions)} конфликтов"
+        else:
+            # Авторазрешение по AI-рекомендации (первый вариант)
+            resolutions = []
+            for conf in state["conflicts"]:
+                if conf.options:
+                    resolutions.append(ConflictResolution(
+                        conflict_id=conf.id,
+                        selected_option_id=conf.options[0].id
+                    ))
+            msg = "Конфликты разрешены автоматически"
+
+        return {
+            **state,
+            "resolutions": resolutions,
+            "status": "resolved",
+            "messages": state.get("messages", []) + [{"role": "system", "content": msg}]
+        }
+
+    async def _finalize_node(self, state: MergerAgentState) -> MergerAgentState:
+        if state.get("resolutions"):
+            self.apply_resolutions(state["resolutions"])
+
+        unified_graph = await self.finalize_graph()
+        return {
+            **state,
+            "unified_graph": unified_graph,
+            "status": "completed"
+        }

@@ -5,24 +5,22 @@
 (CLI, API-адаптер, backend-адаптер).
 """
 import asyncio
-import json
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Callable
 
 import networkx as nx
 
+from core.compiler import TZCompiler
+from core.merger import SmartGraphMerger
+from core.miner import MinerProcessor
+from core.translator import translate_markdown
 from schemas.document import DataSource
 from schemas.enums import TemplateType
 from schemas.graph import (
     ExtractedKnowledge, UnifiedGraph,
     DetectedConflict, ConflictResolution,
 )
-from schemas.templates.base import TZResult, ValidationResult, FieldGap
-from core.miner import MinerProcessor
-from core.merger import SmartGraphMerger
-from core.compiler import TZCompiler
-from core.translator import translate_markdown
-from utils.llm_client import acall_llm_text
+from schemas.templates.base import TZResult, FieldGap
 
 logger = logging.getLogger(__name__)
 
@@ -74,44 +72,39 @@ class TZPipeline:
         return self.subgraphs
 
     # ── Шаг 2: Слияние и дедупликация ───────────────────────
-    async def merge(self) -> None:
+    async def merge(self, human_resolver: Optional[Callable] = None) -> None:
         """Layer 2, часть 1 — слияние подграфов и дедупликация."""
         logger.info(">>> Шаг 2: Слияние подграфов и дедупликация")
         if not self.subgraphs:
-            raise ValueError("Нет подграфов для слияния. Сначала вызовите extract().")
-        await self.merger.merge_subgraphs_and_deduplicate(self.subgraphs)
+            raise ValueError("Нет подграфов. Сначала вызовите extract().")
 
-    # ── Шаг 3: Обнаружение конфликтов ───────────────────────
+        self.unified_graph = await self.merger.run_agentic(
+            self.subgraphs,
+            human_resolver=human_resolver,
+        )
+
     async def detect_conflicts(self) -> List[DetectedConflict]:
-        """Layer 2, часть 2 — поиск логических противоречий."""
-        logger.info(">>> Шаг 3: Поиск конфликтов")
-        self.conflicts = await self.merger.detect_conflicts()
         return self.conflicts
 
-    # ── Шаг 4: Применение решений пользователя ──────────────
     def apply_resolutions(self, resolutions: List[ConflictResolution]) -> None:
-        """Layer 2, часть 3 — применение решений по конфликтам."""
-        logger.info(">>> Шаг 4: Применение решений пользователя")
         self.merger.apply_resolutions(resolutions)
 
-    # ── Шаг 5: Финализация графа ────────────────────────────
     async def finalize_graph(self) -> UnifiedGraph:
         """Layer 2, часть 4 — итоговый граф с голосованиями и секциями."""
-        logger.info(">>> Шаг 5: Финализация графа")
-        self.unified_graph = await self.merger.finalize_graph()
-        logger.info(
-            f"  Граф: {len(self.unified_graph.nodes)} узлов, "
-            f"{len(self.unified_graph.edges)} связей"
-        )
+        if not self.unified_graph:
+            logger.info(">>> Шаг 5: Финализация графа")
+            self.unified_graph = await self.merger.finalize_graph()
+            logger.info(
+                f"  Граф: {len(self.unified_graph.nodes)} узлов, "
+                f"{len(self.unified_graph.edges)} связей"
+            )
         return self.unified_graph
 
-    # ── Шаг 6: Компиляция ТЗ ────────────────────────────────
     async def compile(self) -> TZResult:
         """Layer 3 — заполнение шаблона и генерация документа."""
         logger.info(">>> Шаг 6: Компиляция ТЗ")
         if self.unified_graph is None:
-            raise ValueError("Граф не финализирован. Сначала вызовите finalize_graph().")
-
+            await self.finalize_graph()
         self.result = await self.compiler.compile(
             graph=self.unified_graph,
             template_type=self.template_type,
@@ -123,7 +116,6 @@ class TZPipeline:
         )
         return self.result
 
-    # ── Шаг 7 (опц.): Уточнение пробелов ───────────────────
     def get_gaps(self) -> List[FieldGap]:
         """Возвращает список незаполненных обязательных полей."""
         if self.result is None:
@@ -131,19 +123,15 @@ class TZPipeline:
         return self.result.validation.gaps
 
     def add_user_answers(self, answers: Dict[str, str]) -> None:
-        """Добавляет ответы пользователя для повторной компиляции."""
         self.user_answers.update(answers)
 
     async def recompile(self) -> TZResult:
-        """Повторная компиляция с учётом ответов пользователя."""
-        logger.info(">>> Повторная компиляция с уточнениями")
         return await self.compile()
 
     # ── Шаг 8 (опц.): Перевод ───────────────────────────────
     async def translate(self, target_language: str) -> str:
-        """Переводит готовый документ на другой язык."""
-        if self.result is None:
-            raise ValueError("Нет результата для перевода. Сначала вызовите compile().")
+        if not self.result:
+            raise ValueError("Нет результата для перевода")
         return await translate_markdown(self.result.markdown, target_language)
 
     # ── Полный прогон ────────────────────────────────────────
@@ -163,45 +151,9 @@ class TZPipeline:
             )
 
         await self.merge()
-        conflicts = await self.detect_conflicts()
-        if conflicts and resolutions:
-            self.apply_resolutions(resolutions)
-        await self.finalize_graph()
         return await self.compile()
 
-    # ── Генерация вариантов для конфликта ────────────────────
-    async def generate_conflict_variants(
-        self, conflict: DetectedConflict,
-    ) -> List[str]:
-        """Генерирует развёрнутые текстовые варианты для каждой опции конфликта."""
-        variants: List[str] = []
-        for option in conflict.options:
-            prompt = (
-                f"Конфликт: {conflict.description}\n"
-                f"Вариант: {option.text}\n"
-                f"Обоснование: {option.evidence}\n\n"
-                f"Напиши краткий абзац (3-5 предложений) для технического задания, "
-                f"описывающий выбор «{option.text}» с учётом контекста проекта."
-            )
-            try:
-                text = await acall_llm_text(
-                    prompt,
-                    system="Ты технический писатель. Пиши на русском, кратко и по делу.",
-                    max_tokens=512,
-                )
-                variants.append(text.strip())
-            except Exception as e:
-                logger.warning(f"Ошибка генерации варианта '{option.text}': {e}")
-                variants.append(option.text)
-        return variants
-
-    # ── Сериализация состояния ────────────────────────────────
     def save_state(self) -> dict:
-        """Сериализует состояние пайплайна в JSON-совместимый dict.
-
-        Используется backend-адаптером для сохранения прогресса
-        между вызовами taskiq-воркера.
-        """
         merger_graph = None
         if self.merger.G.number_of_nodes() > 0:
             merger_graph = nx.node_link_data(self.merger.G)
@@ -230,7 +182,6 @@ class TZPipeline:
 
     @classmethod
     def load_state(cls, state: dict) -> "TZPipeline":
-        """Восстанавливает пайплайн из ранее сохранённого состояния."""
         pipeline = cls(
             template_type=TemplateType(state["template_type"]),
             language=state["language"],

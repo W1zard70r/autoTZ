@@ -1,7 +1,9 @@
 ﻿import os
 import logging
 import warnings
-from typing import Type, TypeVar, List, Optional
+import json
+from datetime import datetime
+from typing import Type, TypeVar, List, Optional, Any
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -24,10 +26,55 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 DEFAULT_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
-
 HF_REPO_ID = os.getenv("HF_REPO_ID", "unsloth/Qwen3.5-9B-GGUF")
 HF_FILENAME = os.getenv("HF_FILENAME", "Qwen3.5-9B-Q4_K_S.gguf")
 LOCAL_MODELS_PATH = os.getenv("LOCAL_MODELS_PATH", "/kaggle/working/models")
+
+# Папка для логов запросов
+LLM_LOGS_DIR = "logs/llm_calls"
+os.makedirs(LLM_LOGS_DIR, exist_ok=True)
+
+
+# --- Вспомогательная функция для логирования ---
+def _log_llm_interaction(
+        call_type: str,
+        model_name: str,
+        system: Optional[str],
+        prompt: str,
+        data: str,
+        response: Any,
+        error: Optional[str] = None
+):
+    """Сохраняет детали взаимодействия с LLM в файл."""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    filename = f"{timestamp}_{call_type}.log"
+    filepath = os.path.join(LLM_LOGS_DIR, filename)
+
+    # Подготовка контента для записи
+    log_content = [
+        f"=== TIMESTAMP: {datetime.now().isoformat()} ===",
+        f"CALL TYPE: {call_type}",
+        f"MODEL: {model_name} (Provider: {LLM_PROVIDER})",
+        f"\n--- SYSTEM PROMPT ---\n{system or 'None'}",
+        f"\n--- USER PROMPT ---\n{prompt}",
+        f"\n--- SUPPLEMENTARY DATA ---\n{data or 'None'}",
+    ]
+
+    if error:
+        log_content.append(f"\n❌ ERROR:\n{error}")
+    else:
+        # Если ответ - Pydantic модель, дампим в JSON
+        if hasattr(response, "model_dump_json"):
+            res_text = response.model_dump_json(indent=2)
+        else:
+            res_text = str(response)
+        log_content.append(f"\n--- RESPONSE ---\n{res_text}")
+
+    try:
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("\n".join(log_content))
+    except Exception as e:
+        logger.error(f"Failed to write LLM log to file: {e}")
 
 
 def get_local_model_path(repo_id: str, filename: str) -> str:
@@ -37,10 +84,7 @@ def get_local_model_path(repo_id: str, filename: str) -> str:
     local_file_path = os.path.join(LOCAL_MODELS_PATH, filename)
 
     if os.path.exists(local_file_path):
-        logger.info(f"Using existing local model: {local_file_path}")
         return local_file_path
-
-    logger.info(f"Model not found locally. Downloading {filename} from {repo_id}...")
     try:
         model_path = hf_hub_download(
             repo_id=repo_id,
@@ -51,7 +95,6 @@ def get_local_model_path(repo_id: str, filename: str) -> str:
         logger.info(f"Download complete: {model_path}")
         return model_path
     except Exception as e:
-        logger.error(f"Failed to download model from HF: {e}")
         raise e
 
 
@@ -64,7 +107,6 @@ def get_llm_client(model_name: str, temperature: float = 0.1, max_tokens: Option
         if max_tokens:
             kwargs["max_tokens"] = max_tokens
         return ChatOpenAI(**kwargs)
-
     elif LLM_PROVIDER == "local":
         model_path = get_local_model_path(HF_REPO_ID, HF_FILENAME)
 
@@ -92,6 +134,7 @@ def get_llm_client(model_name: str, temperature: float = 0.1, max_tokens: Option
             kwargs["max_output_tokens"] = max_tokens
         return ChatGoogleGenerativeAI(**kwargs)
 
+
 T = TypeVar("T", bound=BaseModel)
 
 GLOBAL_RETRY_CONFIG = {
@@ -108,7 +151,9 @@ GLOBAL_RETRY_CONFIG = {
 
 
 @retry(**GLOBAL_RETRY_CONFIG)
-async def acall_llm_json(schema: Type[T], prompt: str, data: str = "", model_name: str = DEFAULT_MODEL, system: Optional[str] = None, max_tokens: int = 16384) -> T:
+async def acall_llm_json(schema: Type[T], prompt: str, data: str = "", model_name: str = DEFAULT_MODEL,
+                         system: Optional[str] = None, max_tokens: int = 16384) -> T:
+    response_for_log = None
     try:
         llm = get_llm_client(model_name=model_name, temperature=0.1, max_tokens=max_tokens)
         llm_structured = llm.with_structured_output(schema)
@@ -119,14 +164,23 @@ async def acall_llm_json(schema: Type[T], prompt: str, data: str = "", model_nam
         if data:
             user_content += f"\n\n--- DATA ---\n{data}"
         messages.append(HumanMessage(content=user_content))
-        return await llm_structured.ainvoke(messages)
+
+        response_for_log = await llm_structured.ainvoke(messages)
+
+        # Логируем успешный вызов
+        _log_llm_interaction("json_call", model_name, system, prompt, data, response_for_log)
+
+        return response_for_log
     except Exception as e:
+        _log_llm_interaction("json_call", model_name, system, prompt, data, None, error=str(e))
         logger.error(f"LLM JSON error ({LLM_PROVIDER}): {e}")
         raise e
 
 
 @retry(**GLOBAL_RETRY_CONFIG)
-async def acall_llm_text(prompt: str, data: str = "", model_name: str = DEFAULT_MODEL, system: Optional[str] = None, max_tokens: int = 4096) -> str:
+async def acall_llm_text(prompt: str, data: str = "", model_name: str = DEFAULT_MODEL, system: Optional[str] = None,
+                         max_tokens: int = 4096) -> str:
+    response_for_log = None
     try:
         llm = get_llm_client(model_name=model_name, temperature=0.2, max_tokens=max_tokens)
         messages: List = []
@@ -136,8 +190,16 @@ async def acall_llm_text(prompt: str, data: str = "", model_name: str = DEFAULT_
         if data:
             user_content += f"\n\n--- DATA ---\n{data}"
         messages.append(HumanMessage(content=user_content))
+
         result = await llm.ainvoke(messages)
-        return result.content
+        response_for_log = result.content
+
+        # Логируем успешный вызов
+        _log_llm_interaction("text_call", model_name, system, prompt, data, response_for_log)
+
+        return response_for_log
     except Exception as e:
+        # Логируем ошибку
+        _log_llm_interaction("text_call", model_name, system, prompt, data, None, error=str(e))
         logger.error(f"LLM Text error ({LLM_PROVIDER}): {e}")
         raise e

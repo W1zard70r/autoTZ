@@ -1,8 +1,9 @@
-from typing import List
+import operator
+from typing import List, TypedDict, Annotated, Optional
 from pydantic import BaseModel, Field
 
 from schemas.enums import TZSectionEnum
-from schemas.graph import DetectedConflict
+from schemas.graph import DetectedConflict, ExtractedKnowledge, UnifiedGraph
 
 
 class MergeAction(BaseModel):
@@ -40,3 +41,11 @@ class ConflictResolution(BaseModel):
     conflict_id: str
     selected_option_id: str | None = None
     custom_text: str | None = None
+
+class MergerAgentState(TypedDict):
+    subgraphs: List[ExtractedKnowledge]
+    conflicts: Annotated[List[DetectedConflict], operator.add]
+    resolutions: Annotated[List[ConflictResolution], operator.add]
+    unified_graph: Optional[UnifiedGraph]
+    status: str
+    messages: Annotated[List[dict], operator.add]

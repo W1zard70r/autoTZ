@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from schemas.document import DataSource
 from schemas.enums import TemplateType
-from schemas.graph import ConflictResolution
+from schemas.graph import ConflictResolution, DetectedConflict
 from schemas.templates.base import TZResult, FieldGap
 from core.pipeline import TZPipeline
 from interfaces.base import BasePipelineInterface
@@ -65,26 +65,10 @@ class ConsoleInterface(BasePipelineInterface):
         await pipeline.extract(self.sources)
         print("-" * 50)
 
-        if not pipeline.subgraphs:
-            print("❌ Нет данных для обработки.")
-            return TZResult(
-                template_type=self.template_type,
-                template_data=None,
-            )
+        # ── Шаг 2: Слияние и дедупликация (с ручным резолвером)
+        await pipeline.merge(human_resolver=self._prompt_conflict_resolution)
 
-        # ── Шаг 2-3: Слияние + конфликты ─────────────────
-        await pipeline.merge()
-        conflicts = await pipeline.detect_conflicts()
-
-        # ── Шаг 4: Разрешение конфликтов ──────────────────
-        if conflicts:
-            resolutions = await self._prompt_conflict_resolution(conflicts, pipeline)
-            pipeline.apply_resolutions(resolutions)
-        else:
-            logger.info("✅ Конфликтов не обнаружено.")
-
-        # ── Шаг 5-6: Финализация + компиляция ─────────────
-        await pipeline.finalize_graph()
+        # Шаг 6: Компиляция
         result = await pipeline.compile()
         print("-" * 50)
 
@@ -104,10 +88,6 @@ class ConsoleInterface(BasePipelineInterface):
     async def present_result(self, result: TZResult) -> None:
         os.makedirs(self.output_dir, exist_ok=True)
         output_path = os.path.join(self.output_dir, "FINAL_TZ.md")
-
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(result.markdown)
-
         v = result.validation
         print("\n" + "=" * 60)
         print(f"📊 Заполненность: {v.completeness_percent}% "
@@ -118,6 +98,9 @@ class ConsoleInterface(BasePipelineInterface):
             print(f"⚡ Конфликтов: {len(v.conflicts)}")
         print(f"\n🎉 ТЗ сохранено: {output_path}")
         print("=" * 60)
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(result.markdown)
 
     # ── Вспомогательные интерактивные методы ──────────────
 
@@ -136,7 +119,8 @@ class ConsoleInterface(BasePipelineInterface):
                 return selected
             print("   ❌ Неверный номер, попробуйте снова.")
 
-    async def _prompt_conflict_resolution(self, conflicts, pipeline: TZPipeline) -> List[ConflictResolution]:
+    async def _prompt_conflict_resolution(self, conflicts: List[DetectedConflict]) -> List[ConflictResolution]:
+        """Определяет формат работы callback-функции, которая принимает на вход список конфликтов"""
         print("\n" + "!" * 60)
         print("🛑 ОБНАРУЖЕНЫ ПРОТИВОРЕЧИЯ!")
         print("!" * 60 + "\n")
@@ -147,36 +131,23 @@ class ConsoleInterface(BasePipelineInterface):
             print(f"   Категория: {conf.category}")
             print(f"   🤖 AI советует: {conf.ai_recommendation}")
 
-            # Генерация развёрнутых вариантов
-            print("\n   ⏳ Генерация вариантов...")
-            variants = await pipeline.generate_conflict_variants(conf)
+            print(" Варианты:")
+            for idx, opt in enumerate(conf.options):
 
-            print("   Варианты:")
-            for idx, (opt, variant_text) in enumerate(zip(conf.options, variants)):
-                print(f"\n     [{idx}] {opt.text}")
-                print(f"         {variant_text}")
+                print(f"\n [{idx}] {opt.text}\n   {opt.evidence}")
+
             print(f"\n     [текст] → свой вариант")
 
             while True:
                 user_input = input(f"   👉 Ваш выбор для #{i}: ").strip()
-                if not user_input:
-                    continue
-                if user_input.isdigit():
-                    opt_idx = int(user_input)
-                    if 0 <= opt_idx < len(conf.options):
-                        resolutions.append(ConflictResolution(
-                            conflict_id=conf.id,
-                            selected_option_id=conf.options[opt_idx].id,
-                        ))
-                        print(f"   ✅ Выбрано: {conf.options[opt_idx].text}")
-                        break
-                    print("   ❌ Неверный номер.")
-                else:
+                if user_input.isdigit() and 0 <= int(user_input) < len(conf.options):
                     resolutions.append(ConflictResolution(
                         conflict_id=conf.id,
-                        custom_text=user_input,
+                        selected_option_id=conf.options[int(user_input)].id
                     ))
-                    print(f"   ✍️ Принято: {user_input}")
+                    break
+                elif user_input:
+                    resolutions.append(ConflictResolution(conflict_id=conf.id, custom_text=user_input))
                     break
 
         print("\n🔄 Применяем решения...")
