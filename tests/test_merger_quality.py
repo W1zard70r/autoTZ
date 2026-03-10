@@ -2,21 +2,24 @@ import asyncio
 import os
 import time
 import logging
-from typing import List, Dict
+from typing import List
 from pydantic import BaseModel, Field
 
 # Импортируем ваши схемы
 from schemas.graph import (
-    GraphNode, GraphEdge, ExtractedKnowledge, UnifiedGraph, DetectedConflict
+    GraphNode, GraphEdge, ExtractedKnowledge, UnifiedGraph,
+    DetectedConflict, ConflictResolution
 )
 from schemas.enums import NodeLabel, EdgeRelation, TZSectionEnum
-from core.merger import SmartGraphMerger  # Ваш обновленный класс
-from test_llm import acall_llm_json
+from core.merger import SmartGraphMerger
+from test_llm import acall_llm_json  # Обновлен импорт согласно вашей архитектуре
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 os.makedirs("logs", exist_ok=True)
+
+
 # ==========================================
 # 1. СХЕМА ДЛЯ LLM-СУДЬИ (LLM-as-a-Judge)
 # ==========================================
@@ -32,11 +35,11 @@ class EvaluationScore(BaseModel):
 # 2. ГЕНЕРАТОРЫ ТЕСТОВЫХ ДАННЫХ
 # ==========================================
 def create_node(id: str, name: str, label: str, desc: str) -> GraphNode:
-    return GraphNode(id=id, name=name, label=label, description=desc)
+    return GraphNode(id=id, name=name, label=NodeLabel(label), description=desc)
 
 
 def create_edge(src: str, tgt: str, rel: str) -> GraphEdge:
-    return GraphEdge(source=src, target=tgt, relation=rel)
+    return GraphEdge(source=src, target=tgt, relation=EdgeRelation(rel))
 
 
 def scenario_1_basic_dedup() -> List[ExtractedKnowledge]:
@@ -52,7 +55,6 @@ def scenario_1_basic_dedup() -> List[ExtractedKnowledge]:
         summary="Документ 2",
         nodes=[
             create_node("auth_module", "Auth Service", "Component", "Сервис аутентификации пользователей (JWT)"),
-            # Явный семантический дубль user_auth
             create_node("redis_cache", "Redis Cache", "Component", "Кеш для сессий")
         ]
     )
@@ -77,28 +79,24 @@ def scenario_2_explicit_conflict() -> List[ExtractedKnowledge]:
 
 
 def scenario_3_large_stress_test() -> List[ExtractedKnowledge]:
-    """Тест 3: Нагрузочный тест. 100+ узлов. Проверяем скорость RAG vs Пакетный LLM."""
+    """Тест 3: Нагрузочный тест. Проверяем скорость и работу агента на массе данных."""
     nodes_1 = []
     nodes_2 = []
 
-    # Генерируем "базовую" архитектуру (50 узлов)
+    # Генерируем "базовую" архитектуру
     for i in range(50):
-        nodes_1.append(create_node(f"service_{i}", f"Microservice {i}", "Component",
-                                   f"Базовый микросервис номер {i} для обработки бизнес-логики."))
+        nodes_1.append(create_node(f"service_{i}", f"Microservice {i}", "Component", f"Базовый микросервис номер {i}."))
 
     # Генерируем вторую часть с дублями и 3 конфликтами
     for i in range(50):
-        if i in [10, 20, 30]:  # Внедряем семантические дубли
-            nodes_2.append(create_node(f"ms_{i}_copy", f"Service {i}", "Component",
-                                       f"Микросервис {i} который обрабатывает бизнес-логику."))
+        if i in [10, 20, 30]:  # Дубль
+            nodes_2.append(create_node(f"ms_{i}_copy", f"Service {i}", "Component", f"Микросервис {i}."))
         elif i == 5:  # Конфликт БД
             nodes_1.append(create_node("db_sql", "MySQL", "Component", "Основная монолитная база данных"))
-            nodes_2.append(
-                create_node("db_nosql", "MongoDB", "Component", "Основная монолитная база данных документального типа"))
+            nodes_2.append(create_node("db_nosql", "MongoDB", "Component", "Основная база данных документального типа"))
         elif i == 15:  # Конфликт архитектуры
-            nodes_1.append(create_node("arch_mono", "Monolith", "Concept", "Вся система деплоится как единый монолит"))
-            nodes_2.append(create_node("arch_micro", "Microservices", "Concept",
-                                       "Строгая микросервисная архитектура через Kubernetes"))
+            nodes_1.append(create_node("arch_mono", "Monolith", "Concept", "Деплоится как единый монолит"))
+            nodes_2.append(create_node("arch_micro", "Microservices", "Concept", "Микросервисная архитектура"))
         else:
             nodes_2.append(
                 create_node(f"other_service_{i}", f"Integration {i}", "Component", f"Внешняя интеграция {i}."))
@@ -139,11 +137,10 @@ async def evaluate_with_llm_judge(
     Учти:
     - Фронтенд и Бэкенд (React и FastAPI) - это НЕ конфликт.
     - React и Vue для одного и того же UI - это КОНФЛИКТ.
-    - PostgreSQL и Redis - это НЕ конфликт.
+    - Разные базы данных претендующие на "основную" - это КОНФЛИКТ.
     """
 
-    logger.info(f"🧠 Запуск LLM-судьи для: {scenario_name}...")
-    # Здесь должен вызываться GPT-4o или Claude 3.5 Sonnet для максимальной адекватности
+    logger.info(f"🧠 Запуск LLM-судьи для оценки: {scenario_name}...")
     score: EvaluationScore = await acall_llm_json(
         schema=EvaluationScore,
         prompt=prompt,
@@ -156,34 +153,77 @@ async def run_test(scenario_name: str, subgraphs: List[ExtractedKnowledge]):
     print(f"\n{'=' * 60}\n🚀 ЗАПУСК ТЕСТА: {scenario_name}\n{'=' * 60}")
 
     merger = SmartGraphMerger()
+    captured_conflicts: List[DetectedConflict] = []
 
+    # ---------------------------------------------------------
+    # ХУК ДЛЯ АГЕНТА: Перехватываем конфликты для отчета судье
+    # ---------------------------------------------------------
+    async def mock_human_resolver(conflicts: List[DetectedConflict]) -> List[ConflictResolution]:
+        nonlocal captured_conflicts
+        captured_conflicts = conflicts
+
+        resolutions = []
+
+        print("\n" + "!" * 60)
+        print("🛑 ТРЕБУЕТСЯ РУЧНОЕ РАЗРЕШЕНИЕ КОНФЛИКТОВ (TEST MODE)")
+        print("!" * 60)
+
+        for i, conf in enumerate(conflicts, 1):
+            print(f"\n🔹 КОНФЛИКТ #{i}: {conf.description}")
+            print(f"   Категория: {conf.category}")
+            print(f"   🤖 AI советует: {conf.ai_recommendation}")
+            print("   Варианты:")
+
+            for idx, opt in enumerate(conf.options):
+                print(f"     [{idx}] {opt.text}")
+
+            # Запрос ввода
+            user_input = input(f"\n👉 Ваш выбор (0-{len(conf.options) - 1}) [по умолчанию 0]: ").strip()
+
+            selected_idx = 0  # Значение по умолчанию
+
+            if user_input.isdigit():
+                val = int(user_input)
+                if 0 <= val < len(conf.options):
+                    selected_idx = val
+                else:
+                    print(f"   ⚠️ Неверный индекс, выбран вариант [0]")
+            elif user_input == "":
+                print(f"   ✅ Выбран вариант по умолчанию [0]")
+            else:
+                print(f"   ⚠️ Неверный ввод, выбран вариант [0]")
+
+            resolutions.append(ConflictResolution(
+                conflict_id=conf.id,
+                selected_option_id=conf.options[selected_idx].id
+            ))
+
+        print("\n" + "=" * 60)
+        return resolutions
     # ЗАМЕР ВРЕМЕНИ
     start_time = time.time()
 
-    # 1. Слияние и дедупликация
-    await merger.merge_subgraphs_and_deduplicate(subgraphs)
-
-    # 2. Поиск конфликтов
-    detected_conflicts = await merger.detect_conflicts()
-
-    # 3. Финализация
-    unified_graph = await merger.finalize_graph()
+    # Запускаем единый пайплайн агента
+    unified_graph = await merger.run_agentic(
+        subgraphs=subgraphs,
+        human_resolver=mock_human_resolver  # Передаем наш перехватчик
+    )
 
     end_time = time.time()
     execution_time = end_time - start_time
 
     print(f"⏱️  Время выполнения: {execution_time:.2f} сек.")
     print(f"📊 Исходно узлов: {sum(len(sg.nodes) for sg in subgraphs)} | Итого узлов: {len(unified_graph.nodes)}")
-    print(f"⚠️ Найдено конфликтов: {len(detected_conflicts)}")
+    print(f"⚠️ Найдено конфликтов: {len(captured_conflicts)}")
 
     # АНАЛИЗ КАЧЕСТВА LLM-СУДЬЕЙ
-    evaluation = await evaluate_with_llm_judge(scenario_name, subgraphs, unified_graph, detected_conflicts)
+    evaluation = await evaluate_with_llm_judge(scenario_name, subgraphs, unified_graph, captured_conflicts)
 
     print("\n⚖️  ОЦЕНКА LLM-СУДЬИ:")
     print(f"   Дедупликация: {evaluation.deduplication_score}/10")
     print(f"   Поиск конфликтов: {evaluation.conflict_detection_score}/10")
     print(f"   Штраф за галлюцинации: -{evaluation.hallucination_penalty}")
-    print(f"   Вердикт: {evaluation.reasoning}\n")
+    print(f"   Вердикт: \n   {evaluation.reasoning}\n")
 
 
 async def main():
@@ -193,7 +233,7 @@ async def main():
     # 2. Тест на конфликт (проверка качества RAG кластеризации)
     await run_test("Сценарий 2: Явный архитектурный конфликт (React vs Vue)", scenario_2_explicit_conflict())
 
-    # 3. Большой тест (нагрузка на эмбеддинги и скорость)
+    # 3. Большой тест (нагрузка на эмбеддинги и LangGraph)
     await run_test("Сценарий 3: Нагрузочный тест (100+ узлов, скрытые конфликты)", scenario_3_large_stress_test())
 
 
