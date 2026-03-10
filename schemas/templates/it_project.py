@@ -7,90 +7,203 @@ from .base import BaseTemplate
 
 class GeneralDescription(BaseModel):
     """1. Общее описание проекта"""
-    purpose: Optional[str] = Field(None, description="Назначение системы")
-    analogues: List[str] = Field(default_factory=list, description="Аналоги/конкуренты (optional)")
-    expected_outcome: Optional[str] = Field(None, description="Что будет в итоге")
+    purpose: Optional[str] = Field(
+        None, 
+        description="Сформулируй главную бизнес-цель и назначение системы. Какую проблему решает продукт? Для кого он создается? Напиши профессиональным техническим языком, 1-3 абзаца."
+    )
+    analogues: List[str] = Field(
+        default_factory=list, 
+        description="Перечисли известные аналоги или конкурентов, упомянутых в контексте. Если есть возможность, кратко укажи их отличия от разрабатываемой системы. Если данных нет, оставь пустым."
+    )
+    expected_outcome: Optional[str] = Field(
+        None, 
+        description="Опиши итоговый результат проекта (deliverable). Что конкретно будет передано заказчику? (например: веб-приложение, мобильное приложение, API-сервис, библиотека). Укажи ключевую ценность результата."
+    )
 
 
 class UserRole(BaseModel):
-    name: Optional[str] = Field(None, description="Название роли")
-    capabilities: List[str] = Field(default_factory=list, description="Возможности роли")
+    name: Optional[str] = Field(
+        None, 
+        description="Название роли пользователя (например: 'Администратор', 'Анонимный гость', 'Менеджер')."
+    )
+    capabilities: List[str] = Field(
+        default_factory=list, 
+        description="Список прав и возможностей этой роли. Используй глаголы действий (например: 'Просматривает отчеты', 'Управляет правами доступа')."
+    )
 
 
 class UseCase(BaseModel):
-    name: Optional[str] = Field(None, description="Название сценария")
-    steps: List[str] = Field(default_factory=list, description="Шаги сценария")
+    name: Optional[str] = Field(
+        None, 
+        description="Понятное название пользовательского сценария (например: 'Оформление заказа', 'Регистрация в системе')."
+    )
+    steps: List[str] = Field(
+        default_factory=list, 
+        description="Пошаговое описание сценария: от действия пользователя до реакции системы. Напиши шаги последовательно (1. Пользователь нажимает... 2. Система проверяет...)."
+    )
 
 
 class FunctionalRequirements(BaseModel):
     """2. Функциональные требования"""
-    roles: List[UserRole] = Field(default_factory=list, description="Пользовательские роли")
-    use_cases: List[UseCase] = Field(default_factory=list, description="Основные сценарии использования")
-    modules: List[str] = Field(default_factory=list, description="Список модулей/страниц")
+    roles: List[UserRole] = Field(
+        default_factory=list, 
+        description="Определи все уникальные роли пользователей в системе и их права."
+    )
+    use_cases: List[UseCase] = Field(
+        default_factory=list, 
+        description="Выдели основные пользовательские сценарии (Use Cases), описывающие ключевой функционал системы."
+    )
+    modules: List[str] = Field(
+        default_factory=list, 
+        description="Сформируй список логических модулей, подсистем или ключевых экранов (например: 'Модуль авторизации', 'Платежный шлюз', 'Панель администратора'). Кратко поясни суть каждого."
+    )
 
 
 class DesignSystem(BaseModel):
-    colors: Optional[str] = Field(None, description="Цветовая схема (optional)")
-    fonts: Optional[str] = Field(None, description="Шрифты (optional)")
-    style: Optional[str] = Field(None, description="Стиль интерфейса (optional)")
+    colors: Optional[str] = Field(
+        None, 
+        description="Требования к цветовой схеме: фирменные цвета, наличие темной/светлой темы, общие пожелания (например: 'строгий корпоративный', 'пастельные тона')."
+    )
+    fonts: Optional[str] = Field(
+        None, 
+        description="Требования к типографике: семейства шрифтов, размеры, читабельность."
+    )
+    style: Optional[str] = Field(
+        None, 
+        description="Общий стиль интерфейса (например: Material Design, Flat, минимализм) или ссылки на брендбук/референсы."
+    )
 
 
 class Responsiveness(BaseModel):
-    mobile: Optional[str] = Field(None, description="Мобильные устройства (optional)")
-    desktop: Optional[str] = Field(None, description="Десктоп (optional)")
-    tablet: Optional[str] = Field(None, description="Планшеты (optional)")
+    mobile: Optional[str] = Field(
+        None, 
+        description="Специфические требования к мобильной версии (Mobile-first, поддержка iOS/Android браузеров, минимальное разрешение)."
+    )
+    desktop: Optional[str] = Field(
+        None, 
+        description="Специфические требования к десктопной версии (поддерживаемые браузеры, разрешения от 1024px и выше)."
+    )
+    tablet: Optional[str] = Field(
+        None, 
+        description="Поведение интерфейса на планшетах (портретная/альбомная ориентация)."
+    )
 
 
 class UIUXRequirements(BaseModel):
     """3. Требования к интерфейсу"""
-    design_system: DesignSystem = Field(default_factory=DesignSystem, description="Дизайн-система")
-    responsiveness: Responsiveness = Field(default_factory=Responsiveness, description="Адаптивность")
+    design_system: DesignSystem = Field(
+        default_factory=DesignSystem, 
+        description="Извлеки все визуальные требования: цвета, шрифты, стилистику."
+    )
+    responsiveness: Responsiveness = Field(
+        default_factory=Responsiveness, 
+        description="Определи требования к адаптивности под разные типы устройств."
+    )
 
 
 class TechStack(BaseModel):
-    frontend: Optional[str] = Field(None, description="Фронтенд технологии")
-    backend: Optional[str] = Field(None, description="Бэкенд технологии")
-    database: Optional[str] = Field(None, description="База данных")
-    other: List[str] = Field(default_factory=list, description="Прочие технологии (optional)")
+    frontend: Optional[str] = Field(
+        None, 
+        description="Технологии клиентской части (например: React, Vue.js, Swift, Kotlin). Укажи версии, если есть."
+    )
+    backend: Optional[str] = Field(
+        None, 
+        description="Технологии серверной части (например: Python/FastAPI, Node.js, Java/Spring, Go). Укажи архитектуру, если известна."
+    )
+    database: Optional[str] = Field(
+        None, 
+        description="Используемые СУБД (например: PostgreSQL, MongoDB, Redis). Включая брокеры сообщений."
+    )
+    other: List[str] = Field(
+        default_factory=list, 
+        description="Прочие технические инструменты: Docker, CI/CD, облачные провайдеры (AWS, Yandex Cloud), Nginx и т.д."
+    )
 
 
 class Integration(BaseModel):
-    name: Optional[str] = Field(None, description="Название интеграции")
-    details: Optional[str] = Field(None, description="Детали (optional)")
+    name: Optional[str] = Field(
+        None, 
+        description="Название внешней системы для интеграции (например: '1C:Предприятие', 'Telegram API', 'Stripe')."
+    )
+    details: Optional[str] = Field(
+        None, 
+        description="Детали интеграции: протоколы (REST, SOAP, gRPC), цель интеграции (зачем она нужна), форматы данных."
+    )
 
 
 class TechnicalRequirements(BaseModel):
     """4. Технические требования"""
-    tech_stack: TechStack = Field(default_factory=TechStack, description="Стек технологий")
-    integrations: List[Integration] = Field(default_factory=list, description="Интеграции (optional)")
-    performance: List[str] = Field(default_factory=list, description="Требования к производительности (optional)")
+    tech_stack: TechStack = Field(
+        default_factory=TechStack, 
+        description="Собери полный стек технологий проекта. Не выдумывай технологии, используй только упомянутые факты."
+    )
+    integrations: List[Integration] = Field(
+        default_factory=list, 
+        description="Список всех внешних систем, API и сервисов, с которыми должна интегрироваться разрабатываемая система."
+    )
+    performance: List[str] = Field(
+        default_factory=list, 
+        description="Извлеки метрики производительности: RPS (запросов в секунду), ожидаемый онлайн (DAU/MAU), лимиты по памяти/CPU."
+    )
 
 
 class NonFunctionalRequirements(BaseModel):
     """5. Нефункциональные требования"""
-    security: List[str] = Field(default_factory=list, description="Безопасность")
-    scalability: List[str] = Field(default_factory=list, description="Масштабируемость (optional)")
-    response_time: List[str] = Field(default_factory=list, description="Время отклика (optional)")
+    security: List[str] = Field(
+        default_factory=list, 
+        description="Требования к ИБ: стандарты шифрования, авторизация (OAuth2, JWT), защита от DDoS, соответствие законам (ФЗ-152, GDPR)."
+    )
+    scalability: List[str] = Field(
+        default_factory=list, 
+        description="Требования к масштабируемости: поддержка горизонтального/вертикального масштабирования, микросервисная архитектура, кубернетис."
+    )
+    response_time: List[str] = Field(
+        default_factory=list, 
+        description="SLA и время отклика (например: 'загрузка страницы < 2 сек', 'ответ API < 200 мс')."
+    )
 
 
 class DevelopmentPhase(BaseModel):
-    name: Optional[str] = Field(None, description="Название фазы")
-    deadline: Optional[str] = Field(None, description="Срок (optional)")
-    features: List[str] = Field(default_factory=list, description="Функции (optional)")
+    name: Optional[str] = Field(
+        None, 
+        description="Название этапа (например: 'MVP', 'Альфа-версия', 'Этап 1: Проектирование')."
+    )
+    deadline: Optional[str] = Field(
+        None, 
+        description="Сроки реализации этапа (конкретные даты, количество недель/спринтов)."
+    )
+    features: List[str] = Field(
+        default_factory=list, 
+        description="Список ключевого функционала, который должен быть готов к концу этого этапа."
+    )
 
 
 class DevelopmentStages(BaseModel):
     """6. Этапы разработки и сроки"""
-    mvp: DevelopmentPhase = Field(default_factory=DevelopmentPhase, description="Минимальная версия")
-    release: DevelopmentPhase = Field(default_factory=DevelopmentPhase, description="Основной релиз (optional)")
-    support: Optional[str] = Field(None, description="Поддержка и доработки (optional)")
+    mvp: DevelopmentPhase = Field(
+        default_factory=DevelopmentPhase, 
+        description="Описание первой рабочей версии продукта (MVP). Что в нее входит и когда дедлайн."
+    )
+    release: DevelopmentPhase = Field(
+        default_factory=DevelopmentPhase, 
+        description="Описание полноценного релиза (V1.0). Функции, не вошедшие в MVP."
+    )
+    support: Optional[str] = Field(
+        None, 
+        description="Условия гарантийной поддержки, SLA, планируемые доработки после релиза."
+    )
 
 
 class AcceptanceCriteria(BaseModel):
     """7. Критерии приёмки"""
-    testing: List[str] = Field(default_factory=list, description="Тестирование")
-    documentation: List[str] = Field(default_factory=list, description="Документация")
-
+    testing: List[str] = Field(
+        default_factory=list, 
+        description="Требования к проверке качества: виды тестов (Unit, E2E, нагрузочное), процент покрытия кода (coverage), пайплайны CI/CD, баг-трекинг."
+    )
+    documentation: List[str] = Field(
+        default_factory=list, 
+        description="Список артефактов, которые нужно сдать вместе с кодом (Swagger API, Руководство пользователя, Архитектурный документ, Doxygen)."
+    )
 
 class ITProjectTemplate(BaseTemplate):
     """Шаблон ТЗ для IT-проекта."""

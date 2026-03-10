@@ -1,8 +1,4 @@
-﻿"""
-Layer 3: Graph-Navigator Multi-Agent Compiler v2
-Исправленная версия — устранены ошибки "не правильных сущностей" графа и вызовов LLM.
-"""
-import logging
+﻿import logging
 import asyncio
 import hashlib
 from typing import List, Dict, Any, Optional, TypedDict, Literal, Annotated, Union, get_origin, get_args
@@ -50,33 +46,52 @@ class GraphTools:
     def _get_node_by_id_or_name(self, key: str) -> Optional[GraphNode]:
         if key in self._id_cache:
             return self._id_cache[key]
-        matches = self._name_cache.get(key.lower(),[])
+        matches = self._name_cache.get(key.lower(), [])
         return matches[0] if matches else None
 
     def search_nodes(self, query: str, node_type: Optional[str] = None, limit: int = 10) -> List[Dict]:
         results =[]
         query_lower = query.lower()
+
         for node in self.context.graph.nodes:
             score = 0
-            if query_lower in node.name.lower():
-                score += 3
-            if node.description and query_lower in node.description.lower():
-                score += 2
 
-            # Ищем в properties
+            # 1. Высший приоритет: совпадение по target_section
+            if node.target_section:
+                sec_val = getattr(node.target_section, 'value', str(node.target_section)).lower()
+                if query_lower in sec_val:
+                    score += 10
+
+            # 2. Высокий приоритет: совпадение в названии
+            if query_lower in node.name.lower():
+                score += 5
+
+            # 3. Средний приоритет: совпадение в описании
+            if node.description and query_lower in node.description.lower():
+                score += 3
+
+            # 4. Низкий приоритет: поиск внутри properties
             properties_str = " ".join([f"{p.key}:{p.value}" for p in node.properties])
             if query_lower in properties_str.lower():
                 score += 1
 
-            if node_type and node.label.value == node_type:
-                score += 1
+            # 5. Бонус за совпадение типа (если запрошен)
+            if node_type:
+                lbl_val = getattr(node.label, 'value', str(node.label))
+                if lbl_val == node_type:
+                    score += 2
 
             if score > 0:
                 results.append({
-                    "id": node.id, "name": node.name, "label": node.label.value,
-                    "description": node.description, "score": score,
+                    "id": node.id,
+                    "name": node.name,
+                    "label": getattr(node.label, 'value', str(node.label)),
+                    "description": node.description,
+                    "score": score,
                     "properties":[p.model_dump() for p in node.properties]
                 })
+
+        # Сортируем по убыванию релевантности
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:limit]
 
@@ -87,18 +102,21 @@ class GraphTools:
         incoming =[e for e in self.context.graph.edges if e.target == node.id]
         outgoing =[e for e in self.context.graph.edges if e.source == node.id]
         return {
-            "id": node.id, "name": node.name, "label": node.label.value,
+            "id": node.id,
+            "name": node.name,
+            "label": getattr(node.label, 'value', str(node.label)),
             "description": node.description,
             "properties":[p.model_dump() for p in node.properties],
-            "target_section": node.target_section.value if node.target_section else None,
-            "incoming":[{"from": e.source, "relation": e.relation.value} for e in incoming],
-            "outgoing":[{"to": e.target, "relation": e.relation.value} for e in outgoing]
+            "target_section": getattr(node.target_section, 'value', str(node.target_section)) if node.target_section else None,
+            "incoming":[{"from": e.source, "relation": getattr(e.relation, 'value', str(e.relation))} for e in incoming],
+            "outgoing":[{"to": e.target, "relation": getattr(e.relation, 'value', str(e.relation))} for e in outgoing]
         }
 
     def get_related_nodes(self, node_id: str, relation_type: Optional[str] = None) -> List[Dict]:
         edges =[e for e in self.context.graph.edges if e.source == node_id or e.target == node_id]
         if relation_type:
-            edges =[e for e in edges if e.relation.value == relation_type]
+            edges =[e for e in edges if getattr(e.relation, 'value', str(e.relation)) == relation_type]
+
         results =[]
         for edge in edges:
             is_outgoing = edge.source == node_id
@@ -106,23 +124,17 @@ class GraphTools:
             related_node = self._id_cache.get(related_id)
             if related_node:
                 results.append({
-                    "node": {"id": related_node.id, "name": related_node.name, "label": related_node.label.value},
-                    "relation": edge.relation.value,
+                    "node": {"id": related_node.id, "name": related_node.name, "label": getattr(related_node.label, 'value', str(related_node.label))},
+                    "relation": getattr(edge.relation, 'value', str(edge.relation)),
                     "direction": "outgoing" if is_outgoing else "incoming",
                     "evidence": edge.evidence
                 })
         return results
 
-    def query_by_type(self, node_type: str) -> List[Dict]:
-        return[
-            {"id": n.id, "name": n.name, "description": n.description}
-            for n in self.context.graph.nodes if n.label.value == node_type
-        ]
-
     def get_graph_summary(self) -> Dict:
         types: Dict[str, int] = {}
         for node in self.context.graph.nodes:
-            t = node.label.value
+            t = getattr(node.label, 'value', str(node.label))
             types[t] = types.get(t, 0) + 1
         return {
             "total_nodes": len(self.context.graph.nodes),
@@ -210,17 +222,17 @@ def make_thread_id(prefix: str, graph: UnifiedGraph) -> str:
 
 RESEARCHER_SYSTEM = """Ты Researcher Agent. Твоя задача — собрать факты из графа и создать черновик секции ТЗ.
 ПРАВИЛА:
-1. Используй ТОЛЬКО инструменты для поиска в графе
-2. Каждый факт должен иметь источник (node ID)
-3. НЕ выдумывай ничего
-4. Если информации мало — отметь в notes"""
+1. Используй ТОЛЬКО факты из предоставленного контекста графа.
+2. Каждый факт должен основываться на узлах (node ID).
+3. НЕ выдумывай технические детали или имена, которых нет в контексте.
+4. Если информации мало — заполни то, что есть, и отметь нехватку в notes."""
 
 REVIEWER_SYSTEM = """Ты Reviewer Agent. Проверяй черновик строго по графу.
 Отмечай hallucination, missing_source, inconsistency.
-is_approved=True только если всё идеально."""
+is_approved=True только если черновик полностью опирается на предоставленные источники."""
 
 EDITOR_SYSTEM = """Ты Editor Agent. Исправляй секцию строго по feedback пользователя.
-Сохраняй preserve_aspects без изменений."""
+Обязательно сохраняй preserve_aspects без изменений."""
 
 
 # ============================================================================
@@ -228,6 +240,16 @@ EDITOR_SYSTEM = """Ты Editor Agent. Исправляй секцию строг
 # ============================================================================
 
 class ResearcherAgent:
+
+    # Маппинг названий секций из Pydantic в названия категорий в Knowledge Graph
+    SECTION_MAP = {
+        "general": ["general_info", "general", "overview", "project"],
+        "functional":["functional_req", "functional", "features", "requirements"],
+        "tech":["tech_stack", "tech", "technologies", "architecture"],
+        "ui":["ui_ux", "ui", "ux", "interface", "design"],
+        "non_functional": ["non_functional", "performance", "security"]
+    }
+
     def __init__(self, llm_client=None):
         self.llm_client = llm_client or acall_llm_json
 
@@ -239,8 +261,7 @@ class ResearcherAgent:
         review = state.get('review')
         extra_instruction = ""
         if review and not review.is_approved:
-            issues_text = "\n".join([f"- {i.get('type')}: {i.get('detail', '')}" for i in review.issues]
-            )
+            issues_text = "\n".join([f"- {i.get('type')}: {i.get('detail', '')}" for i in review.issues])
             suggestions = review.suggestions or ""
             extra_instruction = (
                 f"\n\nПРЕДЫДУЩИЕ ПРОБЛЕМЫ (ИСПРАВЬ ИХ):\n{issues_text}\n{suggestions}"
@@ -260,19 +281,32 @@ class ResearcherAgent:
 
     async def _explore_graph(self, tools: GraphTools, state: AgentState) -> List[Dict]:
         section_name = state['section_name']
-        results = tools.search_nodes(section_name, limit=5)
+
+        # 1. Поиск по маппингу (самый надежный способ найти узлы для секции)
+        search_terms = self.SECTION_MAP.get(section_name.lower(), [section_name])
+        results =[]
+        for term in search_terms:
+            results.extend(tools.search_nodes(term, limit=10))
+
+        # 2. Поиск по ключевым словам из инструкции
         key_terms = self._extract_key_terms(state['instruction'])
         for term in key_terms[:3]:
-            results.extend(tools.search_nodes(term, limit=3))
+            results.extend(tools.search_nodes(term, limit=5))
 
-        detailed = []
+        # 3. Дедупликация и сбор полных данных
+        unique_results = {r['id']: r for r in results}
+        sorted_results = sorted(unique_results.values(), key=lambda x: x['score'], reverse=True)
+
+        detailed =[]
         seen: set = set()
-        for r in sorted(results, key=lambda x: x['score'], reverse=True)[:8]:
+
+        for r in sorted_results[:10]:  # Берем топ-10 узлов
             if r['id'] not in seen:
                 details = tools.get_node_details(r['id'])
                 if details:
                     detailed.append(details)
                     seen.add(r['id'])
+                    # Захватываем связанных соседей
                     for rel in tools.get_related_nodes(r['id'])[:2]:
                         rid = rel['node']['id']
                         if rid not in seen:
@@ -281,11 +315,12 @@ class ResearcherAgent:
                                 detailed.append(d)
                                 seen.add(rid)
 
-        # Fallback: если по имени секции ничего не нашли — берём всё из графа
+        # 4. Fallback: если ничего не найдено
         if not detailed:
-            logger.warning(f"[Researcher] No nodes found for '{section_name}', falling back to full graph scan")
+            logger.warning(f"[Researcher] No nodes found for '{section_name}'. Using limited fallback.")
             summary = tools.get_graph_summary()
-            for node_name in summary.get("node_names", [])[:20]:
+            # Берем максимум 3 узла, чтобы не засорять контекст
+            for node_name in summary.get("node_names", [])[:3]:
                 for r in tools.search_nodes(node_name, limit=1):
                     if r['id'] not in seen:
                         d = tools.get_node_details(r['id'])
@@ -296,45 +331,48 @@ class ResearcherAgent:
         return detailed
 
     def _extract_key_terms(self, instruction: str) -> List[str]:
-        words = instruction.lower().split()
-        stop = {'и', 'в', 'на', 'с', 'по', 'для', 'из', 'к', 'а', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for'}
+        words = instruction.lower().replace(',', ' ').replace('.', ' ').split()
+        stop = {
+            'и', 'в', 'на', 'с', 'по', 'для', 'из', 'к', 'а', 'не', 'что', 'как', 'это',
+            'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'is', 'are'
+        }
         return[w for w in words if len(w) > 3 and w not in stop][:5]
 
     async def _create_draft(
             self, schema_class: type, tools: GraphTools, state: AgentState, exploration: List[Dict], extra: str = ""
     ) -> SectionDraft:
         context_parts = []
-        sources = []
+        sources =[]
         for node in exploration:
             context_parts.append(
                 f"Узел: {node['name']} (ID: {node['id']})\n"
-                f"Описание: {node.get('description')}\n"
-                f"Данные: {node.get('properties', [])}\n"
-                f"Входящие связи: {node.get('incoming', [])}\n"
-                f"Исходящие связи: {node.get('outgoing', [])}"
+                f"Описание: {node.get('description', 'N/A')}\n"
+                f"Данные: {node.get('properties',[])}\n"
+                f"Входящие связи: {node.get('incoming',[])}\n"
+                f"Исходящие связи: {node.get('outgoing',[])}"
             )
             sources.append(node['id'])
 
-        # Если данных всё ещё нет — логируем и передаём summary
         if not context_parts:
             summary = tools.get_graph_summary()
-            graph_data = f"[Граф пуст или данные не найдены]\nСводка: {summary}"
-            logger.error(f"[Researcher] exploration empty for section '{state['section_name']}'")
+            graph_data = f"[Детальные данные не найдены]\nСводка графа: {summary}"
+            logger.error(f"[Researcher] Exploration empty for section '{state['section_name']}'")
         else:
             graph_data = "\n---\n".join(context_parts)
 
         prompt = (
             f"Создай черновик секции ТЗ.\n\n"
-            f"НАЗВАНИЕ: {state['section_name']}\n"
-            f"ИНСТРУКЦИЯ: {state['instruction']}{extra}\n\n"
-            f"Верни JSON строго по схеме. Каждый факт — только из графа ниже."
+            f"НАЗВАНИЕ СЕКЦИИ: {state['section_name']}\n"
+            f"ИНСТРУКЦИЯ К СЕКЦИИ: {state['instruction']}{extra}\n\n"
+            f"Верни JSON строго по схеме. Если данных в графе не хватает для полного ответа, "
+            f"заполни поля насколько возможно и не выдумывай лишнего."
         )
 
         try:
             draft_data = await self.llm_client(
                 schema=schema_class,
                 prompt=prompt,
-                data=graph_data,  # <-- граф передаётся через data, не вшивается в prompt
+                data=graph_data,
                 system=RESEARCHER_SYSTEM,
                 max_tokens=16384
             )
@@ -363,7 +401,7 @@ class ReviewerAgent:
             )
 
         meta = get_run_meta(state['run_id'])
-        review = await self._verify_draft(state)
+        review = await self._verify_draft(state, meta)
 
         iterations = state.get('iterations', 0)
         max_iter = state.get('max_iterations', 3)
@@ -393,7 +431,7 @@ class ReviewerAgent:
                     "review": review,
                     "final_result": final,
                     "status": status,
-                    "logs": state.get("logs",[]) + [log_msg]
+                    "logs": state.get("logs", []) + [log_msg]
                 },
                 goto=END
             )
@@ -403,23 +441,40 @@ class ReviewerAgent:
                 "review": review,
                 "iterations": iterations + 1,
                 "status": "drafting",
-                "logs": state.get("logs", []) +["Reviewer: issues found → back to researcher"]
+                "logs": state.get("logs", []) + ["Reviewer: issues found → back to researcher"]
             },
             goto="researcher"
         )
 
-    async def _verify_draft(self, state: AgentState) -> ReviewResult:
+    async def _verify_draft(self, state: AgentState, meta: Dict[str, Any]) -> ReviewResult:
         draft = state['draft']
+        tools = GraphTools(meta['context'])
+
+        # ДОБАВЛЕНО: Собираем тексты источников, на которые сослался Researcher
+        source_parts = []
+        for src_id in draft.sources:
+            node = tools.get_node_details(src_id)
+            if node:
+                source_parts.append(
+                    f"Узел: {node['name']} (ID: {node['id']})\n"
+                    f"Описание: {node.get('description', 'N/A')}\n"
+                    f"Данные: {node.get('properties', [])}"
+                )
+
+        sources_data = "\n---\n".join(source_parts) if source_parts else "Нет детализированных данных по источникам."
+
         prompt = (
             f"Проверь черновик:\n\n"
             f"ЧЕРНОВИК: {draft.content}\n"
-            f"ИСТОЧНИКИ: {draft.sources}\n\n"
-            f"Будь максимально строгим."
+            f"ИСТОЧНИКИ (ID УЗЛОВ): {draft.sources}\n\n"
+            f"Убедись, что нет галлюцинаций (hallucination) и противоречий (inconsistency). "
+            f"Одобряй (is_approved=True) только если все факты из черновика есть в текстах переданных источников."
         )
         try:
             return await self.llm_client(
                 schema=ReviewResult,
                 prompt=prompt,
+                data=sources_data,  # <-- ПЕРЕДАЕМ ТЕКСТЫ ИСТОЧНИКОВ В LLM
                 system=REVIEWER_SYSTEM,
                 max_tokens=16384
             )
@@ -437,7 +492,7 @@ class EditorAgent:
         edit_request = state.get('edit_request')
         if not edit_request or not state.get('draft'):
             return Command(
-                update={"status": "approved", "logs": state.get("logs", []) + ["Editor: nothing to edit"]},
+                update={"status": "approved", "logs": state.get("logs", []) +["Editor: nothing to edit"]},
                 goto=END
             )
 
@@ -462,24 +517,24 @@ class EditorAgent:
                 "edit_mode": False,
                 "edit_request": None,
                 "status": "reviewing",
-                "logs": state.get("logs", []) +["Editor: feedback applied"]
+                "logs": state.get("logs", []) + ["Editor: feedback applied"]
             },
             goto="reviewer"
         )
 
     def _extract_feedback_terms(self, feedback: str) -> List[str]:
-        words = feedback.lower().split()
+        words = feedback.lower().replace(',', ' ').replace('.', ' ').split()
         stop = {'и', 'в', 'на', 'с', 'по', 'для', 'из', 'это', 'что', 'как', 'не'}
-        return[w for w in words if len(w) > 3 and w not in stop][:5]
+        return [w for w in words if len(w) > 3 and w not in stop][:5]
 
     async def _apply_edits(
         self, state: AgentState, schema_class: type, draft: SectionDraft, request: EditRequest, context: List[Dict]
     ) -> SectionDraft:
         prompt = (
-            f"Перепиши секцию по feedback:\n\n"
+            f"Перепиши секцию по feedback пользователя:\n\n"
             f"ТЕКУЩАЯ ВЕРСИЯ: {draft.content}\n"
-            f"FEEDBACK: {request.feedback}\n"
-            f"СОХРАНИ: {request.preserve_aspects}\n"
+            f"FEEDBACK ПОЛЬЗОВАТЕЛЯ: {request.feedback}\n"
+            f"СОХРАНИ (НЕ УДАЛЯЙ): {request.preserve_aspects}\n"
             f"ДОПОЛНИТЕЛЬНЫЙ КОНТЕКСТ: {context[:5]}"
         )
         try:

@@ -36,6 +36,10 @@ os.makedirs(LLM_LOGS_DIR, exist_ok=True)
 
 
 # --- Вспомогательная функция для логирования ---
+# Один файл для всех логов
+LLM_LOG_FILE = os.path.join(LLM_LOGS_DIR, "llm_calls.log")
+
+
 def _log_llm_interaction(
         call_type: str,
         model_name: str,
@@ -45,37 +49,41 @@ def _log_llm_interaction(
         response: Any,
         error: Optional[str] = None
 ):
-    """Сохраняет детали взаимодействия с LLM в файл."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    filename = f"{timestamp}_{call_type}.log"
-    filepath = os.path.join(LLM_LOGS_DIR, filename)
+    """Сохраняет детали взаимодействия с LLM в один общий файл."""
 
-    # Подготовка контента для записи
+    timestamp = datetime.now().isoformat()
+
     log_content = [
-        f"=== TIMESTAMP: {datetime.now().isoformat()} ===",
+        "\n" + "=" * 80,
+        f"TIMESTAMP: {timestamp}",
         f"CALL TYPE: {call_type}",
         f"MODEL: {model_name} (Provider: {LLM_PROVIDER})",
-        f"\n--- SYSTEM PROMPT ---\n{system or 'None'}",
-        f"\n--- USER PROMPT ---\n{prompt}",
-        f"\n--- SUPPLEMENTARY DATA ---\n{data or 'None'}",
+        "-" * 80,
+        f"SYSTEM PROMPT:\n{system or 'None'}",
+        "-" * 80,
+        f"USER PROMPT:\n{prompt}",
+        "-" * 80,
+        f"SUPPLEMENTARY DATA:\n{data or 'None'}",
+        "-" * 80,
     ]
 
     if error:
-        log_content.append(f"\n❌ ERROR:\n{error}")
+        log_content.append(f"ERROR:\n{error}")
     else:
-        # Если ответ - Pydantic модель, дампим в JSON
         if hasattr(response, "model_dump_json"):
             res_text = response.model_dump_json(indent=2)
         else:
             res_text = str(response)
-        log_content.append(f"\n--- RESPONSE ---\n{res_text}")
+
+        log_content.append(f"RESPONSE:\n{res_text}")
+
+    log_content.append("=" * 80)
 
     try:
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write("\n".join(log_content))
+        with open(LLM_LOG_FILE, "a", encoding="utf-8") as f:
+            f.write("\n".join(log_content) + "\n")
     except Exception as e:
         logger.error(f"Failed to write LLM log to file: {e}")
-
 
 def get_local_model_path(repo_id: str, filename: str) -> str:
     """Скачивает модель с HF если её нет и возвращает путь."""

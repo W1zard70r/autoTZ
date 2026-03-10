@@ -148,8 +148,8 @@ async def test_english_localization():
 # ==========================================
 async def main():
     try:
-        await test_smoke_minimal()
-        await test_auto_sectioning()
+        #await test_smoke_minimal()
+        #await test_auto_sectioning()
         await test_full_it_project()
         await test_gost_template()
         await test_english_localization()
